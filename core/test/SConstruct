@@ -1,0 +1,19 @@
+# Copyright (C) 2009 Ashley J. Wilson, Roger E. Ostrander
+# This software is licensed as described in the file COPYING in the root
+# directory of this distribution.
+#
+# = ObjectLite testing suite build file. =
+# Produces an executible that runs the full suite of ObjectLite unit tests.
+
+import os
+env = DefaultEnvironment(ENV = os.environ, tools = ['mingw'])
+
+env['CPPPATH'] = [
+'C:/CUnit-2.1-0/', '../core/'
+]
+
+env['LIBPATH'] = [
+'C:/CUnit-2.1-0/VC8/Release - Static Lib', '../core/'
+]
+
+Program('test_io.c', LIBS=['objectlite', 'cunit'])

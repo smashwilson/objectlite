@@ -1,0 +1,13 @@
+# Copyright (C) 2009 Ashley J. Wilson, Roger E. Ostrander
+# This software is licensed as described in the file COPYING in the root
+# directory of this distribution.
+#
+# = ObjectLite core build file =
+# Produce statically and dynamically linkable builds of the objectlite core
+# library.
+
+import os
+DefaultEnvironment(ENV = os.environ, tools = ['mingw'])
+
+sources = Glob('*.c')
+StaticLibrary('objectlite', sources)

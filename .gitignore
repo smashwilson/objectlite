@@ -1,0 +1,12 @@
+# Ignore SCons caches.
+*.dblite
+
+# Ignore emacs temp files.
+*~
+
+# Ignore object files, executibles, and libraries.
+*.o
+*.exe
+*.a
+*.dll
+*.lib
