@@ -36,7 +36,7 @@ typedef struct {
  * object.  The number of slots and the names of each slot are specified within
  * the object's shape.
  */
-#define OBL_INTERNAL_SLOTTED 2
+#define OBL_INTERNAL_SLOTTED 1
 typedef struct {
   obl_object_address *slots;
 } obl_slotted_object;
@@ -44,13 +44,13 @@ typedef struct {
 /*
  * Integer object: a signed integer value within the range +/-2^31 - 1.
  */
-#define OBL_INTERNAL_INTEGER 0
+#define OBL_INTERNAL_INTEGER 2
 typedef int32_t obl_integer_object;
 
 /*
  * Boolean object: truth or falsehood.
  */
-#define OBL_INTERNAL_BOOLEAN 1
+#define OBL_INTERNAL_BOOLEAN 3
 typedef uint32_t obl_boolean_object;
 
 /*
@@ -59,7 +59,7 @@ typedef uint32_t obl_boolean_object;
  * and use the functions provided here to manipulate them.
  */
 typedef struct {
-  obl_shape_object shape;
+  obl_shape_object *shape;
   uint8_t internal_format;
   union {
     obl_integer_object *integer;
@@ -67,5 +67,7 @@ typedef struct {
     obl_slotted_object *slotted;
   } internal_storage;
 } obl_object;
+
+void obl_destroy_object(obl_object *o);
 
 #endif

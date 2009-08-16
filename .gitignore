@@ -10,3 +10,6 @@
 *.a
 *.dll
 *.lib
+
+# Ignore ObjectLite databases.
+*.obl
