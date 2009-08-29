@@ -10,8 +10,11 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include "log.h"
+
 typedef struct {
   char *filename;
+  struct obl_log_configuration log_config;
 } obl_database;
 
 #endif
