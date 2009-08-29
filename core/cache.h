@@ -15,19 +15,23 @@
 
 #include "object.h"
 
+struct _obl_cache_entry;
+typedef struct _obl_cache_entry obl_cache_entry;
+
 struct _obl_cache_age_entry;
+typedef struct _obl_cache_age_entry obl_cache_age_entry;
 
-typedef struct _obl_cache_data_entry {
+struct _obl_cache_entry {
   obl_object *object;
-  struct _obl_cache_entry *next;
-  struct _obl_cache_age_entry *age_entry;
-} obl_cache_entry;
+  obl_cache_entry *next;
+  obl_cache_age_entry *age_entry;
+};
 
-typedef struct _obl_cache_age_entry {
+struct _obl_cache_age_entry {
   obl_cache_entry *entry;
-  struct _obl_cache_age_entry *older;
-  struct _obl_cache_age_entry *younger;
-} obl_cache_age_entry;
+  obl_cache_age_entry *older;
+  obl_cache_age_entry *younger;
+};
 
 typedef struct {
   int max_size;
