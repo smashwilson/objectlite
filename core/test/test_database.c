@@ -34,8 +34,30 @@ void test_initialize_database(void)
     CU_FAIL("Cache not allocated.");
   }
 
-  CU_ASSERT(database->error == NULL);
   CU_ASSERT(obl_database_ok(database));
+
+  obl_destroy_database(database);
+}
+
+void test_report_error(void)
+{
+  obl_database *database;
+
+  database = obl_create_database("foo.obl");
+  CU_ASSERT_FATAL(database != NULL);
+  CU_ASSERT(obl_database_ok(database));
+
+  obl_report_error(database, OUT_OF_MEMORY, "A sample error message.");
+
+  CU_ASSERT( ! obl_database_ok(database) );
+  CU_ASSERT(strcmp(database->last_error.message, "A sample error message.") == 0);
+  CU_ASSERT(database->last_error.code == OUT_OF_MEMORY);
+
+  obl_clear_error(database);
+
+  CU_ASSERT(obl_database_ok(database));
+  CU_ASSERT(database->last_error.message == NULL);
+  CU_ASSERT(database->last_error.code == OK);
 
   obl_destroy_database(database);
 }
@@ -54,7 +76,8 @@ CU_pSuite initialize_database_suite(void)
   }
 
   if(
-     (CU_add_test(pSuite, "Initialize the database structure.", test_initialize_database) == NULL)
+     (CU_add_test(pSuite, "Initialize the database structure.", test_initialize_database) == NULL) ||
+     (CU_add_test(pSuite, "Reporting and clearing errors.", test_report_error) == NULL)
      ) {
     return NULL;
   }

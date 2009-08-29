@@ -10,6 +10,8 @@
 #include "database.h"
 #include "constants.h"
 
+#include <stdio.h>
+
 /*
  * External functions definitions.
  */
@@ -24,12 +26,12 @@ obl_database *obl_create_database(char *filename)
     return NULL;
   }
 
-  database->error = NULL;
   database->filename = filename;
+  obl_clear_error(database);
 
   cache = obl_cache_create(DEFAULT_CACHE_BUCKETS, DEFAULT_CACHE_SIZE);
   if( cache == NULL ) {
-    database->error = "Unable to allocate cache.";
+    obl_report_error(database, OUT_OF_MEMORY, "Unable to allocate cache.");
   }
   database->cache = cache;
 
@@ -47,5 +49,23 @@ void obl_destroy_database(obl_database *database)
 
 int obl_database_ok(obl_database *database)
 {
-  return database->error == NULL;
+  return database->last_error.code == OK;
+}
+
+void obl_clear_error(obl_database *database)
+{
+  database->last_error.message = NULL;
+  database->last_error.code = OK;
+}
+
+void obl_report_error(obl_database *database, error_code code, char *message)
+{
+  if( database == NULL ) {
+    fprintf(stderr, "Unable to report error \"%s\":\n", message);
+    fprintf(stderr, "No database structure available to report it in.\n");
+    return ;
+  }
+
+  database->last_error.message = message;
+  database->last_error.code = code;
 }
