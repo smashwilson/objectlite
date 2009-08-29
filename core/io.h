@@ -9,6 +9,7 @@
 #ifndef IO_H
 #define IO_H
 
+#include "platform.h"
 #include "object.h"
 
 #include <stdio.h>
@@ -43,6 +44,9 @@ obl_object *obl_read_shape(obl_shape_object *shape, FILE *source);
  * the shape object, then invoke the appropriate obl_object_read_function from
  * the <obl_read_functions> table to read the rest of the object.  Return the
  * populated obl_object structure.
+ *
+ * The created object lives on the heap and must be destroyed with a call to
+ * obl_destroy_object() as defined in "object.h".
  */
 obl_object *obl_read_object(FILE *source);
 

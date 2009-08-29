@@ -21,10 +21,16 @@ env['LIBPATH'] = [
 ]
 
 # libobjectlite: The core library. #############################################
-corelib = StaticLibrary('core/objectlite', Glob('core/*.c'))
+corelib = StaticLibrary(
+    'core/objectlite',
+    Glob('core/*.c'),
+    LIBS = ['ws2_32'])
 
 # unittests: Unit testing suite for libobjectlite. #############################
-coretest = Program('unittests', Glob('core/test/*.c'), LIBS = ['objectlite', 'cunit'])
+coretest = Program(
+    'unittests',
+    Glob('core/test/*.c'),
+    LIBS = ['objectlite', 'cunit', 'ws2_32'])
 
 # Alias directives for common configurations. ##################################
 Alias('corelib', corelib)

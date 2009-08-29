@@ -9,13 +9,3 @@
 #include <stdlib.h>
 
 #include "object.h"
-
-void obl_destroy_object(obl_object *object)
-{
-  /* All possible internal storage slots occupy the same address, so
-   * we only need to free one of them.
-   */
-  free(object->internal_storage.slotted);
-
-  free(object);
-}

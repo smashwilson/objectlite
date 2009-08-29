@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "io.h"
+#include "platform.h"
 
 /*
  * The global array of object-reading functions: one for each internal state
@@ -22,6 +23,7 @@ obl_object_read_function obl_read_functions[] = {
 };
 
 obl_object *obl_read_integer(obl_shape_object *shape, FILE *source) {
+  obl_integer_object raw;
   obl_object *o;
   obl_integer_object *internal;
 
@@ -30,19 +32,20 @@ obl_object *obl_read_integer(obl_shape_object *shape, FILE *source) {
     /* TODO: set error message here. */
     return NULL;
   }
-
   o->shape = shape;
   o->internal_format = OBL_INTERNAL_INTEGER;
+
+  if( fread(&raw, sizeof(obl_integer_object), 1, source) != 1 ) {
+    /* TODO: set error message here. */
+    return NULL;
+  }
 
   internal = malloc(sizeof(obl_integer_object));
   if( internal == NULL ) {
     /* TODO: set error message here. */
     return NULL;
   }
-  if( fread(internal, sizeof(obl_integer_object), 1, source) != 1 ) {
-    /* TODO: set error message here. */
-    return NULL;
-  }
+  *internal = (obl_integer_object) ntohl(raw);
   o->internal_storage.integer = internal;
 
   return o;

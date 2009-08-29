@@ -11,11 +11,25 @@
 
 #include <stdint.h>
 
+#include "constants.h"
+
+/*
+ * Used to specify a physical word address within the .obl file.
+ */
+typedef uint32_t obl_physical_address;
+
 /* 
  * Used to specify the logical address of a remote object that's stored
  * elsewhere in the database.
  */
-typedef uint32_t obl_object_address;
+typedef uint32_t obl_logical_address;
+
+/*
+ * Forward declaration of the _obl_object struct and its typedef, because many
+ * of these structures are recursive.
+ */
+struct _obl_object;
+typedef struct _obl_object obl_object;
 
 /*
  * Shape object: a Class object which specifies how to interpret any object
@@ -24,9 +38,9 @@ typedef uint32_t obl_object_address;
  */
 #define OBL_INTERNAL_SHAPE 0
 typedef struct {
-  obl_object_address name;
-  obl_object_address slot_names;
-  obl_object_address current_shape;
+  obl_object *name;
+  obl_object *slot_names;
+  obl_object *current_shape;
   uint32_t storage_format;
 } obl_shape_object;
 
@@ -38,19 +52,30 @@ typedef struct {
  */
 #define OBL_INTERNAL_SLOTTED 1
 typedef struct {
-  obl_object_address *slots;
+  obl_object *slots;
 } obl_slotted_object;
 
 /*
- * Integer object: a signed integer value within the range +/-2^31 - 1.
+ * Chunked object: an object that contains a variable-length collection of
+ * pointers to other objects.  Stored as a singly-linked list of chunks, each of
+ * which occupies exactly BLOCK_SIZE words of storage.
  */
-#define OBL_INTERNAL_INTEGER 2
+#define OBL_INTERNAL_CHUNK 2
+typedef struct _obl_chunked_object {
+  obl_object *contents;
+  struct _obl_chunked_object *next_chunk;
+} obl_chunked_object;
+
+/*
+ * Integer object: a signed integer value within the range +/- 2^31 - 1.
+ */
+#define OBL_INTERNAL_INTEGER 3
 typedef int32_t obl_integer_object;
 
 /*
  * Boolean object: truth or falsehood.
  */
-#define OBL_INTERNAL_BOOLEAN 3
+#define OBL_INTERNAL_BOOLEAN 4
 typedef uint32_t obl_boolean_object;
 
 /*
@@ -58,16 +83,16 @@ typedef uint32_t obl_boolean_object;
  * external and language binding code should work with obl_object objects
  * and use the functions provided here to manipulate them.
  */
-typedef struct {
+struct _obl_object {
+  obl_logical_address address;
   obl_shape_object *shape;
   uint8_t internal_format;
   union {
+    obl_shape_object *shape;
+    obl_slotted_object *slotted;
     obl_integer_object *integer;
     obl_boolean_object *boolean;
-    obl_slotted_object *slotted;
   } internal_storage;
-} obl_object;
-
-void obl_destroy_object(obl_object *o);
+};
 
 #endif

@@ -9,9 +9,11 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "CUnit/Headers/Basic.h"
 
+#include "platform.h"
 #include "io.h"
 #include "object.h"
 
@@ -20,16 +22,19 @@
 void test_read_integer(void)
 {
   FILE *writable, *readable;
-  obl_integer_object payload = 123456789;
+  obl_integer_object payload = 0x11223344;
+  uint32_t netlong;
   obl_shape_object shape;
   obl_object *output;
 
+  /* Write the integer object to the file in network byte order. */
   writable = fopen(FILENAME, "wb");
   if( writable == NULL ) {
     CU_FAIL("Unable to create temporary data file.");
     return ;
   }
-  CU_ASSERT(fwrite(&payload, sizeof(obl_integer_object), 1, writable) == 1);
+  netlong = htonl((uint32_t) payload);
+  CU_ASSERT(fwrite(&netlong, sizeof(uint32_t), 1, writable) == 1);
   CU_ASSERT_FATAL(fclose(writable) == 0);
 
   readable = fopen(FILENAME, "rb");
@@ -44,9 +49,9 @@ void test_read_integer(void)
 
   CU_ASSERT(output->shape == &shape);
   CU_ASSERT(output->internal_format == OBL_INTERNAL_INTEGER);
-  CU_ASSERT(*(output->internal_storage.integer) == 123456789);
+  CU_ASSERT(*(output->internal_storage.integer) == 0x11223344);
 
-  obl_destroy_object(output);
+  free(output);
 }
 
 /*
