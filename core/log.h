@@ -9,18 +9,18 @@
 #ifndef LOG_H
 #define LOG_H
 
-enum obl_log_level {
+typedef enum {
   DEBUG, INFO, NOTICE, WARN, ERROR, NONE
-};
+} obl_log_level;
 
-struct obl_log_configuration {
+typedef struct {
   char *filename;
-  enum obl_log_level level;
-};
+  obl_log_level level;
+} obl_log_configuration;
 
-void obl_log(struct obl_log_configuration *config,
-         enum obl_log_level level, 
-         const char *message);
+void obl_log(obl_log_configuration *config,
+             obl_log_level level,
+             const char *message);
 
 #ifndef DISABLE_LOGGING
 
