@@ -70,7 +70,7 @@ void obl_cache_destroy(obl_cache *cache)
     current = cache->buckets[bucket_index];
     while( current != NULL ) {
       previous = current;
-      current = (obl_cache_entry*) current->next;
+      current = current->next;
       free(previous);
     }
   }
@@ -79,7 +79,7 @@ void obl_cache_destroy(obl_cache *cache)
   current_age = cache->youngest;
   while( current_age != NULL ) {
     previous_age = current_age;
-    current_age = (obl_cache_age_entry*) current_age->older;
+    current_age = current_age->older;
     free(previous_age);
   }
 
@@ -141,7 +141,7 @@ void obl_cache_delete_at(obl_cache *cache, obl_logical_address address)
   if( previous_bucket != NULL ) {
     previous_bucket->next = found_bucket->next;
   } else {
-    cache->buckets[bucket_for_address(cache, address)] = (obl_cache_entry*) found_bucket->next;
+    cache->buckets[bucket_for_address(cache, address)] = found_bucket->next;
   }
 
   /* Remove the age entry from the age list. */
@@ -164,8 +164,8 @@ obl_object *obl_cache_get(obl_cache *cache, obl_logical_address address)
   }
 
   /* Promote this entry's age entry to the front of the age list. */
-  remove_age_entry(cache, (obl_cache_age_entry*) result->age_entry);
-  make_youngest(cache, (obl_cache_age_entry*) result->age_entry);
+  remove_age_entry(cache, result->age_entry);
+  make_youngest(cache, result->age_entry);
   
   return result->object;
 }
@@ -214,20 +214,20 @@ static void insert_in_bucket(obl_cache *cache, int bucket_index, obl_cache_entry
 
   while( current != NULL && current->object->address <= address ) {
     previous = current;
-    current = (obl_cache_entry*) current->next;
+    current = current->next;
   }
 
   if( previous == NULL ) {
     /* Insert at the list front.  Point the bucket pointer here and the new
        entry's next pointer at the existing list front. */
-    entry->next = (struct _obl_cache_entry*) head;
+    entry->next = head;
     cache->buckets[bucket_index] = entry;
   } else {
     /* Insert somewhere in the list middle.  current is the entry that should
        fall immediately after the new one; previous is the entry before.  If we
        are at the list end, current may also be NULL. */
-    previous->next = (struct _obl_cache_entry*) entry;
-    entry->next = (struct _obl_cache_entry*) current;
+    previous->next = entry;
+    entry->next = current;
   }
 }
 
@@ -258,7 +258,7 @@ static obl_cache_entry *lookup_address(obl_cache *cache,
     if( previous != NULL ) {
       *previous = current; 
     }
-    current = (obl_cache_entry*) current->next;
+    current = current->next;
   }
 
   return NULL;

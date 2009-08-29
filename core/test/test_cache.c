@@ -116,7 +116,7 @@ void test_cache_colliding(void)
   CU_ASSERT(entry->object == &o2);
   ISNT_NULL(entry->next, "Lost the original bucket.");
 
-  entry = (obl_cache_entry*) entry->next;
+  entry = entry->next;
   CU_ASSERT(entry->object == &o1);
   CU_ASSERT(entry->next == NULL);
 
@@ -125,9 +125,9 @@ void test_cache_colliding(void)
   obl_cache_insert(cache, &o3);
   entry = cache->buckets[2];
   CU_ASSERT(entry->object == &o2);
-  entry = (obl_cache_entry*) entry->next;
+  entry = entry->next;
   CU_ASSERT(entry->object == &o3);
-  entry = (obl_cache_entry*) entry->next;
+  entry = entry->next;
   CU_ASSERT(entry->object == &o1);
   CU_ASSERT(entry->next == NULL);
 
@@ -249,7 +249,7 @@ void test_cache_deletion(void)
     if( index != 5 ) {
       ISNT_NULL(current_age, "Age list entry missing.");
       CU_ASSERT(current_age->entry->object == &o[index]);
-      current_age = (obl_cache_age_entry*) current_age->older;
+      current_age = current_age->older;
     }
   }
   CU_ASSERT(current_age == NULL);

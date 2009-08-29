@@ -8,6 +8,9 @@
 
 #include "CUnit/Headers/Basic.h"
 
+#include "log.h"
+#include "database.h"
+
 /*
  * Prototypes for the initialization methods of each test_xyz module.
  */

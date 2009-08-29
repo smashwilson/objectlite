@@ -11,10 +11,12 @@
 #define DATABASE_H
 
 #include "cache.h"
+#include "log.h"
 
 typedef struct {
   char *filename;
   obl_cache *cache;
+  obl_log_configuration log_config;
   char *error;
 } obl_database;
 

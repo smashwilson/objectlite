@@ -40,3 +40,6 @@ Alias('coretest', coretest)
 
 for scratch in Glob('*~') + Glob('*/*~') + Glob('*/*/*~'):
     Clean(str(scratch)[:-1], scratch)
+
+Clean('.', Glob('*.log'))
+Clean('.', Glob('*.obl'))

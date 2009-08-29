@@ -11,5 +11,6 @@
 *.dll
 *.lib
 
-# Ignore ObjectLite databases.
+# Ignore ObjectLite databases and log files.
 *.obl
+*.log
