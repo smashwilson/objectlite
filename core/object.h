@@ -82,7 +82,7 @@ typedef uint32_t obl_boolean_object;
  */
 struct _obl_object {
   obl_logical_address address;
-  obl_shape_object *shape;
+  obl_object *shape;
   uint8_t internal_format;
   union {
     obl_shape_object *shape;

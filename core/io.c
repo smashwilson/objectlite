@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "io.h"
+#include "database.h"
 #include "platform.h"
 
 /*
@@ -22,27 +23,30 @@ obl_object_read_function obl_read_functions[] = {
   &obl_read_boolean
 };
 
-obl_object *obl_read_integer(obl_shape_object *shape, FILE *source) {
+obl_object *obl_read_integer(obl_object *shape, FILE *source) {
   obl_integer_object raw;
   obl_object *o;
   obl_integer_object *internal;
 
   o = malloc(sizeof(obl_object));
   if( o == NULL ) {
-    /* TODO: set error message here. */
+    obl_report_error(shape->database, OUT_OF_MEMORY,
+                     "Unable to allocate an integer object.");
     return NULL;
   }
   o->shape = shape;
   o->internal_format = OBL_INTERNAL_INTEGER;
 
   if( fread(&raw, sizeof(obl_integer_object), 1, source) != 1 ) {
-    /* TODO: set error message here. */
+    obl_report_error(shape->database, UNABLE_TO_READ_FILE,
+                     "Unable to read a file.");
     return NULL;
   }
 
   internal = malloc(sizeof(obl_integer_object));
   if( internal == NULL ) {
-    /* TODO: set error message here. */
+    obl_report_error(shape->database, OUT_OF_MEMORY,
+                     "Unable to allocate internal object storage.");
     return NULL;
   }
   *internal = (obl_integer_object) ntohl(raw);
@@ -51,15 +55,15 @@ obl_object *obl_read_integer(obl_shape_object *shape, FILE *source) {
   return o;
 }
 
-obl_object *obl_read_boolean(obl_shape_object *shape, FILE *source) {
+obl_object *obl_read_boolean(obl_object *shape, FILE *source) {
   return NULL;
 }
 
-obl_object *obl_read_slotted(obl_shape_object *shape, FILE *source) {
+obl_object *obl_read_slotted(obl_object *shape, FILE *source) {
   return NULL;
 }
 
-obl_object *obl_read_shape(obl_shape_object *shape, FILE *source) {
+obl_object *obl_read_shape(obl_object *shape, FILE *source) {
   return NULL;
 }
 

@@ -19,25 +19,25 @@
  * Each such function is provided the shape determined from the shape word and a
  * FILE* positioned immediately after the shape word.
  */
-typedef obl_object *(*obl_object_read_function)(obl_shape_object *shape, FILE *source);
+typedef obl_object *(*obl_object_read_function)(obl_object *shape, FILE *source);
 
 /* Read a single-word obl_integer_object. */
-obl_object *obl_read_integer(obl_shape_object *shape, FILE *source);
+obl_object *obl_read_integer(obl_object *shape, FILE *source);
 
 /* Read a single-word obl_boolean_object. */
-obl_object *obl_read_boolean(obl_shape_object *shape, FILE *source);
+obl_object *obl_read_boolean(obl_object *shape, FILE *source);
 
 /*
  * Read a slotted object.  The number of slots expected is determined by the
  * provided shape.
  */
-obl_object *obl_read_slotted(obl_shape_object *shape, FILE *source);
+obl_object *obl_read_slotted(obl_object *shape, FILE *source);
 
 /*
  * Read a shape object.  Shapes are themselves a fixed shape (sorry, no turtles
  * all the way down -- yet).
  */
-obl_object *obl_read_shape(obl_shape_object *shape, FILE *source);
+obl_object *obl_read_shape(obl_object *shape, FILE *source);
 
 /*
  * Read a shape word from the current position of the file <source>, retrieve

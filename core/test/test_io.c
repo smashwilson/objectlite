@@ -24,7 +24,7 @@ void test_read_integer(void)
   FILE *writable, *readable;
   obl_integer_object payload = 0x11223344;
   uint32_t netlong;
-  obl_shape_object shape;
+  obl_object shape;
   obl_object *output;
 
   /* Write the integer object to the file in network byte order. */
@@ -42,7 +42,11 @@ void test_read_integer(void)
     CU_FAIL("Unable to reopen temporary data file.");
     return ;
   }
-  shape.storage_format = OBL_INTERNAL_INTEGER;
+
+  shape.internal_storage.shape = (obl_shape_object*)
+    malloc(sizeof(obl_shape_object));
+  shape.internal_storage.shape->storage_format = OBL_INTERNAL_INTEGER;
+
   output = obl_read_integer(&shape, readable);
   CU_ASSERT(fclose(readable) == 0);
   CU_ASSERT(output != NULL);

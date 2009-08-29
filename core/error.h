@@ -17,6 +17,7 @@
 typedef enum {
   OK,
   OUT_OF_MEMORY,
+  UNABLE_TO_READ_FILE,
   UNABLE_TO_OPEN_FILE
 } error_code;
 
