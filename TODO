@@ -1,0 +1,49 @@
+Copyright (C) 2009 by Ashley J. Wilson and Roger E. Ostrander.
+This software is licensed as described in the file COPYING in the root directory
+of this distribution.
+
+A rough timeline of the tasks to finish before we see release, large and small.
+
+# Environment and Data Structures
+
+* An LRU cache for objects to live in while resident in memory.
+- error handling and reporting system.
+- include a logging system.
+- make the SConstruct files a little more cross-platform.
+- obl_database struct (a place for the cache, logger, and error handlers to
+   live).
+- the rest of the obl_object internal format structs.
+- manual creation functions for obl_shape objects.
+- conversion functions from C data types to obl_object types.
+
+# Primitive I/O
+
+* read integer objects.
+- read/write the rest of the single-word object formats.
+- read/write slotted objects.
+- read/write fixed objects and Unicode strings.
+- read/write chunks and manipulate chunked objects.
+- read/write tree pages.
+- read/write arbitrary objects by reading the shape word and delegating to one
+   of the other object-reading functions.
+- implement the address map with tree pages.
+- implement the address allocator.
+- bootstrap new obl_databases by writing the root object.
+
+# Advanced I/O
+
+- write the transaction mechanism.
+
+# Compound object interfaces
+
+- implement the index object, probably as a generalization of the B+ tree
+   address map.
+- design high-level set and dictionary interfaces that use indices to organize
+   references to other objects.
+- write the shape index.
+
+# Binding for VisualWorks Smalltalk
+
+# Binding for Ruby
+
+# Version 1.0 Release
