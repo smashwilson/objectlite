@@ -8,7 +8,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
 
 * An LRU cache for objects to live in while resident in memory.
 - error handling and reporting system.
-- include a logging system.
+* include a logging system.
 - make the SConstruct files a little more cross-platform.
 - obl_database struct (a place for the cache, logger, and error handlers to
    live).
