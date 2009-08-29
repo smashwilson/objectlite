@@ -9,10 +9,10 @@
 #ifndef IO_H
 #define IO_H
 
+#include <stdio.h>
+
 #include "platform.h"
 #include "object.h"
-
-#include <stdio.h>
 
 /*
  * Signature of a function that reads and populates an object's internal state.

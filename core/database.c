@@ -8,6 +8,7 @@
  */
 
 #include "database.h"
+#include "log.h"
 #include "constants.h"
 
 #include <stdio.h>
@@ -60,6 +61,8 @@ void obl_clear_error(obl_database *database)
 
 void obl_report_error(obl_database *database, error_code code, char *message)
 {
+  OBL_ERROR(database, message);
+
   if( database == NULL ) {
     fprintf(stderr, "Unable to report error \"%s\":\n", message);
     fprintf(stderr, "No database structure available to report it in.\n");

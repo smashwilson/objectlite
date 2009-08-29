@@ -10,16 +10,19 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+struct _obl_database;
+typedef struct _obl_database obl_database;
+
 #include "cache.h"
 #include "log.h"
 #include "error.h"
 
-typedef struct {
+struct _obl_database {
   char *filename;
   obl_cache *cache;
   obl_log_configuration log_config;
   error last_error;
-} obl_database;
+};
 
 /*
  * Allocate structures for a new ObjectLite database interface layer, using all

@@ -10,6 +10,10 @@
 
 #include "cache.h"
 
+#include "log.h"
+#include "error.h"
+#include "database.h"
+
 /*
  * Internal functions prototypes.
  */
@@ -36,7 +40,6 @@ obl_cache *obl_cache_create(int bucket_count, int max_size)
 
   cache = (obl_cache*) malloc(sizeof(obl_cache));
   if( cache == NULL ) {
-    /* TODO: Note error somehow */
     return NULL;
   }
   cache->max_size = max_size;
@@ -46,7 +49,6 @@ obl_cache *obl_cache_create(int bucket_count, int max_size)
   /* Allocate the cache buckets and initialize them to NULL. */
   cache->buckets = (obl_cache_entry**) malloc(sizeof(obl_cache_entry*) * cache->bucket_count);
   if( cache->buckets == NULL ) {
-    /* TODO: Note error somehow */
     free(cache);
     return NULL;
   }
@@ -94,7 +96,8 @@ void obl_cache_insert(obl_cache *cache, obl_object *object)
 
   entry = (obl_cache_entry*) malloc(sizeof(obl_cache_entry));
   if( entry == NULL ) {
-    /* TODO: Note error */
+    obl_report_error(cache->database, OUT_OF_MEMORY,
+                     "Unable to allocate cache entry.");
     return ;
   }
   entry->object = object;
@@ -102,7 +105,8 @@ void obl_cache_insert(obl_cache *cache, obl_object *object)
 
   age = (obl_cache_age_entry*) malloc(sizeof(obl_cache_age_entry));
   if( entry == NULL ) {
-    /* TODO: Note error */
+    obl_report_error(cache->database, OUT_OF_MEMORY,
+                     "Unable to allocate cache age list entry.");
     return ;
   }
   age->entry = entry;

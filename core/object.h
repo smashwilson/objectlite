@@ -11,7 +11,8 @@
 
 #include <stdint.h>
 
-#include "constants.h"
+struct _obl_object;
+typedef struct _obl_object obl_object;
 
 /*
  * Used to specify a physical word address within the .obl file.
@@ -24,12 +25,8 @@ typedef uint32_t obl_physical_address;
  */
 typedef uint32_t obl_logical_address;
 
-/*
- * Forward declaration of the _obl_object struct and its typedef, because many
- * of these structures are recursive.
- */
-struct _obl_object;
-typedef struct _obl_object obl_object;
+#include "constants.h"
+#include "database.h"
 
 /*
  * Shape object: a Class object which specifies how to interpret any object
@@ -93,6 +90,7 @@ struct _obl_object {
     obl_integer_object *integer;
     obl_boolean_object *boolean;
   } internal_storage;
+  obl_database *database;
 };
 
 #endif

@@ -13,13 +13,17 @@
 
 #include <stdlib.h>
 
-#include "object.h"
+struct _obl_cache;
+typedef struct _obl_cache obl_cache;
 
 struct _obl_cache_entry;
 typedef struct _obl_cache_entry obl_cache_entry;
 
 struct _obl_cache_age_entry;
 typedef struct _obl_cache_age_entry obl_cache_age_entry;
+
+#include "object.h"
+#include "database.h"
 
 struct _obl_cache_entry {
   obl_object *object;
@@ -33,14 +37,15 @@ struct _obl_cache_age_entry {
   obl_cache_age_entry *younger;
 };
 
-typedef struct {
+struct _obl_cache {
   int max_size;
   int current_size;
   int bucket_count;
   obl_cache_entry **buckets;
   obl_cache_age_entry *oldest;
   obl_cache_age_entry *youngest;
-} obl_cache;
+  obl_database *database;
+};
 
 /*
  * Allocate a new cache with the provided maximum size.
