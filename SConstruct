@@ -38,5 +38,5 @@ Alias('coretest', coretest)
 
 # Additional -c clean rules. ###################################################
 
-for scratch in Glob('*~ */*~'):
+for scratch in Glob('*~') + Glob('*/*~') + Glob('*/*/*~'):
     Clean(str(scratch)[:-1], scratch)
