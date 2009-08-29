@@ -10,8 +10,18 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include "cache.h"
+
 typedef struct {
   char *filename;
+  obl_cache *cache;
+  char *error;
 } obl_database;
+
+obl_database *obl_create_database(char *filename);
+
+void obl_destroy_database(obl_database *database);
+
+int obl_database_ok(obl_database *database);
 
 #endif

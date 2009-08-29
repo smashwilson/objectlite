@@ -9,7 +9,20 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-/* The number of words to allocate to an object chunk, in words. */
+/*
+ * The number of words to allocate to an object chunk.
+ */
 #define CHUNK_SIZE 512
+
+/*
+ * Default maximum size of the cache.
+ */
+#define DEFAULT_CACHE_SIZE 1024
+
+/*
+ * Default number of buckets in the cache.  This should be set to a prime number
+ * relatively close to DEFAULT_CACHE_SIZE.
+ */
+#define DEFAULT_CACHE_BUCKETS 1021
 
 #endif
