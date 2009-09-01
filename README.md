@@ -19,7 +19,7 @@ To build from source, verify that you have the following prerequisites installed
 
  * [CUnit](http://cunit.sourgeforge.net/) for unit testing in C.
 
- * IBM's [ICU](http://site.ico-project.org/) Unicode library.
+ * IBM's [ICU](http://site.icu-project.org/) Unicode library.
 
 Have all of that?  Make sure that you have your newline settings correct (as
 [discussed here](http://github.com/guides/dealing-with-newlines-in-git)) and
