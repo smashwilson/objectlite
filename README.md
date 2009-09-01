@@ -14,19 +14,18 @@ Smalltalk (VisualWorks), Python, and possibly C# and Smalltalk (Squeak/Pharo).
 
 To build from source, verify that you have the following prerequisites installed:
 
- * The SCons build system, which we're using instead of Makefiles, available for
-   download at http://www.scons.org/ .  Scons in turn depends on Python.
+ * The [SCons build system](http://www.scons.org), which we're using instead of
+   Makefiles.  Scons in turn depends on [Python](http://www.python.org).
 
- * CUnit for unit testing in C.  Download and build from
-   http://cunit.sourceforge.net/ .
+ * [CUnit](http://cunit.sourgeforge.net/) for unit testing in C.
 
- * IBM's ICU Unicode library: http://site.icu-project.org/ .
+ * IBM's [ICU](http://site.ico-project.org/) Unicode library.
 
 Have all of that?  Make sure that you have your newline settings correct (as
-discussed at http://github.com/guides/dealing-with-newlines-in-git ) and check
-out the latest code from github by cloning the repository:
+[discussed here](http://github.com/guides/dealing-with-newlines-in-git)) and
+check out the latest code from github by cloning the repository:
 
-git clone git://github.com/smashwilson/objectlite.git
+`git clone git://github.com/smashwilson/objectlite.git`
 
 Now enter the root directory of the git repository and type "scons".  Did that
 work?  No?  Well, we're working on that.  If it did, you could run the
