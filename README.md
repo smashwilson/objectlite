@@ -17,7 +17,7 @@ To build from source, verify that you have the following prerequisites installed
  * The [SCons build system](http://www.scons.org), which we're using instead of
    Makefiles.  Scons in turn depends on [Python](http://www.python.org).
 
- * [CUnit](http://cunit.sourgeforge.net/) for unit testing in C.
+ * [CUnit](http://cunit.sourceforge.net/) for unit testing in C.
 
  * IBM's [ICU](http://site.icu-project.org/) Unicode library.
 
