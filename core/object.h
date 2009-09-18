@@ -11,12 +11,16 @@
 
 #include <stdint.h>
 
+#include "utypes.h"
+
+/*
+ * Forward declarations.
+ */
+
 struct _obl_object;
 typedef struct _obl_object obl_object;
 
-/*
- * Used to specify a physical word address within the .obl file.
- */
+/* Used to specify a physical word address within the .obl file. */
 typedef uint32_t obl_physical_address;
 
 /* 
@@ -29,51 +33,167 @@ typedef uint32_t obl_logical_address;
 #include "database.h"
 
 /*
- * Shape object: a Class object which specifies how to interpret any object
- * whose header word points to it.  Most significant is the storage format, an
- * index into the global obl_read_functions array defined in "io.h".
+ * Possible values for kinds of internal storage.  Each of these corresponds to
+ * a function in obl_read_functions, as defined in io.c, and an obl_shape_xxx
+ * struct defined below.
  */
-#define OBL_INTERNAL_SHAPE 0
+typedef enum {
+  SHAPE, SLOTTED, FIXED, CHUNK,
+  INTEGER, FLOAT, DOUBLE,
+  CHAR, STRING,
+  BOOLEAN, NIL, STUB
+} obl_storage_type;
+
+/*
+ * Shape
+ *
+ * "Class" object which specifies how to interpret any object whose header word
+ * points to it.
+ */
 typedef struct {
+
+  /* The shape's base name, including a language-agnostic namespace prefix. */
   obl_object *name;
+
+  /* A fixed-size collection of slot names in the order that they will occur
+   * within instances.  Objects that have no slot names (such as fixed or
+   * chunked objects) will have nil here.
+   */
   obl_object *slot_names;
+
+  /* If non-nil, specifies the migration destination for instances of this
+   * shape.  Instances will be migrated to this shape on read and persisted in
+   * their new shape on write.
+   */
   obl_object *current_shape;
+
+  /* The internal storage format to be used for I/O of instances of this shape.
+   */
   uint32_t storage_format;
-} obl_shape_object;
+
+} obl_shape_storage;
 
 /*
- * Slotted object: an object that contains zero to many "slots" (more commonly
- * known as instance variables).  Each slot contains a reference to another
- * object.  The number of slots and the names of each slot are specified within
- * the object's shape.
+ * Slotted
+ *
+ * Contains zero to many "slots" (more commonly known as instance variables).
+ * Each slot contains a reference to another object.  The number of slots and
+ * the names of each slot are specified by the object's shape.
  */
-#define OBL_INTERNAL_SLOTTED 1
 typedef struct {
+
+  /* An array of object references, mapped to +slot_names+ by position. */
   obl_object *slots;
-} obl_slotted_object;
+
+} obl_slotted_storage;
 
 /*
- * Chunked object: an object that contains a variable-length collection of
- * pointers to other objects.  Stored as a singly-linked list of chunks, each of
- * which occupies exactly BLOCK_SIZE words of storage.
+ * Fixed
+ *
+ * Fixed, immutable length collection containing position-indexed references to
+ * other objects.
  */
-#define OBL_INTERNAL_CHUNK 2
-typedef struct _obl_chunked_object {
+typedef struct {
+  
+  /* The size of the collection. */
+  uint32_t length;
+
+  /* Collection payload. */
   obl_object *contents;
-  struct _obl_chunked_object *next_chunk;
-} obl_chunked_object;
+
+} obl_fixed_storage;
 
 /*
- * Integer object: a signed integer value within the range +/- 2^31 - 1.
+ * Chunk
+ *
+ * Single section of a variable-length, position-indexed collection.  Chunks act
+ * as a singly-linked list of nodes that contain batches of consecutive
+ * collection contents.
  */
-#define OBL_INTERNAL_INTEGER 3
-typedef int32_t obl_integer_object;
+typedef struct {
+
+  /* The next chunk in the list. */
+  obl_object *next;
+
+  /* The contents of this chunk. */
+  obl_object contents[CHUNK_SIZE];
+
+} obl_chunk_storage;
 
 /*
- * Boolean object: truth or falsehood.
+ * Integer
+ *
+ * A signed integer value within the range +/- 2^31 - 1.
  */
-#define OBL_INTERNAL_BOOLEAN 4
-typedef uint32_t obl_boolean_object;
+typedef int32_t obl_integer_storage;
+
+/*
+ * Float
+ *
+ * Single-precision fractional number. 
+ */
+typedef int32_t obl_float_storage;
+
+/*
+ * Double
+ *
+ * Double-precision fractional number.
+ */
+typedef double obl_double_storage;
+
+/*
+ * Char
+ *
+ * Single unicode character (not a single code point).
+ */
+typedef UChar32 obl_char_storage;
+
+/*
+ * String
+ *
+ * Length-prefixed UTF-16 string.
+ */
+typedef struct {
+
+  /* Size of the string, in code points (not in characters). */
+  uint32_t length;
+
+  /* Array of code points. */
+  UChar *contents;
+
+} obl_string_storage;
+
+/*
+ * Boolean
+ *
+ * Truth or falsehood.  Boolean objects are never instantiated: rather, the
+ * objects True and False reside at fixed logical addresses and are returned
+ * from abstract I/O functions as needed.
+ */
+typedef uint32_t obl_boolean_storage;
+
+/*
+ * Nil
+ *
+ * The null object.  Like Booleans, nil is never instantiated directly, but has
+ * one instance accessable at the logical address 0.  Actually, nil has no
+ * internal storage at all: it's represented by a null pointer in the storage
+ * field.
+ */
+typedef uint32_t obl_nil_storage;
+
+/*
+ * Stub
+ *
+ * Stand in for an object that has not yet been loaded.  The slots of objects
+ * that are too deep in the object graph to load directly are instead populated
+ * by psuedo-objects with stub storage.  Stubs contain only the logical address
+ * of the real object.
+ *
+ * Client code should never see an obl_object with stub storage, because the
+ * object access API resolves them as they are seen.
+ */
+typedef obl_logical_address obl_stub_storage;
 
 /*
  * A wrapper that contains an object's shape and internal storage.  Most
@@ -81,16 +201,40 @@ typedef uint32_t obl_boolean_object;
  * and use the functions provided here to manipulate them.
  */
 struct _obl_object {
-  obl_logical_address address;
-  obl_object *shape;
-  uint8_t internal_format;
-  union {
-    obl_shape_object *shape;
-    obl_slotted_object *slotted;
-    obl_integer_object *integer;
-    obl_boolean_object *boolean;
-  } internal_storage;
+
+  /* Database that this object is stored in, or NULL. */
   obl_database *database;
+
+  /* The logical address of this object, if one has been assigned. */
+  obl_logical_address logical_address;
+
+  /* The physical address within the database, if this instance is persisted. */
+  obl_physical_address physical_address;
+
+  /* Shape of this instance. */
+  obl_object *shape;
+
+  /* Internal data storage.  The active internal storage module is determined by
+   * the +shape+ of the instance (NULL indicates shape storage).
+   */
+  union {
+    obl_shape_storage *shape_storage;
+
+    obl_slotted_storage *slotted_storage;
+    obl_fixed_storage *fixed_storage;
+    obl_chunk_storage *chunk_storage;
+
+    obl_integer_storage *integer_storage;
+    obl_float_storage *float_storage;
+    obl_double_storage *double_storage;
+
+    obl_char_storage *char_storage;
+    obl_string_storage *string_storage;
+
+    obl_boolean_storage *boolean_storage;
+    obl_nil_storage *nil_storage;
+    obl_stub_storage *stub_storage;
+  } internal_storage;
 };
 
 #endif

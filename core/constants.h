@@ -12,7 +12,7 @@
 /*
  * The number of words to allocate to an object chunk.
  */
-#define CHUNK_SIZE 512
+#define CHUNK_SIZE 256
 
 /*
  * Default maximum size of the cache.
