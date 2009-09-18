@@ -38,10 +38,11 @@ typedef uint32_t obl_logical_address;
  * struct defined below.
  */
 typedef enum {
-  SHAPE, SLOTTED, FIXED, CHUNK,
+  SHAPE, SLOTTED, FIXED, CHUNK, TREE_PAGE,
   INTEGER, FLOAT, DOUBLE,
   CHAR, STRING,
-  BOOLEAN, NIL, STUB
+  BOOLEAN, NIL, STUB,
+  OBL_STORAGE_TYPE_MAX = STUB
 } obl_storage_type;
 
 /*
@@ -121,6 +122,24 @@ typedef struct {
 } obl_chunk_storage;
 
 /*
+ * Tree Page
+ *
+ * Building block for indices and hashes, include the address map and shape storage.  Implemented
+ * as a B+ tree.
+ */
+typedef struct {
+
+  /* Position of the page within the tree.  Leaves have a depth of 0. */
+  uint32_t depth;
+
+  /* Object pointers.  On leaves, these will be tree contents; on branches,
+   * pointers to the next level.
+   */
+  obl_object contents[CHUNK_SIZE];
+
+} obl_treepage_storage;
+
+/*
  * Integer
  *
  * A signed integer value within the range +/- 2^31 - 1.
@@ -130,16 +149,54 @@ typedef int32_t obl_integer_storage;
 /*
  * Float
  *
- * Single-precision fractional number. 
+ * Fractional number, stored in 32 bits as sign bit, exponent and mantissa.
+ * Follows the IEEE 754-1985 standard explicitly to ensure binary compatibility
+ * across compilers and architectures.  Of course, this may or may not actually
+ * correspond to a native C float for any particular build, so conversions
+ * should be done with caution.
+ *
+ * The numeric value represented can be calculated as:
+ *   (-1)^sign * 2^(exponent - 127) * (1 + mantissa)
+ * If the number is normalized (exponent == 0 and mantissa != 0), or:
+ *   (-1)^sign * 2^(-126) * (0 + mantissa)
+ * if it is denormalized.  There are other special cases for signed 0s, NaN,
+ * and the infinities which you can read about below.
+ *
+ * Reference: http://en.wikipedia.org/wiki/IEEE_754-1985#Single-precision_32-bit
  */
-typedef int32_t obl_float_storage;
+typedef struct {
+
+  /* Sign bit.  0 indicates a positive value. */
+  unsigned int sign : 1;
+
+  /* Exponent, biased with 127. */
+  unsigned int exponent : 8;
+
+  /* 1.mantissa in binary. */
+  unsigned int mantissa : 23;
+
+} obl_float_storage;
 
 /*
  * Double
  *
- * Double-precision fractional number.
+ * Double-precision floating point number, stored in 64 bits.  Storage is similar
+ * to the single-precision Float with a longer exponent and mantissa.
+ *
+ * Reference: http://en.wikipedia.org/wiki/IEEE_754-1985#Double-precision_64-bit
  */
-typedef double obl_double_storage;
+typedef struct {
+
+  /* Sign bit.  0 indicates a positive value. */
+  unsigned int sign : 1;
+
+  /* Exponent, biased with +1023 (-1022 if denormalized). */
+  unsigned int exponent : 11;
+
+  /* 1.mantissa in binary. */
+  unsigned int mantissa : 52;
+
+} obl_double_storage;
 
 /*
  * Char
@@ -223,6 +280,7 @@ struct _obl_object {
     obl_slotted_storage *slotted_storage;
     obl_fixed_storage *fixed_storage;
     obl_chunk_storage *chunk_storage;
+    obl_treepage_storage *treepage_storage;
 
     obl_integer_storage *integer_storage;
     obl_float_storage *float_storage;
@@ -236,5 +294,42 @@ struct _obl_object {
     obl_stub_storage *stub_storage;
   } internal_storage;
 };
+
+/*
+ * Translate primitive C types into their equivalent obl_object structures.
+ */
+
+/* int to INTEGER object. */
+obl_object *obl_create_integer(const int i);
+
+/* float to FLOAT object. */
+obl_object *obl_create_float(const float f);
+
+/* double to DOUBLE object. */
+obl_object *obl_create_double(const double d);
+
+/* char to CHAR object, including translation from ASCII to UTF-16. */
+obl_object *obl_create_char(const char c);
+
+/* Unicode UChar32 to CHAR object. */
+obl_object *obl_create_uchar(const UChar32 uc);
+
+/* NULL-terminated C string to UTF-16 STRING object. */
+obl_object *obl_create_string(const char *c);
+
+/* NULL-terminated unicode string to STRING object. */
+obl_object *obl_create_ustring(const UChar *uc);
+
+/* Placeholder for deferring an object load operation. */
+obl_object *obl_create_stub(const obl_logical_address address);
+
+/* Direct creation of SHAPE objects, for convenience. */
+obl_object *obl_create_shape(const char *name, const char **slot_names,
+                             const obl_storage_type type);
+
+/* Orderly obl_object deallocation, including nested structures (but not linked
+ * objects, such as the shape or slot contents).
+ */
+void obl_destroy(obl_object *o);
 
 #endif
