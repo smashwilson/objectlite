@@ -46,7 +46,7 @@ void test_cache_noncolliding(void)
   CU_ASSERT_FATAL(cache != NULL);
 
   /* o1 should be inserted in bucket 1, youngest and oldest. */
-  o1.address = (obl_logical_address) 1;
+  o1.logical_address = (obl_logical_address) 1;
   obl_cache_insert(cache, &o1);
 
   CU_ASSERT(cache->current_size == 1);
@@ -66,7 +66,7 @@ void test_cache_noncolliding(void)
   CU_ASSERT(age1->younger == NULL);
 
   /* o2 should be inserted in bucket 5 and youngest. */
-  o2.address = (obl_logical_address) 55;
+  o2.logical_address = (obl_logical_address) 55;
   obl_cache_insert(cache, &o2);
 
   CU_ASSERT(cache->current_size == 2);
@@ -99,7 +99,7 @@ void test_cache_colliding(void)
   CU_ASSERT_FATAL(cache != NULL);
 
   /* o1 should be inserted into bucket 2. */
-  o1.address = (obl_logical_address) 42;
+  o1.logical_address = (obl_logical_address) 42;
   obl_cache_insert(cache, &o1);
   ISNT_NULL(cache->buckets[2], "Unable to allocate bucket 2.");
 
@@ -110,7 +110,7 @@ void test_cache_colliding(void)
   /* o2 should also be inserted into bucket 2.  The bucket linked lists should
      be sorted, so o2 should be at the list head and o1 should be linked
      after. */
-  o2.address = (obl_logical_address) 12;
+  o2.logical_address = (obl_logical_address) 12;
   obl_cache_insert(cache, &o2);
   entry = cache->buckets[2];
   CU_ASSERT(entry->object == &o2);
@@ -121,7 +121,7 @@ void test_cache_colliding(void)
   CU_ASSERT(entry->next == NULL);
 
   /* o3 should go into bucket 2, between o2 and o1. */
-  o3.address = (obl_logical_address) 32;
+  o3.logical_address = (obl_logical_address) 32;
   obl_cache_insert(cache, &o3);
   entry = cache->buckets[2];
   CU_ASSERT(entry->object == &o2);
@@ -147,7 +147,7 @@ void test_quiet_cache_retrieval(void)
   /* Assign the objects o logical addresses of 100, 101, ... 129 and insert them
      into the cache. */
   for( index = 0; index < 30; index++ ) {
-    o[index].address = (obl_logical_address) index + 100;
+    o[index].logical_address = (obl_logical_address) index + 100;
     obl_cache_insert(cache, &o[index]);
   }
 
@@ -187,7 +187,7 @@ void test_cache_retrieval(void)
 
   /* Insert thirty objects with addresses 100 to 129. */
   for( index = 0; index < 30; index++ ) {
-    o[index].address = 100 + index;
+    o[index].logical_address = 100 + index;
     obl_cache_insert(cache, &o[index]);
   }
 
@@ -226,7 +226,7 @@ void test_cache_deletion(void)
   CU_ASSERT_FATAL(cache != NULL);
 
   for( index = 0; index < 10; index++ ) {
-    o[index].address = (obl_logical_address) 100 + index;
+    o[index].logical_address = (obl_logical_address) 100 + index;
     obl_cache_insert(cache, &o[index]);
   }
 
@@ -267,12 +267,12 @@ void test_cache_overfill(void)
   CU_ASSERT_FATAL(cache != NULL);
 
   for( index = 0; index < 100; index++ ) {
-    o[index].address = (obl_logical_address) index + 100;
+    o[index].logical_address = (obl_logical_address) index + 100;
     obl_cache_insert(cache, &o[index]);
   }
   CU_ASSERT(cache->current_size == 100);
 
-  o[100].address = (obl_logical_address) 200;
+  o[100].logical_address = (obl_logical_address) 200;
   obl_cache_insert(cache, &o[100]);
 
   CU_ASSERT(cache->current_size == 100);

@@ -11,14 +11,12 @@ import os
 env = DefaultEnvironment(ENV = os.environ, tools = ['mingw'])
 
 # Include path.
-env['CPPPATH'] = [
-'C:/CUnit-2.1-0/', 'core'
-]
+env.Append(CPPPATH = os.environ.get('INCLUDE'))
+env.Append(CPPPATH = 'core')
 
 # Library path.
-env['LIBPATH'] = [
-'C:/CUnit-2.1-0/VC8/Release - Static Lib', 'core'
-]
+env.Append(LIBPATH = os.environ.get('LIB'))
+env.Append(LIBPATH = 'core')
 
 # libobjectlite: The core library. #############################################
 corelib = StaticLibrary(

@@ -22,7 +22,7 @@
 void test_read_integer(void)
 {
   FILE *writable, *readable;
-  obl_integer_object payload = 0x11223344;
+  obl_integer_storage payload = 0x11223344;
   uint32_t netlong;
   obl_object shape;
   obl_object *output;
@@ -43,17 +43,16 @@ void test_read_integer(void)
     return ;
   }
 
-  shape.internal_storage.shape = (obl_shape_object*)
-    malloc(sizeof(obl_shape_object));
-  shape.internal_storage.shape->storage_format = OBL_INTERNAL_INTEGER;
+  shape.internal_storage.shape_storage = (obl_shape_storage*)
+    malloc(sizeof(obl_shape_storage));
+  shape.internal_storage.shape_storage->storage_format = OBL_INTEGER;
 
   output = obl_read_integer(&shape, readable);
   CU_ASSERT(fclose(readable) == 0);
   CU_ASSERT(output != NULL);
 
   CU_ASSERT(output->shape == &shape);
-  CU_ASSERT(output->internal_format == OBL_INTERNAL_INTEGER);
-  CU_ASSERT(*(output->internal_storage.integer) == 0x11223344);
+  CU_ASSERT(*(output->internal_storage.integer_storage) == 0x11223344);
 
   free(output);
 }

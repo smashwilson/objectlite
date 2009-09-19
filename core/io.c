@@ -24,35 +24,7 @@ obl_object_read_function obl_read_functions[] = {
 };
 
 obl_object *obl_read_integer(obl_object *shape, FILE *source) {
-  obl_integer_object raw;
-  obl_object *o;
-  obl_integer_object *internal;
-
-  o = malloc(sizeof(obl_object));
-  if( o == NULL ) {
-    obl_report_error(shape->database, OUT_OF_MEMORY,
-                     "Unable to allocate an integer object.");
-    return NULL;
-  }
-  o->shape = shape;
-  o->internal_format = OBL_INTERNAL_INTEGER;
-
-  if( fread(&raw, sizeof(obl_integer_object), 1, source) != 1 ) {
-    obl_report_error(shape->database, UNABLE_TO_READ_FILE,
-                     "Unable to read a file.");
-    return NULL;
-  }
-
-  internal = malloc(sizeof(obl_integer_object));
-  if( internal == NULL ) {
-    obl_report_error(shape->database, OUT_OF_MEMORY,
-                     "Unable to allocate internal object storage.");
-    return NULL;
-  }
-  *internal = (obl_integer_object) ntohl(raw);
-  o->internal_storage.integer = internal;
-
-  return o;
+  return NULL;
 }
 
 obl_object *obl_read_boolean(obl_object *shape, FILE *source) {

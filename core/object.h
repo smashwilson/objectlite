@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-#include "utypes.h"
+#include "unicode/utypes.h"
 
 /*
  * Forward declarations.
@@ -38,11 +38,11 @@ typedef uint32_t obl_logical_address;
  * struct defined below.
  */
 typedef enum {
-  SHAPE, SLOTTED, FIXED, CHUNK, TREE_PAGE,
-  INTEGER, FLOAT, DOUBLE,
-  CHAR, STRING,
-  BOOLEAN, NIL, STUB,
-  OBL_STORAGE_TYPE_MAX = STUB
+  OBL_SHAPE, OBL_SLOTTED, OBL_FIXED, OBL_CHUNK, OBL_TREEPAGE,
+  OBL_INTEGER, OBL_FLOAT, OBL_DOUBLE,
+  OBL_CHAR, OBL_STRING,
+  OBL_BOOLEAN, OBL_NIL, OBL_STUB,
+  OBL_STORAGE_TYPE_MAX = OBL_STUB
 } obl_storage_type;
 
 /*
@@ -117,7 +117,7 @@ typedef struct {
   obl_object *next;
 
   /* The contents of this chunk. */
-  obl_object contents[CHUNK_SIZE];
+  obl_object *contents[CHUNK_SIZE];
 
 } obl_chunk_storage;
 
@@ -135,7 +135,7 @@ typedef struct {
   /* Object pointers.  On leaves, these will be tree contents; on branches,
    * pointers to the next level.
    */
-  obl_object contents[CHUNK_SIZE];
+  obl_object *contents[CHUNK_SIZE];
 
 } obl_treepage_storage;
 
@@ -194,7 +194,7 @@ typedef struct {
   unsigned int exponent : 11;
 
   /* 1.mantissa in binary. */
-  unsigned int mantissa : 52;
+  unsigned long long mantissa : 52;
 
 } obl_double_storage;
 

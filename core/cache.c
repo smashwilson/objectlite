@@ -116,7 +116,7 @@ void obl_cache_insert(obl_cache *cache, obl_object *object)
 
   cache->current_size++;
 
-  bucket = bucket_for_address(cache, object->address);
+  bucket = bucket_for_address(cache, object->logical_address);
   insert_in_bucket(cache, bucket, entry);
   make_youngest(cache, age);
 
@@ -127,7 +127,7 @@ void obl_cache_insert(obl_cache *cache, obl_object *object)
 
 void obl_cache_delete(obl_cache *cache, obl_object *object)
 {
-  obl_cache_delete_at(cache, object->address);
+  obl_cache_delete_at(cache, object->logical_address);
 }
 
 void obl_cache_delete_at(obl_cache *cache, obl_logical_address address)
@@ -211,12 +211,12 @@ static void insert_in_bucket(obl_cache *cache, int bucket_index, obl_cache_entry
   obl_cache_entry *head, *current, *previous;
   obl_logical_address address;
 
-  address = entry->object->address;
+  address = entry->object->logical_address;
   head = cache->buckets[bucket_index];
   previous = NULL;
   current = head;
 
-  while( current != NULL && current->object->address <= address ) {
+  while( current != NULL && current->object->logical_address <= address ) {
     previous = current;
     current = current->next;
   }
@@ -254,8 +254,8 @@ static obl_cache_entry *lookup_address(obl_cache *cache,
   }
   current = head;
 
-  while( current != NULL && current->object->address <= address ) {
-    if( current->object->address == address ) {
+  while( current != NULL && current->object->logical_address <= address ) {
+    if( current->object->logical_address == address ) {
       return current;
     }
 
