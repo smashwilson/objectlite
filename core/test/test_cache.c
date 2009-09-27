@@ -12,14 +12,14 @@
 
 /* A macro to make cache cleanup less repetitive. */
 #define ISNT_NULL(pointer, message) \
-  if( (pointer) == NULL ) { CU_FAIL(message); obl_cache_destroy(cache); return; }
+  if( (pointer) == NULL ) { CU_FAIL(message); obl_destroy_cache(cache); return; }
 
 void test_initialize_cache(void)
 {
   obl_cache *cache;
   int bucket_index;
 
-  cache = obl_cache_create(10, 100);
+  cache = obl_create_cache(10, 100);
   CU_ASSERT_FATAL(cache != NULL);
   CU_ASSERT(cache->max_size == 100);
   CU_ASSERT(cache->current_size == 0);
@@ -32,7 +32,7 @@ void test_initialize_cache(void)
   CU_ASSERT(cache->oldest == NULL);
   CU_ASSERT(cache->youngest == NULL);
 
-  obl_cache_destroy(cache);
+  obl_destroy_cache(cache);
 }
 
 void test_cache_noncolliding(void)
@@ -42,7 +42,7 @@ void test_cache_noncolliding(void)
   obl_cache_entry *entry;
   obl_cache_age_entry *age1, *age2;
 
-  cache = obl_cache_create(10, 100);
+  cache = obl_create_cache(10, 100);
   CU_ASSERT_FATAL(cache != NULL);
 
   /* o1 should be inserted in bucket 1, youngest and oldest. */
@@ -86,7 +86,7 @@ void test_cache_noncolliding(void)
   CU_ASSERT(age1->older == NULL);
   CU_ASSERT(age1->younger == age2);
 
-  obl_cache_destroy(cache);
+  obl_destroy_cache(cache);
 }
 
 void test_cache_colliding(void)
@@ -95,7 +95,7 @@ void test_cache_colliding(void)
   obl_object o1, o2, o3;
   obl_cache_entry *entry;
 
-  cache = obl_cache_create(10, 100);
+  cache = obl_create_cache(10, 100);
   CU_ASSERT_FATAL(cache != NULL);
 
   /* o1 should be inserted into bucket 2. */
@@ -131,7 +131,7 @@ void test_cache_colliding(void)
   CU_ASSERT(entry->object == &o1);
   CU_ASSERT(entry->next == NULL);
 
-  obl_cache_destroy(cache);
+  obl_destroy_cache(cache);
 }
 
 void test_quiet_cache_retrieval(void)
@@ -141,7 +141,7 @@ void test_quiet_cache_retrieval(void)
   obl_object *result;
   int index;
 
-  cache = obl_cache_create(10, 100);
+  cache = obl_create_cache(10, 100);
   CU_ASSERT_FATAL(cache != NULL);
 
   /* Assign the objects o logical addresses of 100, 101, ... 129 and insert them
@@ -172,7 +172,7 @@ void test_quiet_cache_retrieval(void)
   CU_ASSERT(cache->youngest->entry->object == &o[29]);
   CU_ASSERT(cache->oldest->entry->object == &o[0]);
 
-  obl_cache_destroy(cache);
+  obl_destroy_cache(cache);
 }
 
 void test_cache_retrieval(void)
@@ -182,7 +182,7 @@ void test_cache_retrieval(void)
   obl_object *result;
   int index;
 
-  cache = obl_cache_create(10, 100);
+  cache = obl_create_cache(10, 100);
   CU_ASSERT_FATAL(cache != NULL);
 
   /* Insert thirty objects with addresses 100 to 129. */
@@ -211,7 +211,7 @@ void test_cache_retrieval(void)
   CU_ASSERT(cache->youngest->older->older->entry->object == &o[29]);
   CU_ASSERT(cache->oldest->entry->object == &o[1]);
 
-  obl_cache_destroy(cache);
+  obl_destroy_cache(cache);
 }
 
 void test_cache_deletion(void)
@@ -222,7 +222,7 @@ void test_cache_deletion(void)
   obl_cache_age_entry *current_age;
   int index, count;
 
-  cache = obl_cache_create(5, 100);
+  cache = obl_create_cache(5, 100);
   CU_ASSERT_FATAL(cache != NULL);
 
   for( index = 0; index < 10; index++ ) {
@@ -254,7 +254,7 @@ void test_cache_deletion(void)
   }
   CU_ASSERT(current_age == NULL);
 
-  obl_cache_destroy(cache);
+  obl_destroy_cache(cache);
 }
 
 void test_cache_overfill(void)
@@ -263,7 +263,7 @@ void test_cache_overfill(void)
   obl_object o[101];
   int index;
 
-  cache = obl_cache_create(30, 100);
+  cache = obl_create_cache(30, 100);
   CU_ASSERT_FATAL(cache != NULL);
 
   for( index = 0; index < 100; index++ ) {
@@ -283,7 +283,7 @@ void test_cache_overfill(void)
   CU_ASSERT(cache->youngest->entry->object == &o[100]);
   CU_ASSERT(cache->oldest->entry->object == &o[1]);
 
-  obl_cache_destroy(cache);
+  obl_destroy_cache(cache);
 }
 
 /*

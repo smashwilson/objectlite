@@ -50,12 +50,12 @@ struct _obl_cache {
 /*
  * Allocate a new cache with the provided maximum size.
  */
-obl_cache *obl_cache_create(int buckets_size, int max_size);
+obl_cache *obl_create_cache(int buckets_size, int max_size);
 
 /*
  * Destroy an obl_cache produced by obl_cache_create.
  */
-void obl_cache_destroy(obl_cache *cache);
+void obl_destroy_cache(obl_cache *cache);
 
 /*
  * Insert a new object into a cache, hashed by its logical address.  Mark it as

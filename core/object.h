@@ -124,8 +124,7 @@ typedef struct {
 /*
  * Tree Page
  *
- * Building block for indices and hashes, include the address map and shape storage.  Implemented
- * as a B+ tree.
+ * Building block for indices and hashes, include the address map and shape storage.
  */
 typedef struct {
 
@@ -292,7 +291,7 @@ struct _obl_object {
     obl_boolean_storage *boolean_storage;
     obl_nil_storage *nil_storage;
     obl_stub_storage *stub_storage;
-  } internal_storage;
+  } storage;
 };
 
 /*
@@ -300,36 +299,43 @@ struct _obl_object {
  */
 
 /* int to INTEGER object. */
-obl_object *obl_create_integer(const int i);
+obl_object *obl_create_integer(obl_database *d, int i);
 
 /* float to FLOAT object. */
-obl_object *obl_create_float(const float f);
+obl_object *obl_create_float(obl_database *d, float f);
 
 /* double to DOUBLE object. */
-obl_object *obl_create_double(const double d);
+obl_object *obl_create_double(obl_database *d, double dbl);
 
-/* char to CHAR object, including translation from ASCII to UTF-16. */
-obl_object *obl_create_char(const char c);
+/* char to CHAR object, including translation from US-ASCII to UTF-16. */
+obl_object *obl_create_char(obl_database *d, char c);
 
 /* Unicode UChar32 to CHAR object. */
-obl_object *obl_create_uchar(const UChar32 uc);
+obl_object *obl_create_uchar(obl_database *d, UChar32 uc);
 
 /* NULL-terminated C string to UTF-16 STRING object. */
-obl_object *obl_create_string(const char *c);
+obl_object *obl_create_string(obl_database *d, char *c, int32_t length);
 
 /* NULL-terminated unicode string to STRING object. */
-obl_object *obl_create_ustring(const UChar *uc);
+obl_object *obl_create_ustring(obl_database *d, UChar *uc, int32_t length);
 
 /* Placeholder for deferring an object load operation. */
-obl_object *obl_create_stub(const obl_logical_address address);
+obl_object *obl_create_stub(obl_database *d, obl_logical_address address);
 
 /* Direct creation of SHAPE objects, for convenience. */
-obl_object *obl_create_shape(const char *name, const char **slot_names,
-                             const obl_storage_type type);
+obl_object *obl_create_shape(obl_database *d,
+                             char *name, char **slot_names,
+                             obl_storage_type type);
+
+/* Translate obl_object structures into primitive C types. */
+
+int obl_integer_value(const obl_object *o);
+
+char *obl_string_value(const obl_object *o);
 
 /* Orderly obl_object deallocation, including nested structures (but not linked
  * objects, such as the shape or slot contents).
  */
-void obl_destroy(obl_object *o);
+void obl_destroy_object(obl_object *o);
 
 #endif

@@ -33,7 +33,7 @@ static void make_youngest(obl_cache *cache, obl_cache_age_entry *age);
  * External functions definitions.
  */
 
-obl_cache *obl_cache_create(int bucket_count, int max_size)
+obl_cache *obl_create_cache(int bucket_count, int max_size)
 {
   obl_cache *cache;
   int bucket_index;
@@ -62,7 +62,7 @@ obl_cache *obl_cache_create(int bucket_count, int max_size)
   return cache;
 }
 
-void obl_cache_destroy(obl_cache *cache)
+void obl_destroy_cache(obl_cache *cache)
 {
   int bucket_index;
   obl_cache_entry *current, *previous;

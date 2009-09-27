@@ -21,14 +21,13 @@ env.Append(LIBPATH = 'core')
 # libobjectlite: The core library. #############################################
 corelib = StaticLibrary(
     'core/objectlite',
-    Glob('core/*.c'),
-    LIBS = ['ws2_32'])
+    Glob('core/*.c'))
 
 # unittests: Unit testing suite for libobjectlite. #############################
 coretest = Program(
     'unittests',
     Glob('core/test/*.c'),
-    LIBS = ['objectlite', 'cunit', 'ws2_32'])
+    LIBS = ['objectlite', 'cunit', 'ws2_32', 'icuuc'])
 
 # Alias directives for common configurations. ##################################
 Alias('corelib', corelib)

@@ -18,14 +18,15 @@ typedef enum {
   OK,
   OUT_OF_MEMORY,
   UNABLE_TO_READ_FILE,
-  UNABLE_TO_OPEN_FILE
+  UNABLE_TO_OPEN_FILE,
+  CONVERSION_ERROR
 } error_code;
 
 /*
  * A structure for storing information about an error that's occurred.
  */
 typedef struct {
-  char *message;
+  const char *message;
   error_code code;
 } error;
 
