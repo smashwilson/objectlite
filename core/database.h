@@ -21,64 +21,87 @@ typedef struct _obl_database obl_database;
 /* Fixed allocation.  These logical addresses will always resolve to universally
  * accessible, constant objects that do not reside in the database.
  */
-typedef enum {
-  /* Special constants: nil, true, and false. */
-  OBL_NIL_ADDR, OBL_TRUE_ADDR, OBL_FALSE_ADDR,
+typedef enum
+{
+    /* Special constants: nil, true, and false. */
+    OBL_NIL_ADDR,
+    OBL_TRUE_ADDR,
+    OBL_FALSE_ADDR,
 
-  /* The base Shape objects. */
-  OBL_INTEGER_SHAPE_ADDR, OBL_FLOAT_SHAPE_ADDR, OBL_DOUBLE_SHAPE_ADDR,
-  OBL_CHAR_SHAPE_ADDR, OBL_STRING_SHAPE_ADDR,
+    /* The primitive Shape objects. */
+    OBL_INTEGER_SHAPE_ADDR,
+    OBL_FLOAT_SHAPE_ADDR,
+    OBL_DOUBLE_SHAPE_ADDR,
+    OBL_CHAR_SHAPE_ADDR,
+    OBL_STRING_SHAPE_ADDR,
 
-  /* A useful constant that specifies the extent of fixed space. */
-  OBL_FIXED_ADDR_MAX
+    /* Built-in collection Shape objects. */
+    OBL_FIXED_SHAPE_ADDR,
+    OBL_CHUNK_SHAPE_ADDR,
+
+    /* Virtual Shape objects. */
+    OBL_NIL_SHAPE_ADDR,
+    OBL_BOOLEAN_SHAPE_ADDR,
+
+    /* A useful constant that specifies the extent of fixed space. */
+    OBL_FIXED_ADDR_MAX
 } obl_fixed_address;
 
-/* ObjectLite interface layer.
+/*
+ * ObjectLite interface layer.
  */
-struct _obl_database {
+struct _obl_database
+{
 
-  /* Location of the persisted database. */
-  const char *filename;
+    /* Location of the persisted database. */
+    const char *filename;
 
-  /* Object cache to prevent unnecessary address translations
-   * and support self-referential object structures.
-   */
-  obl_cache *cache;
+    /*
+     * Object cache to prevent unnecessary address translations
+     * and support self-referential object structures.
+     */
+    obl_cache *cache;
 
-  /* Fixed object space. */
-  obl_object **fixed;
+    /* Fixed object space. */
+    obl_object **fixed;
 
-  /* Logging and error structures. */
-  obl_log_configuration log_config;
-  error last_error;
+    /* Logging and error structures. */
+    obl_log_configuration log_config;
+    error last_error;
 };
 
-/* Allocate structures for a new ObjectLite database interface layer, using all
+/*
+ * Allocate structures for a new ObjectLite database interface layer, using all
  * of the default settings.  Database objects created in this manner must be
  * destroyed by +obl_destroy_database()+.
  */
 obl_database *obl_create_database(const char *filename);
 
-/* The most basic query: return an object that lives at a known logical address.
+/*
+ * The most basic query: return an object that lives at a known logical address.
  */
 obl_object *obl_at_address(obl_database *database,
-                           const obl_logical_address address);
+        const obl_logical_address address);
 
-/* Deallocate all of the resources associated with an ObjectLite database.
+/*
+ * Deallocate all of the resources associated with an ObjectLite database.
  */
 void obl_destroy_database(obl_database *database);
 
-/* Return TRUE if +database+ has no active error code, or FALSE if it does.  The
+/*
+ * Return TRUE if +database+ has no active error code, or FALSE if it does.  The
  * error status of a database may be reset using the +obl_clear_error()+
  * function.
  */
 int obl_database_ok(const obl_database *database);
 
-/* Unset any active error codes in +database+.
+/*
+ * Unset any active error codes in +database+.
  */
 void obl_clear_error(obl_database *database);
 
-/* Set the active error code in +database+.
+/*
+ * Set the active error code in +database+.
  */
 void obl_report_error(obl_database *database, error_code code, char *message);
 

@@ -26,22 +26,20 @@ CU_pSuite initialize_object_suite(void);
  */
 int main()
 {
-  if( CU_initialize_registry() != CUE_SUCCESS ) {
-    return CU_get_error();
-  }
+    if (CU_initialize_registry() != CUE_SUCCESS) {
+        return CU_get_error();
+    }
 
-  if(
-     /*  (initialize_io_suite() == NULL) || */
-     (initialize_cache_suite() == NULL) ||
-     (initialize_database_suite() == NULL) ||
-     (initialize_object_suite() == NULL)
-     ) {
+    if (
+    /*  (initialize_io_suite() == NULL) || */
+    (initialize_cache_suite() == NULL) || (initialize_database_suite() == NULL)
+            || (initialize_object_suite() == NULL)) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_run_tests();
     CU_cleanup_registry();
     return CU_get_error();
-  }
-
-  CU_basic_set_mode(CU_BRM_VERBOSE);
-  CU_basic_run_tests();
-  CU_cleanup_registry();
-  return CU_get_error();
 }

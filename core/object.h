@@ -37,12 +37,17 @@ typedef uint32_t obl_logical_address;
  * a function in obl_read_functions, as defined in io.c, and an obl_shape_xxx
  * struct defined below.
  */
-typedef enum {
-  OBL_SHAPE, OBL_SLOTTED, OBL_FIXED, OBL_CHUNK, OBL_TREEPAGE,
-  OBL_INTEGER, OBL_FLOAT, OBL_DOUBLE,
-  OBL_CHAR, OBL_STRING,
-  OBL_BOOLEAN, OBL_NIL, OBL_STUB,
-  OBL_STORAGE_TYPE_MAX = OBL_STUB
+typedef enum
+{
+    OBL_SHAPE,
+
+    OBL_SLOTTED, OBL_FIXED, OBL_CHUNK, OBL_TREEPAGE,
+
+    OBL_INTEGER, OBL_FLOAT, OBL_DOUBLE, OBL_CHAR, OBL_STRING, OBL_BOOLEAN,
+
+    OBL_NIL, OBL_STUB,
+
+    OBL_STORAGE_TYPE_MAX = OBL_STUB
 } obl_storage_type;
 
 /*
@@ -51,26 +56,27 @@ typedef enum {
  * "Class" object which specifies how to interpret any object whose header word
  * points to it.
  */
-typedef struct {
+typedef struct
+{
 
-  /* The shape's base name, including a language-agnostic namespace prefix. */
-  obl_object *name;
+    /* The shape's base name, including a language-agnostic namespace prefix. */
+    obl_object *name;
 
-  /* A fixed-size collection of slot names in the order that they will occur
-   * within instances.  Objects that have no slot names (such as fixed or
-   * chunked objects) will have nil here.
-   */
-  obl_object *slot_names;
+    /* A fixed-size collection of slot names in the order that they will occur
+     * within instances.  Objects that have no slot names (such as fixed or
+     * chunked objects) will have nil here.
+     */
+    obl_object *slot_names;
 
-  /* If non-nil, specifies the migration destination for instances of this
-   * shape.  Instances will be migrated to this shape on read and persisted in
-   * their new shape on write.
-   */
-  obl_object *current_shape;
+    /* If non-nil, specifies the migration destination for instances of this
+     * shape.  Instances will be migrated to this shape on read and persisted in
+     * their new shape on write.
+     */
+    obl_object *current_shape;
 
-  /* The internal storage format to be used for I/O of instances of this shape.
-   */
-  uint32_t storage_format;
+    /* The internal storage format to be used for I/O of instances of this shape.
+     */
+    obl_object *storage_format;
 
 } obl_shape_storage;
 
@@ -81,10 +87,11 @@ typedef struct {
  * Each slot contains a reference to another object.  The number of slots and
  * the names of each slot are specified by the object's shape.
  */
-typedef struct {
+typedef struct
+{
 
-  /* An array of object references, mapped to +slot_names+ by position. */
-  obl_object *slots;
+    /* An array of object references, mapped to +slot_names+ by position. */
+    obl_object *slots;
 
 } obl_slotted_storage;
 
@@ -94,13 +101,14 @@ typedef struct {
  * Fixed, immutable length collection containing position-indexed references to
  * other objects.
  */
-typedef struct {
-  
-  /* The size of the collection. */
-  uint32_t length;
+typedef struct
+{
 
-  /* Collection payload. */
-  obl_object *contents;
+    /* The size of the collection. */
+    uint32_t length;
+
+    /* Collection payload. */
+    obl_object **contents;
 
 } obl_fixed_storage;
 
@@ -111,13 +119,14 @@ typedef struct {
  * as a singly-linked list of nodes that contain batches of consecutive
  * collection contents.
  */
-typedef struct {
+typedef struct
+{
 
-  /* The next chunk in the list. */
-  obl_object *next;
+    /* The next chunk in the list. */
+    obl_object *next;
 
-  /* The contents of this chunk. */
-  obl_object *contents[CHUNK_SIZE];
+    /* The contents of this chunk. */
+    obl_object *contents[CHUNK_SIZE];
 
 } obl_chunk_storage;
 
@@ -126,15 +135,16 @@ typedef struct {
  *
  * Building block for indices and hashes, include the address map and shape storage.
  */
-typedef struct {
+typedef struct
+{
 
-  /* Position of the page within the tree.  Leaves have a depth of 0. */
-  uint32_t depth;
+    /* Position of the page within the tree.  Leaves have a depth of 0. */
+    uint32_t depth;
 
-  /* Object pointers.  On leaves, these will be tree contents; on branches,
-   * pointers to the next level.
-   */
-  obl_object *contents[CHUNK_SIZE];
+    /* Object pointers.  On leaves, these will be tree contents; on branches,
+     * pointers to the next level.
+     */
+    obl_object *contents[CHUNK_SIZE];
 
 } obl_treepage_storage;
 
@@ -163,16 +173,17 @@ typedef int32_t obl_integer_storage;
  *
  * Reference: http://en.wikipedia.org/wiki/IEEE_754-1985#Single-precision_32-bit
  */
-typedef struct {
+typedef struct
+{
 
-  /* Sign bit.  0 indicates a positive value. */
-  unsigned int sign : 1;
+    /* Sign bit.  0 indicates a positive value. */
+    unsigned int sign :1;
 
-  /* Exponent, biased with 127. */
-  unsigned int exponent : 8;
+    /* Exponent, biased with 127. */
+    unsigned int exponent :8;
 
-  /* 1.mantissa in binary. */
-  unsigned int mantissa : 23;
+    /* 1.mantissa in binary. */
+    unsigned int mantissa :23;
 
 } obl_float_storage;
 
@@ -184,16 +195,17 @@ typedef struct {
  *
  * Reference: http://en.wikipedia.org/wiki/IEEE_754-1985#Double-precision_64-bit
  */
-typedef struct {
+typedef struct
+{
 
-  /* Sign bit.  0 indicates a positive value. */
-  unsigned int sign : 1;
+    /* Sign bit.  0 indicates a positive value. */
+    unsigned int sign :1;
 
-  /* Exponent, biased with +1023 (-1022 if denormalized). */
-  unsigned int exponent : 11;
+    /* Exponent, biased with +1023 (-1022 if denormalized). */
+    unsigned int exponent :11;
 
-  /* 1.mantissa in binary. */
-  unsigned long long mantissa : 52;
+    /* 1.mantissa in binary. */
+    unsigned long long mantissa :52;
 
 } obl_double_storage;
 
@@ -209,13 +221,14 @@ typedef UChar32 obl_char_storage;
  *
  * Length-prefixed UTF-16 string.
  */
-typedef struct {
+typedef struct
+{
 
-  /* Size of the string, in code points (not in characters). */
-  uint32_t length;
+    /* Size of the string, in code points (not in characters). */
+    uint32_t length;
 
-  /* Array of code points. */
-  UChar *contents;
+    /* Array of code points. */
+    UChar *contents;
 
 } obl_string_storage;
 
@@ -256,46 +269,50 @@ typedef obl_logical_address obl_stub_storage;
  * external and language binding code should work with obl_object objects
  * and use the functions provided here to manipulate them.
  */
-struct _obl_object {
+struct _obl_object
+{
 
-  /* Database that this object is stored in, or NULL. */
-  obl_database *database;
+    /* Database that this object is stored in, or NULL. */
+    obl_database *database;
 
-  /* The logical address of this object, if one has been assigned. */
-  obl_logical_address logical_address;
+    /* The logical address of this object, if one has been assigned. */
+    obl_logical_address logical_address;
 
-  /* The physical address within the database, if this instance is persisted. */
-  obl_physical_address physical_address;
+    /* The physical address within the database, if this instance is persisted. */
+    obl_physical_address physical_address;
 
-  /* Shape of this instance. */
-  obl_object *shape;
+    /* Shape of this instance. */
+    obl_object *shape;
 
-  /* Internal data storage.  The active internal storage module is determined by
-   * the +shape+ of the instance (NULL indicates shape storage).
-   */
-  union {
-    obl_shape_storage *shape_storage;
+    /* Internal data storage.  The active internal storage module is determined by
+     * the +shape+ of the instance (NULL indicates shape storage).
+     */
+    union
+    {
+        obl_shape_storage *shape_storage;
 
-    obl_slotted_storage *slotted_storage;
-    obl_fixed_storage *fixed_storage;
-    obl_chunk_storage *chunk_storage;
-    obl_treepage_storage *treepage_storage;
+        obl_slotted_storage *slotted_storage;
+        obl_fixed_storage *fixed_storage;
+        obl_chunk_storage *chunk_storage;
+        obl_treepage_storage *treepage_storage;
 
-    obl_integer_storage *integer_storage;
-    obl_float_storage *float_storage;
-    obl_double_storage *double_storage;
+        obl_integer_storage *integer_storage;
+        obl_float_storage *float_storage;
+        obl_double_storage *double_storage;
 
-    obl_char_storage *char_storage;
-    obl_string_storage *string_storage;
+        obl_char_storage *char_storage;
+        obl_string_storage *string_storage;
 
-    obl_boolean_storage *boolean_storage;
-    obl_nil_storage *nil_storage;
-    obl_stub_storage *stub_storage;
-  } storage;
+        obl_boolean_storage *boolean_storage;
+        obl_nil_storage *nil_storage;
+        obl_stub_storage *stub_storage;
+    } storage;
 };
 
 /*
+ * ============================================================================
  * Translate primitive C types into their equivalent obl_object structures.
+ * ============================================================================
  */
 
 /* int to INTEGER object. */
@@ -319,19 +336,48 @@ obl_object *obl_create_string(obl_database *d, char *c, int32_t length);
 /* NULL-terminated unicode string to STRING object. */
 obl_object *obl_create_ustring(obl_database *d, UChar *uc, int32_t length);
 
+/* Fixed-size collection creation. */
+obl_object *obl_create_fixed(obl_database *d, uint32_t length);
+
 /* Placeholder for deferring an object load operation. */
 obl_object *obl_create_stub(obl_database *d, obl_logical_address address);
 
 /* Direct creation of SHAPE objects, for convenience. */
-obl_object *obl_create_shape(obl_database *d,
-                             char *name, char **slot_names,
-                             obl_storage_type type);
+obl_object *obl_create_shape(obl_database *d, char *name, char **slot_names,
+        obl_storage_type type);
 
-/* Translate obl_object structures into primitive C types. */
+/*
+ * ============================================================================
+ * Common operations on shapes and built-in collection types.
+ * ============================================================================
+ */
+
+uint32_t obl_fixed_size(obl_object *o);
+
+obl_object *obl_fixed_at(obl_object *o, const uint32_t index);
+
+void obl_fixed_at_put(obl_object *o, const uint32_t index, obl_object *value);
+
+/*
+ * ============================================================================
+ * Translate obl_object structures into primitive C types.
+ * ============================================================================
+ */
 
 int obl_integer_value(const obl_object *o);
 
-char *obl_string_value(const obl_object *o);
+/* Return the number of code points contained in the STRING object +o+. */
+size_t obl_string_size(const obl_object *o);
+
+/* Acquire at most +buffer_size+ code points contained within a STRING object
+ * +o+ into a prepared +buffer+.  Return the number of code points copied.
+ */
+size_t obl_string_value(const obl_object *o, UChar *buffer, size_t buffer_size);
+
+/* Acquire at most +buffer_size+ US-ASCII characters into +buffer+.  Return the
+ * number of code points copied.
+ */
+size_t obl_string_chars(const obl_object *o, char *buffer, size_t buffer_size);
 
 /* Orderly obl_object deallocation, including nested structures (but not linked
  * objects, such as the shape or slot contents).

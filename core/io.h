@@ -19,7 +19,8 @@
  * Each such function is provided the shape determined from the shape word and a
  * FILE* positioned immediately after the shape word.
  */
-typedef obl_object *(*obl_object_read_function)(obl_object *shape, FILE *source);
+typedef obl_object
+        * (*obl_object_read_function)(obl_object *shape, FILE *source);
 
 /* Read a single-word obl_integer_object. */
 obl_object *obl_read_integer(obl_object *shape, FILE *source);

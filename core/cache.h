@@ -25,26 +25,29 @@ typedef struct _obl_cache_age_entry obl_cache_age_entry;
 #include "object.h"
 #include "database.h"
 
-struct _obl_cache_entry {
-  obl_object *object;
-  obl_cache_entry *next;
-  obl_cache_age_entry *age_entry;
+struct _obl_cache_entry
+{
+    obl_object *object;
+    obl_cache_entry *next;
+    obl_cache_age_entry *age_entry;
 };
 
-struct _obl_cache_age_entry {
-  obl_cache_entry *entry;
-  obl_cache_age_entry *older;
-  obl_cache_age_entry *younger;
+struct _obl_cache_age_entry
+{
+    obl_cache_entry *entry;
+    obl_cache_age_entry *older;
+    obl_cache_age_entry *younger;
 };
 
-struct _obl_cache {
-  int max_size;
-  int current_size;
-  int bucket_count;
-  obl_cache_entry **buckets;
-  obl_cache_age_entry *oldest;
-  obl_cache_age_entry *youngest;
-  obl_database *database;
+struct _obl_cache
+{
+    int max_size;
+    int current_size;
+    int bucket_count;
+    obl_cache_entry **buckets;
+    obl_cache_age_entry *oldest;
+    obl_cache_age_entry *youngest;
+    obl_database *database;
 };
 
 /*
@@ -84,6 +87,7 @@ obl_object *obl_cache_get(obl_cache *cache, obl_logical_address address);
  * Query the cache for an object at a given address.  Do not modify the recency
  * list whether it is found or not.
  */
-obl_object *obl_cache_get_quietly(obl_cache *cache, obl_logical_address address);
+obl_object *
+obl_cache_get_quietly(obl_cache *cache, obl_logical_address address);
 
 #endif
