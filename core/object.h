@@ -340,10 +340,10 @@ obl_object *obl_create_char(obl_database *d, char c);
 obl_object *obl_create_uchar(obl_database *d, UChar32 uc);
 
 /* NULL-terminated C string to UTF-16 STRING object. */
-obl_object *obl_create_string(obl_database *d, char *c, int32_t length);
+obl_object *obl_create_string(obl_database *d, const char *c, int32_t length);
 
 /* NULL-terminated unicode string to STRING object. */
-obl_object *obl_create_ustring(obl_database *d, UChar *uc, int32_t length);
+obl_object *obl_create_ustring(obl_database *d, const UChar *uc, int32_t length);
 
 /* Fixed-size collection creation. */
 obl_object *obl_create_fixed(obl_database *d, uint32_t length);

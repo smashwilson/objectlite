@@ -18,9 +18,12 @@
  * ============================================================================
  */
 
-inline obl_storage_type _storage_of(const obl_object *o);
+static inline obl_storage_type _storage_of(const obl_object *o);
 
-inline obl_object *_allocate_object();
+static inline obl_object *_allocate_object(obl_database *d);
+
+static obl_object *_allocate_string(obl_database *d, UChar *uc,
+        int32_t length);
 
 /*
  * ============================================================================
@@ -38,9 +41,8 @@ obl_object *obl_create_integer(obl_database *d, int i)
         return NULL;
     }
 
-    result = _allocate_object();
+    result = _allocate_object(d);
     if (result == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
         return NULL;
     }
 
@@ -77,7 +79,7 @@ obl_object *obl_create_uchar(obl_database *d, UChar32 uc)
     return NULL;
 }
 
-obl_object *obl_create_string(obl_database *d, char *c, int32_t length)
+obl_object *obl_create_string(obl_database *d, const char *c, int32_t length)
 {
     UConverter *converter;
     int32_t output_length;
@@ -108,32 +110,24 @@ obl_object *obl_create_string(obl_database *d, char *c, int32_t length)
         return NULL;
     }
 
-    return obl_create_ustring(d, output_string, converted_length);
+    return _allocate_string(d, output_string, converted_length);
 }
 
-obl_object *obl_create_ustring(obl_database *d, UChar *uc, int32_t length)
+obl_object *obl_create_ustring(obl_database *d, const UChar *uc, int32_t length)
 {
-    obl_object *result;
-    obl_string_storage *storage;
+    UChar *copied;
+    int32_t bytes;
 
-    result = _allocate_object();
-    if (result == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
+    bytes = sizeof(UChar) * length;
+    copied = (UChar *) malloc(bytes);
+    if( copied == NULL ) {
+        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate string storage.");
         return NULL;
     }
-    storage = (obl_string_storage *) malloc(sizeof(obl_string_storage));
-    if (storage == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
-        free(result);
-        return NULL;
-    }
-    result->storage.string_storage = storage;
-    result->shape = obl_at_address(d, OBL_STRING_SHAPE_ADDR);
 
-    storage->length = (uint32_t) length;
-    storage->contents = uc;
+    memcpy(copied, uc, bytes);
 
-    return result;
+    return _allocate_string(d, copied, length);
 }
 
 obl_object *obl_create_fixed(obl_database *d, uint32_t length)
@@ -142,9 +136,8 @@ obl_object *obl_create_fixed(obl_database *d, uint32_t length)
     obl_fixed_storage *storage;
     uint32_t i;
 
-    result = _allocate_object();
+    result = _allocate_object(d);
     if (result == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
         return NULL;
     }
 
@@ -244,7 +237,7 @@ size_t obl_string_size(const obl_object *o)
 size_t obl_string_value(const obl_object *o, UChar *buffer, size_t buffer_size)
 {
     obl_string_storage *storage;
-    size_t count;
+    size_t count , bytes;
 
     /* if (_storage_of(o) != OBL_STRING) {
      return 0;
@@ -252,8 +245,9 @@ size_t obl_string_value(const obl_object *o, UChar *buffer, size_t buffer_size)
 
     storage = o->storage.string_storage;
     count = storage->length > buffer_size ? storage->length : buffer_size;
+    bytes = count * sizeof(UChar);
 
-    memcpy(buffer, o->storage.string_storage->contents, count);
+    memcpy(buffer, o->storage.string_storage->contents, bytes);
 
     return count;
 }
@@ -305,6 +299,9 @@ void obl_destroy_object(obl_object *o)
     case OBL_STRING:
         free(o->storage.string_storage->contents);
         break;
+    case OBL_FIXED:
+        free(o->storage.fixed_storage->contents);
+        break;
     }
 
     free(o);
@@ -327,11 +324,43 @@ inline obl_storage_type _storage_of(const obl_object *o)
 }
 
 /* Allocate and perform common initialization for an unpersisted obl_object. */
-inline obl_object *_allocate_object()
+inline obl_object *_allocate_object(obl_database *d)
 {
     obl_object *result = (obl_object *) malloc(sizeof(obl_object));
+
+    if (result == NULL) {
+        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
+        return NULL;
+    }
+
     result->database = NULL;
     result->logical_address = 0;
     result->physical_address = 0;
+    return result;
+}
+
+/* Allocate and perform common initialization for STRING objects. */
+static obl_object *_allocate_string(obl_database *d, UChar *uc, int32_t length)
+{
+    obl_object *result;
+    obl_string_storage *storage;
+
+    result = _allocate_object(d);
+    if (result == NULL) {
+        return NULL;
+    }
+
+    storage = (obl_string_storage *) malloc(sizeof(obl_string_storage));
+    if (storage == NULL) {
+        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
+        free(result);
+        return NULL;
+    }
+    result->storage.string_storage = storage;
+    result->shape = obl_at_address(d, OBL_STRING_SHAPE_ADDR);
+
+    storage->length = (uint32_t) length;
+    storage->contents = uc;
+
     return result;
 }
