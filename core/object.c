@@ -322,8 +322,7 @@ inline obl_storage_type _storage_of(const obl_object *o)
     if (o->shape == NULL) {
         return OBL_SHAPE;
     } else {
-        return (obl_storage_type) obl_integer_value(
-                o->shape->storage.shape_storage->storage_format);
+        return (obl_storage_type) o->shape->storage.shape_storage->storage_format;
     }
 }
 

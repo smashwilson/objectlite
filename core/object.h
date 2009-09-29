@@ -9,9 +9,11 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#include "unicode/utypes.h"
+
 #include <stdint.h>
 
-#include "unicode/utypes.h"
+#include "platform.h"
 
 /*
  * Forward declarations.
@@ -21,13 +23,13 @@ struct _obl_object;
 typedef struct _obl_object obl_object;
 
 /* Used to specify a physical word address within the .obl file. */
-typedef uint32_t obl_physical_address;
+typedef obl_address obl_physical_address;
 
 /* 
  * Used to specify the logical address of a remote object that's stored
  * elsewhere in the database.
  */
-typedef uint32_t obl_logical_address;
+typedef obl_address obl_logical_address;
 
 #include "constants.h"
 #include "database.h"
@@ -62,21 +64,24 @@ typedef struct
     /* The shape's base name, including a language-agnostic namespace prefix. */
     obl_object *name;
 
-    /* A fixed-size collection of slot names in the order that they will occur
+    /*
+     * A fixed-size collection of slot names in the order that they will occur
      * within instances.  Objects that have no slot names (such as fixed or
      * chunked objects) will have nil here.
      */
     obl_object *slot_names;
 
-    /* If non-nil, specifies the migration destination for instances of this
+    /*
+     * If non-nil, specifies the migration destination for instances of this
      * shape.  Instances will be migrated to this shape on read and persisted in
      * their new shape on write.
      */
     obl_object *current_shape;
 
-    /* The internal storage format to be used for I/O of instances of this shape.
+    /*
+     * The internal storage format to be used for I/O of instances of this shape.
      */
-    obl_object *storage_format;
+    uint32_t storage_format;
 
 } obl_shape_storage;
 
@@ -90,7 +95,11 @@ typedef struct
 typedef struct
 {
 
-    /* An array of object references, mapped to +slot_names+ by position. */
+    /*
+     * An array of object references, mapped to +slot_names+ by position.  The
+     * array size is determined by the number of slot names defined in the
+     * object's shape.
+     */
     obl_object *slots;
 
 } obl_slotted_storage;
