@@ -339,11 +339,11 @@ obl_object *obl_create_char(obl_database *d, char c);
 /* Unicode UChar32 to CHAR object. */
 obl_object *obl_create_uchar(obl_database *d, UChar32 uc);
 
-/* NULL-terminated C string to UTF-16 STRING object. */
-obl_object *obl_create_string(obl_database *d, const char *c, int32_t length);
+/* Unicode string to STRING object. */
+obl_object *obl_create_string(obl_database *d, const UChar *uc, int32_t length);
 
-/* NULL-terminated unicode string to STRING object. */
-obl_object *obl_create_ustring(obl_database *d, const UChar *uc, int32_t length);
+/* C string to UTF-16 STRING object. */
+obl_object *obl_create_cstring(obl_database *d, const char *c, int32_t length);
 
 /* Fixed-size collection creation. */
 obl_object *obl_create_fixed(obl_database *d, uint32_t length);
@@ -351,8 +351,18 @@ obl_object *obl_create_fixed(obl_database *d, uint32_t length);
 /* Placeholder for deferring an object load operation. */
 obl_object *obl_create_stub(obl_database *d, obl_logical_address address);
 
-/* Direct creation of SHAPE objects, for convenience. */
-obl_object *obl_create_shape(obl_database *d, char *name, char **slot_names,
+/* Construction of SHAPE objects from individual shape components. */
+obl_object *obl_create_shape(obl_database *d,
+        obl_object *name, obl_object *slot_names,
+        obl_storage_type type);
+
+/*
+ * Direct creation of SHAPE objects from C primitives, for convenience.  Shapes
+ * created with this function *must* be destroyed with +obl_destroy_cshape+ to
+ * deallocate internal objects.
+ */
+obl_object *obl_create_cshape(obl_database *d,
+        char *name, size_t slot_count, char **slot_names,
         obl_storage_type type);
 
 /*
@@ -361,11 +371,70 @@ obl_object *obl_create_shape(obl_database *d, char *name, char **slot_names,
  * ============================================================================
  */
 
-uint32_t obl_fixed_size(obl_object *o);
+/* FIXED objects */
 
-obl_object *obl_fixed_at(obl_object *o, const uint32_t index);
+/*
+ * Return the number of elements present in a fixed-size collection +o+.
+ */
+uint32_t obl_fixed_size(const obl_object *fixed);
 
-void obl_fixed_at_put(obl_object *o, const uint32_t index, obl_object *value);
+/*
+ * Access an element of the fixed-size collection +o+ at the zero-based index
+ * +index+.
+ */
+obl_object *obl_fixed_at(const obl_object *fixed, const uint32_t index);
+
+/*
+ * Set an element of the fixed-size collection +o+ at +index+ to point to the
+ * object +value+.
+ */
+void obl_fixed_at_put(obl_object *fixed, const uint32_t index, obl_object *value);
+
+/* STRING objects */
+
+/* Return the number of code points contained in the STRING object +o+. */
+size_t obl_string_size(const obl_object *string);
+
+/*
+ * Acquire at most +buffer_size+ US-ASCII characters into +buffer+.  Return the
+ * number of code points copied.
+ */
+size_t obl_string_chars(const obl_object *string, char *buffer, size_t buffer_size);
+
+/*
+ * Return zero if the contents of +string_a+ exactly match those of +string_b+, or
+ * nonzero if either is not a STRING or have different contents.
+ */
+int obl_string_cmp(const obl_object *string_a, const obl_object *string_b);
+
+/*
+ * Return zero if the contents of +o+ exactly match the NULL-terminated C string
+ * +match+, nonzero otherwise.
+ */
+int obl_string_ccmp(const obl_object *string, const char *match);
+
+/* SHAPE objects */
+
+/*
+ * Return the number of slots present in the shape +o+.
+ */
+uint32_t obl_shape_slotcount(const obl_object *shape);
+
+/*
+ * Return the index (zero-based) of a slot with a given name, or -1 if no slot
+ * has that name.
+ */
+int obl_shape_slotnamed(const obl_object *shape, const obl_object *name);
+
+/*
+ * Convenience wrapper for +obl_shape_slotnamed+ that uses a C string.
+ */
+int obl_shape_slotcnamed(const obl_object *shape, const char *name);
+
+/*
+ * Accessor for the storage type of a SHAPE object.
+ */
+obl_storage_type obl_shape_storagetype(const obl_object *shape);
 
 /*
  * ============================================================================
@@ -375,22 +444,21 @@ void obl_fixed_at_put(obl_object *o, const uint32_t index, obl_object *value);
 
 int obl_integer_value(const obl_object *o);
 
-/* Return the number of code points contained in the STRING object +o+. */
-size_t obl_string_size(const obl_object *o);
-
-/* Acquire at most +buffer_size+ code points contained within a STRING object
+/*
+ * Acquire at most +buffer_size+ code points contained within a STRING object
  * +o+ into a prepared +buffer+.  Return the number of code points copied.
  */
 size_t obl_string_value(const obl_object *o, UChar *buffer, size_t buffer_size);
 
-/* Acquire at most +buffer_size+ US-ASCII characters into +buffer+.  Return the
- * number of code points copied.
- */
-size_t obl_string_chars(const obl_object *o, char *buffer, size_t buffer_size);
-
-/* Orderly obl_object deallocation, including nested structures (but not linked
- * objects, such as the shape or slot contents).
+/*
+ * Orderly obl_object deallocation.
  */
 void obl_destroy_object(obl_object *o);
+
+/*
+ * Destroy full SHAPE objects, including slot names and shape name.  Created to
+ * parallel +obl_create_cshape+.
+ */
+void obl_destroy_cshape(obl_object *o);
 
 #endif

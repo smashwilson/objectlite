@@ -25,7 +25,7 @@ void test_create_integer(void)
 
     o = obl_create_integer(d, 42);
     CU_ASSERT_FATAL(o != NULL);
-    CU_ASSERT(o->database == NULL);
+    CU_ASSERT(o->database == d);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_INTEGER_SHAPE_ADDR));
     CU_ASSERT(obl_integer_value(o) == 42);
 
@@ -43,9 +43,9 @@ void test_create_string(void)
 
     d = obl_create_database("unit.obl");
 
-    o = obl_create_string(d, string, strlen(string));
+    o = obl_create_cstring(d, string, strlen(string));
     CU_ASSERT_FATAL(o != NULL);
-    CU_ASSERT(o->database == NULL);
+    CU_ASSERT(o->database == d);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_STRING_SHAPE_ADDR));
     CU_ASSERT(obl_string_size(o) == strlen(string));
 
@@ -53,6 +53,8 @@ void test_create_string(void)
     CU_ASSERT(obl_string_chars(o, buffer, obl_string_size(o))
             == obl_string_size(o));
     CU_ASSERT(strncmp(buffer, string, obl_string_size(o)) == 0);
+
+    CU_ASSERT(obl_string_ccmp(o, string) == 0);
 
     free(buffer);
     obl_destroy_object(o);
@@ -71,7 +73,7 @@ void test_create_fixed(void)
 
     o = obl_create_fixed(d, length);
     CU_ASSERT_FATAL(o != NULL);
-    CU_ASSERT(o->database == NULL);
+    CU_ASSERT(o->database == d);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_FIXED_SHAPE_ADDR));
     CU_ASSERT(obl_fixed_size(o) == length);
     CU_ASSERT(obl_fixed_at(o, 1) == obl_at_address(d, OBL_NIL_ADDR));
@@ -94,6 +96,35 @@ void test_create_fixed(void)
     obl_destroy_database(d);
 }
 
+void test_create_shape(void)
+{
+    char *slot_names[] = { "one", "two" };
+    obl_database *d;
+    obl_object *o;
+    obl_shape_storage *storage;
+
+    d = obl_create_database("unit.obl");
+
+    o = obl_create_cshape(d, "Foo", 2, slot_names, OBL_SLOTTED);
+    CU_ASSERT_FATAL(o != NULL);
+    CU_ASSERT(o->database == d);
+    CU_ASSERT(o->shape == NULL);
+
+    storage = o->storage.shape_storage;
+    CU_ASSERT_FATAL(storage != NULL);
+    CU_ASSERT(obl_fixed_size(storage->slot_names) == 2);
+    CU_ASSERT(obl_string_ccmp(obl_fixed_at(storage->slot_names, 0), "one") == 0);
+    CU_ASSERT(obl_string_ccmp(obl_fixed_at(storage->slot_names, 1), "two") == 0);
+
+    CU_ASSERT(obl_shape_slotcount(o) == 2);
+    CU_ASSERT(obl_shape_slotcnamed(o, "one") == 0);
+    CU_ASSERT(obl_shape_slotcnamed(o, "two") == 1);
+    CU_ASSERT(obl_shape_storagetype(o) == OBL_SLOTTED);
+
+    obl_destroy_cshape(o);
+    obl_destroy_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -107,11 +138,20 @@ CU_pSuite initialize_object_suite(void)
         return NULL;
     }
 
-    if ((CU_add_test(pSuite, "Create an OBL_INTEGER object.",
-            test_create_integer) == NULL) || (CU_add_test(pSuite,
-            "Create an OBL_STRING object from a C string.", test_create_string)
-            == NULL) || (CU_add_test(pSuite, "Create an OBL_FIXED collection.",
-            test_create_fixed) == NULL)) {
+    if (
+        (CU_add_test(pSuite,
+                "Create an OBL_INTEGER object.",
+                test_create_integer) == NULL) ||
+        (CU_add_test(pSuite,
+                "Create an OBL_STRING object from a C string.",
+                test_create_string) == NULL) ||
+        (CU_add_test(pSuite,
+                "Create an OBL_FIXED collection.",
+                test_create_fixed) == NULL) ||
+        (CU_add_test(pSuite,
+                "Create a shape object with convenience methods.",
+                test_create_shape) == NULL)
+    ) {
         return NULL;
     }
 
