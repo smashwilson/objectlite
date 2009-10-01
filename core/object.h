@@ -248,7 +248,12 @@ typedef struct
  * objects True and False reside at fixed logical addresses and are returned
  * from abstract I/O functions as needed.
  */
-typedef uint32_t obl_boolean_storage;
+typedef struct {
+
+    /* Truth is 1, Falsehood is 0. */
+    uint32_t value;
+
+} obl_boolean_storage;
 
 /*
  * Nil
@@ -460,5 +465,17 @@ void obl_destroy_object(obl_object *o);
  * parallel +obl_create_cshape+.
  */
 void obl_destroy_cshape(obl_object *o);
+
+/*
+ * ============================================================================
+ * Private methods that should only be called elsewhere within ObjectLite.
+ * ============================================================================
+ */
+
+/* Creates the one and only NIL instance in the database. */
+obl_object *_obl_create_nil(obl_database *d);
+
+/* Creates the only instances of true (1) and false (0). */
+obl_object *_obl_create_bool(obl_database *d, int truth);
 
 #endif

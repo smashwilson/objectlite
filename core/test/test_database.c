@@ -63,6 +63,32 @@ void test_report_error(void)
     obl_destroy_database(database);
 }
 
+void test_allocate_fixed_space(void)
+{
+    obl_database *d;
+    obl_object *o;
+
+    d = obl_create_database("foo.obl");
+    CU_ASSERT_FATAL(d != NULL);
+
+    o = obl_at_address(d, OBL_NIL_ADDR);
+    CU_ASSERT_FATAL(o != NULL);
+    CU_ASSERT(o->shape != NULL);
+    CU_ASSERT(o->shape == obl_at_address(d, OBL_NIL_SHAPE_ADDR));
+
+    o = obl_at_address(d, OBL_TRUE_ADDR);
+    CU_ASSERT_FATAL(o != NULL);
+    CU_ASSERT(o->shape != NULL);
+    CU_ASSERT(o->shape == obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR));
+
+    o = obl_at_address(d, OBL_FALSE_ADDR);
+    CU_ASSERT_FATAL(o != NULL);
+    CU_ASSERT(o->shape != NULL);
+    CU_ASSERT(o->shape == obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR));
+
+    obl_destroy_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -76,9 +102,17 @@ CU_pSuite initialize_database_suite(void)
         return NULL;
     }
 
-    if ((CU_add_test(pSuite, "Initialize the database structure.",
-            test_initialize_database) == NULL) || (CU_add_test(pSuite,
-            "Reporting and clearing errors.", test_report_error) == NULL)) {
+    if (
+        (CU_add_test(pSuite,
+                "Initialize the database structure.",
+                test_initialize_database) == NULL) ||
+        (CU_add_test(pSuite,
+                "Reporting and clearing errors.",
+                test_report_error) == NULL) ||
+        (CU_add_test(pSuite,
+                "Fixed space allocation.",
+                test_allocate_fixed_space) == NULL)
+    ) {
         return NULL;
     }
 

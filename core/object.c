@@ -275,18 +275,18 @@ obl_object *obl_fixed_at(const obl_object *fixed, const uint32_t index)
 
 void obl_fixed_at_put(obl_object *fixed, const uint32_t index, obl_object *value)
 {
-    /* if (_storage_of(o) != OBL_FIXED_STORAGE) {
-     return 0;
-     } */
+    if (_storage_of(fixed) != OBL_FIXED) {
+        return ;
+    }
 
     fixed->storage.fixed_storage->contents[index] = value;
 }
 
 size_t obl_string_size(const obl_object *string)
 {
-    /* if (_storage_of(o) != OBL_STRING) {
-     return 0;
-     } */
+    if (_storage_of(string) != OBL_STRING) {
+        return 0;
+    }
 
     return string->storage.string_storage->length;
 }
@@ -298,9 +298,9 @@ size_t obl_string_chars(const obl_object *string, char *buffer, size_t buffer_si
     uint32_t converted_length;
     UErrorCode status = U_ZERO_ERROR;
 
-    /* if (_storage_of(o) != OBL_STRING) {
-     return 0;
-     } */
+    if (_storage_of(string) != OBL_STRING) {
+        return 0;
+    }
 
     converter = ucnv_open(NULL, &status);
     if (U_FAILURE(status)) {
@@ -327,9 +327,9 @@ int obl_string_cmp(const obl_object *string_a, const obl_object *string_b)
 {
     uint32_t length;
 
-    /* if (_storage_of(string_a) != OBL_STRING || _storage_of(string_b) != OBL_STRING) {
+    if (_storage_of(string_a) != OBL_STRING || _storage_of(string_b) != OBL_STRING) {
         return 1;
-    } */
+    }
 
     length = obl_string_size(string_a);
     if (obl_string_size(string_b) != length) {
@@ -412,9 +412,9 @@ obl_storage_type obl_shape_storagetype(const obl_object *shape)
 
 int obl_integer_value(const obl_object *integer)
 {
-    /* if (_storage_of(o) != OBL_INTEGER) {
-     return 0;
-     } */
+    if (_storage_of(integer) != OBL_INTEGER) {
+        return 0;
+    }
 
     return (int) *(integer->storage.integer_storage);
 }
@@ -424,9 +424,9 @@ size_t obl_string_value(const obl_object *string, UChar *buffer, size_t buffer_s
     obl_string_storage *storage;
     size_t count , bytes;
 
-    /* if (_storage_of(o) != OBL_STRING) {
-     return 0;
-     } */
+    if (_storage_of(string) != OBL_STRING) {
+        return 0;
+    }
 
     storage = string->storage.string_storage;
     count = storage->length > buffer_size ? storage->length : buffer_size;
@@ -463,6 +463,53 @@ void obl_destroy_cshape(obl_object *shape)
         obl_destroy_object(obl_fixed_at(storage->slot_names, i));
     }
     obl_destroy_object(storage->slot_names);
+}
+
+/*
+ * ============================================================================
+ * Private methods that should only be called elsewhere within ObjectLite.
+ * ============================================================================
+ */
+
+obl_object *_obl_create_nil(obl_database *d)
+{
+    obl_object *result, *shape;
+
+    result = _allocate_object(d);
+    if (result == NULL) {
+        return NULL;
+    }
+
+    result->shape = obl_at_address(d, OBL_NIL_SHAPE_ADDR);
+    result->storage.nil_storage = NULL;
+
+    return result;
+}
+
+obl_object *_obl_create_bool(obl_database *d, int truth)
+{
+    obl_object *result, *shape;
+    obl_boolean_storage *storage;
+
+    result = _allocate_object(d);
+    if (result == NULL) {
+        return NULL;
+    }
+
+    storage = (obl_boolean_storage*) malloc(sizeof(obl_boolean_storage));
+    if (storage == NULL) {
+        free(result);
+        obl_report_error(d, OUT_OF_MEMORY,
+                "Unable to allocate a boolean");
+        return NULL;
+    }
+
+    storage->value = truth;
+
+    result->shape = obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR);
+    result->storage.boolean_storage = storage;
+
+    return result;
 }
 
 /*
