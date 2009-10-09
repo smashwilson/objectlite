@@ -48,7 +48,7 @@ obl_object *obl_create_integer(obl_database *d, int i)
 
     storage = (obl_integer_storage *) malloc(sizeof(obl_integer_storage));
     if (storage == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }
@@ -87,7 +87,7 @@ obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uint length)
     bytes = sizeof(UChar) * (size_t) length;
     copied = (UChar *) malloc(bytes);
     if( copied == NULL ) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate string storage.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
@@ -106,15 +106,16 @@ obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uint length)
 
     converter = ucnv_open(NULL, &status);
     if (U_FAILURE(status)) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY,
-                "Unable to allocate Unicode converter.");
+        obl_report_errorf(d, OBL_CONVERSION_ERROR,
+                "Error creating Unicode converter: %s",
+                u_errorName(status));
         return NULL;
     }
 
     output_length = (size_t) length * 2;
     output_string = (UChar *) malloc(sizeof(UChar) * output_length);
     if (output_string == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate Unicode string.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
@@ -122,7 +123,9 @@ obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uint length)
             c, length, &status);
     ucnv_close(converter);
     if (U_FAILURE(status)) {
-        obl_report_error(d, OBL_CONVERSION_ERROR, "Unicode conversion failure.");
+        obl_report_errorf(d, OBL_CONVERSION_ERROR,
+                "Unicode conversion failure: %s",
+                u_errorName(status));
         free(output_string);
         return NULL;
     }
@@ -610,7 +613,7 @@ inline obl_object *_allocate_object(obl_database *d)
     obl_object *result = (obl_object *) malloc(sizeof(obl_object));
 
     if (result == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
@@ -633,7 +636,7 @@ static obl_object *_allocate_string(obl_database *d, UChar *uc, obl_uint length)
 
     storage = (obl_string_storage *) malloc(sizeof(obl_string_storage));
     if (storage == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }

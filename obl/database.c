@@ -27,7 +27,8 @@ static int _initialize_fixed_objects(obl_database *database);
 static char *error_messages[] = {
         NULL,
         "Unable to allocate an object", "Unable to read file",
-        "Unable to open file", "Error during Unicode conversion"
+        "Unable to open file", "Error during Unicode conversion",
+        "Incorrect object storage type"
 };
 
 /* External functions definitions. */
