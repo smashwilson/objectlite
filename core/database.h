@@ -84,6 +84,21 @@ obl_object *obl_at_address(obl_database *database,
         const obl_logical_address address);
 
 /*
+ * Return the single instance of +nil+.
+ */
+obl_object *obl_nil(obl_database *database);
+
+/*
+ * Return the single object representing truth.
+ */
+obl_object *obl_true(obl_database *database);
+
+/*
+ * Return the single object representing falsehood.
+ */
+obl_object *obl_false(obl_database *database);
+
+/*
  * Deallocate all of the resources associated with an ObjectLite database.
  */
 void obl_destroy_database(obl_database *database);

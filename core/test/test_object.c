@@ -76,7 +76,7 @@ void test_create_fixed(void)
     CU_ASSERT(o->database == d);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_FIXED_SHAPE_ADDR));
     CU_ASSERT(obl_fixed_size(o) == length);
-    CU_ASSERT(obl_fixed_at(o, 1) == obl_at_address(d, OBL_NIL_ADDR));
+    CU_ASSERT(obl_fixed_at(o, 1) == obl_nil(d));
 
     items[0] = obl_create_integer(d, 100);
     items[1] = obl_create_integer(d, 101);

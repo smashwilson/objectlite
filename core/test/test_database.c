@@ -75,16 +75,19 @@ void test_allocate_fixed_space(void)
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->shape != NULL);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_NIL_SHAPE_ADDR));
+    CU_ASSERT(o == obl_nil(d));
 
     o = obl_at_address(d, OBL_TRUE_ADDR);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->shape != NULL);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR));
+    CU_ASSERT(o == obl_true(d));
 
     o = obl_at_address(d, OBL_FALSE_ADDR);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->shape != NULL);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR));
+    CU_ASSERT(o == obl_false(d));
 
     obl_destroy_database(d);
 }

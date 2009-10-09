@@ -160,7 +160,7 @@ obl_object *obl_create_fixed(obl_database *d, uint32_t length)
     }
 
     for (i = 0; i < length; i++) {
-        storage->contents[i] = obl_at_address(d, OBL_NIL_ADDR);
+        storage->contents[i] = obl_nil(d);
     }
 
     return result;
@@ -193,7 +193,7 @@ obl_object *obl_create_shape(obl_database *d,
 
     storage->name = name;
     storage->slot_names = slot_names;
-    storage->current_shape = obl_at_address(d, OBL_NIL_ADDR);
+    storage->current_shape = obl_nil(d);
     storage->storage_format = (uint32_t) type;
     result->storage.shape_storage = storage;
 

@@ -66,6 +66,21 @@ obl_object *obl_at_address(obl_database *database,
     return NULL;
 }
 
+obl_object *obl_nil(obl_database *database)
+{
+    return obl_at_address(database, OBL_NIL_ADDR);
+}
+
+obl_object *obl_true(obl_database *database)
+{
+    return obl_at_address(database, OBL_TRUE_ADDR);
+}
+
+obl_object *obl_false(obl_database *database)
+{
+    return obl_at_address(database, OBL_FALSE_ADDR);
+}
+
 void obl_destroy_database(obl_database *database)
 {
     int i;
