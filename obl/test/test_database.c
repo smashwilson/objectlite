@@ -47,24 +47,24 @@ void test_report_error(void)
     CU_ASSERT_FATAL(database != NULL);
     CU_ASSERT(obl_database_ok(database));
 
-    obl_report_error(database, OUT_OF_MEMORY, "A sample error message.");
+    obl_report_error(database, OBL_OUT_OF_MEMORY, "A sample error message.");
 
     CU_ASSERT(!obl_database_ok(database));
     CU_ASSERT(strcmp(database->last_error.message, "A sample error message.")
             == 0);
-    CU_ASSERT(database->last_error.code == OUT_OF_MEMORY);
+    CU_ASSERT(database->last_error.code == OBL_OUT_OF_MEMORY);
 
     obl_clear_error(database);
 
     CU_ASSERT(obl_database_ok(database));
     CU_ASSERT(database->last_error.message == NULL);
-    CU_ASSERT(database->last_error.code == OK);
+    CU_ASSERT(database->last_error.code == OBL_OK);
 
-    obl_report_error(database, OUT_OF_MEMORY, NULL);
+    obl_report_error(database, OBL_OUT_OF_MEMORY, NULL);
     CU_ASSERT(strcmp(database->last_error.message, "Unable to allocate an object") == 0);
 
     obl_clear_error(database);
-    obl_report_errorf(database, OUT_OF_MEMORY, "%d - %d - %d", 10, 20, 30);
+    obl_report_errorf(database, OBL_OUT_OF_MEMORY, "%d - %d - %d", 10, 20, 30);
     CU_ASSERT(strcmp(database->last_error.message, "10 - 20 - 30") == 0);
 
     obl_destroy_database(database);

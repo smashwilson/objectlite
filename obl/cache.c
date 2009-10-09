@@ -98,7 +98,7 @@ void obl_cache_insert(obl_cache *cache, obl_object *object)
 
     entry = (obl_cache_entry*) malloc(sizeof(obl_cache_entry));
     if (entry == NULL) {
-        obl_report_error(cache->database, OUT_OF_MEMORY,
+        obl_report_error(cache->database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate cache entry.");
         return;
     }
@@ -107,7 +107,7 @@ void obl_cache_insert(obl_cache *cache, obl_object *object)
 
     age = (obl_cache_age_entry*) malloc(sizeof(obl_cache_age_entry));
     if (entry == NULL) {
-        obl_report_error(cache->database, OUT_OF_MEMORY,
+        obl_report_error(cache->database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate cache age list entry.");
         return;
     }

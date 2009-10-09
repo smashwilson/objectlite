@@ -37,7 +37,7 @@ obl_object *obl_create_integer(obl_database *d, int i)
     obl_integer_storage *storage;
 
     if (i < INT32_MIN || i > INT32_MAX) {
-        obl_report_error(d, CONVERSION_ERROR, "Integer out of range.");
+        obl_report_error(d, OBL_CONVERSION_ERROR, "Integer out of range.");
         return NULL;
     }
 
@@ -48,7 +48,7 @@ obl_object *obl_create_integer(obl_database *d, int i)
 
     storage = (obl_integer_storage *) malloc(sizeof(obl_integer_storage));
     if (storage == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
         free(result);
         return NULL;
     }
@@ -87,7 +87,7 @@ obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uint length)
     bytes = sizeof(UChar) * (size_t) length;
     copied = (UChar *) malloc(bytes);
     if( copied == NULL ) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate string storage.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate string storage.");
         return NULL;
     }
 
@@ -106,7 +106,7 @@ obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uint length)
 
     converter = ucnv_open(NULL, &status);
     if (U_FAILURE(status)) {
-        obl_report_error(d, OUT_OF_MEMORY,
+        obl_report_error(d, OBL_OUT_OF_MEMORY,
                 "Unable to allocate Unicode converter.");
         return NULL;
     }
@@ -114,7 +114,7 @@ obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uint length)
     output_length = (size_t) length * 2;
     output_string = (UChar *) malloc(sizeof(UChar) * output_length);
     if (output_string == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate Unicode string.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate Unicode string.");
         return NULL;
     }
 
@@ -122,7 +122,7 @@ obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uint length)
             c, length, &status);
     ucnv_close(converter);
     if (U_FAILURE(status)) {
-        obl_report_error(d, CONVERSION_ERROR, "Unicode conversion failure.");
+        obl_report_error(d, OBL_CONVERSION_ERROR, "Unicode conversion failure.");
         free(output_string);
         return NULL;
     }
@@ -143,7 +143,7 @@ obl_object *obl_create_fixed(obl_database *d, obl_uint length)
 
     storage = (obl_fixed_storage *) malloc(sizeof(obl_fixed_storage));
     if (storage == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
         free(result);
         return NULL;
     }
@@ -153,7 +153,7 @@ obl_object *obl_create_fixed(obl_database *d, obl_uint length)
     storage->length = length;
     storage->contents = (obl_object **) malloc(sizeof(obl_object*) * length);
     if (storage->contents == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
         free(result);
         free(storage);
         return NULL;
@@ -181,7 +181,7 @@ obl_object *obl_create_slotted(obl_object *shape)
 
     storage = (obl_slotted_storage*) malloc(sizeof(obl_slotted_storage));
     if (storage == NULL) {
-        obl_report_error(shape->database, OUT_OF_MEMORY,
+        obl_report_error(shape->database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate an object.");
         free(result);
         return NULL;
@@ -192,7 +192,7 @@ obl_object *obl_create_slotted(obl_object *shape)
     slot_count = obl_shape_slotcount(shape);
     slots = (obl_object **) malloc(sizeof(obl_object*) * slot_count);
     if (slots == NULL) {
-        obl_report_error(shape->database, OUT_OF_MEMORY,
+        obl_report_error(shape->database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate an object.");
         free(result);
         free(storage);
@@ -221,7 +221,7 @@ obl_object *obl_create_shape(obl_database *d,
 
     storage = (obl_shape_storage*) malloc(sizeof(obl_shape_storage));
     if (storage == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
         free(result);
         return NULL;
     }
@@ -246,13 +246,13 @@ obl_object *obl_create_cshape(obl_database *d,
 
     name_ob = obl_create_cstring(d, name, strlen(name));
     if (name_ob == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a shape name.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a shape name.");
         return NULL;
     }
     slots_ob = obl_create_fixed(d, slot_count);
     if (slots_ob == NULL) {
         obl_destroy_object(name_ob);
-        obl_report_error(d, OUT_OF_MEMORY,
+        obl_report_error(d, OBL_OUT_OF_MEMORY,
                 "Unable to allocate a shape's slot names.");
         return NULL;
     }
@@ -265,7 +265,7 @@ obl_object *obl_create_cshape(obl_database *d,
             }
             obl_destroy_object(slots_ob);
             obl_destroy_object(name_ob);
-            obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a slot name.");
+            obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a slot name.");
             return NULL;
         }
         obl_fixed_at_put(slots_ob, i, slot_name_ob);
@@ -278,7 +278,7 @@ obl_object *obl_create_cshape(obl_database *d,
         }
         obl_destroy_object(slots_ob);
         obl_destroy_object(name_ob);
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate the shape itself.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate the shape itself.");
         return NULL;
     }
 
@@ -340,7 +340,7 @@ obl_uint obl_string_chars(const obl_object *string, char *buffer, size_t buffer_
 
     converter = ucnv_open(NULL, &status);
     if (U_FAILURE(status)) {
-        obl_report_error(string->database, OUT_OF_MEMORY,
+        obl_report_error(string->database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate Unicode converter.");
         return 0;
     }
@@ -352,7 +352,7 @@ obl_uint obl_string_chars(const obl_object *string, char *buffer, size_t buffer_
     ucnv_close(converter);
 
     if (U_FAILURE(status)) {
-        obl_report_error(string->database, CONVERSION_ERROR,
+        obl_report_error(string->database, OBL_CONVERSION_ERROR,
                 "Unable to convert string from UTF-16.");
     }
 
@@ -385,7 +385,7 @@ int obl_string_ccmp(const obl_object *string, const char *match)
 
     temp = obl_create_cstring(string->database, match, strlen(match));
     if (temp == NULL) {
-        obl_report_error(string->database, OUT_OF_MEMORY,
+        obl_report_error(string->database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate a string for comparison");
         return -1;
     }
@@ -570,7 +570,7 @@ obl_object *_obl_create_bool(obl_database *d, int truth)
     storage = (obl_boolean_storage*) malloc(sizeof(obl_boolean_storage));
     if (storage == NULL) {
         free(result);
-        obl_report_error(d, OUT_OF_MEMORY,
+        obl_report_error(d, OBL_OUT_OF_MEMORY,
                 "Unable to allocate a boolean");
         return NULL;
     }
@@ -610,7 +610,7 @@ inline obl_object *_allocate_object(obl_database *d)
     obl_object *result = (obl_object *) malloc(sizeof(obl_object));
 
     if (result == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
         return NULL;
     }
 
@@ -633,7 +633,7 @@ static obl_object *_allocate_string(obl_database *d, UChar *uc, obl_uint length)
 
     storage = (obl_string_storage *) malloc(sizeof(obl_string_storage));
     if (storage == NULL) {
-        obl_report_error(d, OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
         free(result);
         return NULL;
     }

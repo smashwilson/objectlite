@@ -16,11 +16,11 @@
  */
 typedef enum
 {
-    OK,
-    OUT_OF_MEMORY,
-    UNABLE_TO_READ_FILE,
-    UNABLE_TO_OPEN_FILE,
-    CONVERSION_ERROR
+    OBL_OK,
+    OBL_OUT_OF_MEMORY,
+    OBL_UNABLE_TO_READ_FILE,
+    OBL_UNABLE_TO_OPEN_FILE,
+    OBL_CONVERSION_ERROR
 } error_code;
 
 /*

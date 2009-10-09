@@ -48,14 +48,14 @@ obl_database *obl_create_database(const char *filename)
 
     cache = obl_create_cache(DEFAULT_CACHE_BUCKETS, DEFAULT_CACHE_SIZE);
     if (cache == NULL) {
-        obl_report_error(database, OUT_OF_MEMORY, "Unable to allocate cache.");
+        obl_report_error(database, OBL_OUT_OF_MEMORY, "Unable to allocate cache.");
         free(database);
         return NULL;
     }
     database->cache = cache;
 
     if (_initialize_fixed_objects(database)) {
-        obl_report_error(database, OUT_OF_MEMORY,
+        obl_report_error(database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate fixed space.");
         obl_destroy_cache(database->cache);
         free(database);
@@ -118,7 +118,7 @@ void obl_destroy_database(obl_database *database)
 
 int obl_database_ok(const obl_database *database)
 {
-    return database->last_error.code == OK;
+    return database->last_error.code == OBL_OK;
 }
 
 void obl_clear_error(obl_database *database)
@@ -127,7 +127,7 @@ void obl_clear_error(obl_database *database)
         free(database->last_error.message);
     }
     database->last_error.message = NULL;
-    database->last_error.code = OK;
+    database->last_error.code = OBL_OK;
 }
 
 void obl_report_error(obl_database *database, error_code code, const char *message)

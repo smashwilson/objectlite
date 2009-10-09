@@ -12,26 +12,26 @@ env = DefaultEnvironment(ENV = os.environ, tools = ['mingw'])
 
 # Include path.
 env.Append(CPPPATH = os.environ.get('INCLUDE'))
-env.Append(CPPPATH = ';core')
+env.Append(CPPPATH = ';obl')
 
 # Library path.
 env.Append(LIBPATH = os.environ.get('LIB'))
-env.Append(LIBPATH = ';core')
+env.Append(LIBPATH = ';obl')
 
 # libobjectlite: The core library. #############################################
-corelib = StaticLibrary(
-    'core/objectlite',
-    Glob('core/*.c'))
+obllib = StaticLibrary(
+    'obl/objectlite',
+    Glob('obl/*.c'))
 
 # unittests: Unit testing suite for libobjectlite. #############################
-coretest = Program(
+obltest = Program(
     'unittests',
-    Glob('core/test/*.c'),
+    Glob('obl/test/*.c'),
     LIBS = ['objectlite', 'cunit', 'ws2_32', 'icuuc'])
 
 # Alias directives for common configurations. ##################################
-Alias('corelib', corelib)
-Alias('coretest', coretest)
+Alias('lib', obllib)
+Alias('test', obltest)
 
 # Additional -c clean rules. ###################################################
 
