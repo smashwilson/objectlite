@@ -14,12 +14,21 @@
 #include "object.h"
 
 #include <stdio.h>
+#include <stdarg.h>
 
 /* Internal function prototypes. */
 
 static inline int _is_fixed_address(const obl_logical_address addr);
 
 static int _initialize_fixed_objects(obl_database *database);
+
+/* Error codes: one for each error_code in error.h. */
+
+static char *error_messages[] = {
+        NULL,
+        "Unable to allocate an object", "Unable to read file",
+        "Unable to open file", "Error during Unicode conversion"
+};
 
 /* External functions definitions. */
 
@@ -34,6 +43,7 @@ obl_database *obl_create_database(const char *filename)
     }
 
     database->filename = filename;
+    database->last_error.message = NULL;
     obl_clear_error(database);
 
     cache = obl_create_cache(DEFAULT_CACHE_BUCKETS, DEFAULT_CACHE_SIZE);
@@ -99,6 +109,10 @@ void obl_destroy_database(obl_database *database)
         }
     }
 
+    if (database->last_error.message != NULL) {
+        free(database->last_error.message);
+    }
+
     free(database);
 }
 
@@ -109,12 +123,17 @@ int obl_database_ok(const obl_database *database)
 
 void obl_clear_error(obl_database *database)
 {
+    if (database->last_error.message != NULL) {
+        free(database->last_error.message);
+    }
     database->last_error.message = NULL;
     database->last_error.code = OK;
 }
 
-void obl_report_error(obl_database *database, error_code code, char *message)
+void obl_report_error(obl_database *database, error_code code, const char *message)
 {
+    char *buffer;
+    size_t message_size;
     OBL_ERROR(database, message);
 
     if (database == NULL) {
@@ -123,8 +142,38 @@ void obl_report_error(obl_database *database, error_code code, char *message)
         return;
     }
 
-    database->last_error.message = message;
+    if (message != NULL) {
+        message_size = strlen(message);
+        buffer = (char*) malloc(message_size);
+        memcpy(buffer, message, message_size);
+
+        database->last_error.message = buffer;
+    } else {
+        database->last_error.message = error_messages[code];
+    }
     database->last_error.code = code;
+}
+
+void obl_report_errorf(obl_database *database, error_code code,
+        const char *format, ...)
+{
+    va_list args;
+    size_t required_size;
+    char *buffer;
+
+    /* Include the terminating NULL byte. */
+    va_start(args, format);
+    required_size = vsnprintf(NULL, 0, format, args) + 1;
+    va_end(args);
+
+    va_start(args, format);
+    buffer = (char*) malloc(required_size);
+    vsnprintf(buffer, required_size, format, args);
+    va_end(args);
+
+    obl_report_error(database, code, buffer);
+
+    free(buffer);
 }
 
 /* Internal function implementations. */

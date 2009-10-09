@@ -116,8 +116,16 @@ int obl_database_ok(const obl_database *database);
 void obl_clear_error(obl_database *database);
 
 /*
- * Set the active error code in +database+.
+ * Set the active error code in +database+.  If +message+ is NULL, a default message
+ * will be used.
  */
-void obl_report_error(obl_database *database, error_code code, char *message);
+void obl_report_error(obl_database *database, error_code code,
+        const char *message);
+
+/*
+ * Format an error message with variables a la +sprintf()+ and friends.
+ */
+void obl_report_errorf(obl_database *database, error_code code,
+        const char *format, ...);
 
 #endif

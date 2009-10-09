@@ -60,6 +60,13 @@ void test_report_error(void)
     CU_ASSERT(database->last_error.message == NULL);
     CU_ASSERT(database->last_error.code == OK);
 
+    obl_report_error(database, OUT_OF_MEMORY, NULL);
+    CU_ASSERT(strcmp(database->last_error.message, "Unable to allocate an object") == 0);
+
+    obl_clear_error(database);
+    obl_report_errorf(database, OUT_OF_MEMORY, "%d - %d - %d", 10, 20, 30);
+    CU_ASSERT(strcmp(database->last_error.message, "10 - 20 - 30") == 0);
+
     obl_destroy_database(database);
 }
 

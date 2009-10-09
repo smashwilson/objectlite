@@ -28,7 +28,7 @@ typedef enum
  */
 typedef struct
 {
-    const char *message;
+    char *message;
     error_code code;
 } error;
 
