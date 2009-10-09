@@ -23,7 +23,7 @@ static inline obl_storage_type _storage_of(const obl_object *o);
 static inline obl_object *_allocate_object(obl_database *d);
 
 static obl_object *_allocate_string(obl_database *d, UChar *uc,
-        obl_uword length);
+        obl_uint length);
 
 /*
  * ============================================================================
@@ -54,7 +54,7 @@ obl_object *obl_create_integer(obl_database *d, int i)
     }
 
     result->shape = obl_at_address(d, OBL_INTEGER_SHAPE_ADDR);
-    storage->value = (obl_word) i;
+    storage->value = (obl_int) i;
     result->storage.integer_storage = storage;
     return result;
 }
@@ -79,7 +79,7 @@ obl_object *obl_create_uchar(obl_database *d, UChar32 uc)
     return NULL;
 }
 
-obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uword length)
+obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uint length)
 {
     UChar *copied;
     size_t bytes;
@@ -96,7 +96,7 @@ obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uword length
     return _allocate_string(d, copied, length);
 }
 
-obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uword length)
+obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uint length)
 {
     UConverter *converter;
     size_t output_length;
@@ -127,14 +127,14 @@ obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uword length)
         return NULL;
     }
 
-    return _allocate_string(d, output_string, (obl_uword) converted_length);
+    return _allocate_string(d, output_string, (obl_uint) converted_length);
 }
 
-obl_object *obl_create_fixed(obl_database *d, obl_uword length)
+obl_object *obl_create_fixed(obl_database *d, obl_uint length)
 {
     obl_object *result;
     obl_fixed_storage *storage;
-    obl_uword i;
+    obl_uint i;
 
     result = _allocate_object(d);
     if (result == NULL) {
@@ -170,9 +170,9 @@ obl_object *obl_create_slotted(obl_object *shape)
 {
     obl_object *result;
     obl_slotted_storage *storage;
-    obl_uword slot_count;
+    obl_uint slot_count;
     obl_object **slots;
-    obl_uword i;
+    obl_uint i;
 
     result = _allocate_object(shape->database);
     if (result == NULL) {
@@ -230,7 +230,7 @@ obl_object *obl_create_shape(obl_database *d,
     storage->name = name;
     storage->slot_names = slot_names;
     storage->current_shape = obl_nil(d);
-    storage->storage_format = (obl_uword) type;
+    storage->storage_format = (obl_uint) type;
     result->storage.shape_storage = storage;
 
     return result;
@@ -291,7 +291,7 @@ obl_object *obl_create_cshape(obl_database *d,
  * ============================================================================
  */
 
-obl_uword obl_fixed_size(const obl_object *fixed)
+obl_uint obl_fixed_size(const obl_object *fixed)
 {
     /* if (_storage_of(o) != OBL_FIXED_STORAGE) {
      return 0;
@@ -300,7 +300,7 @@ obl_uword obl_fixed_size(const obl_object *fixed)
     return fixed->storage.fixed_storage->length;
 }
 
-obl_object *obl_fixed_at(const obl_object *fixed, const obl_uword index)
+obl_object *obl_fixed_at(const obl_object *fixed, const obl_uint index)
 {
     /* if (_storage_of(o) != OBL_FIXED_STORAGE) {
      return 0;
@@ -309,7 +309,7 @@ obl_object *obl_fixed_at(const obl_object *fixed, const obl_uword index)
     return fixed->storage.fixed_storage->contents[index];
 }
 
-void obl_fixed_at_put(obl_object *fixed, const obl_uword index, obl_object *value)
+void obl_fixed_at_put(obl_object *fixed, const obl_uint index, obl_object *value)
 {
     if (_storage_of(fixed) != OBL_FIXED) {
         return ;
@@ -327,11 +327,11 @@ size_t obl_string_size(const obl_object *string)
     return string->storage.string_storage->length;
 }
 
-obl_uword obl_string_chars(const obl_object *string, char *buffer, size_t buffer_size)
+obl_uint obl_string_chars(const obl_object *string, char *buffer, size_t buffer_size)
 {
     obl_string_storage *storage;
     UConverter *converter;
-    obl_uword converted_length;
+    obl_uint converted_length;
     UErrorCode status = U_ZERO_ERROR;
 
     if (_storage_of(string) != OBL_STRING) {
@@ -361,7 +361,7 @@ obl_uword obl_string_chars(const obl_object *string, char *buffer, size_t buffer
 
 int obl_string_cmp(const obl_object *string_a, const obl_object *string_b)
 {
-    obl_uword length;
+    obl_uint length;
 
     if (_storage_of(string_a) != OBL_STRING || _storage_of(string_b) != OBL_STRING) {
         return 1;
@@ -395,7 +395,7 @@ int obl_string_ccmp(const obl_object *string, const char *match)
     return result;
 }
 
-obl_object *obl_slotted_at(const obl_object *slotted, const obl_uword index)
+obl_object *obl_slotted_at(const obl_object *slotted, const obl_uint index)
 {
     return slotted->storage.slotted_storage->slots[index];
 }
@@ -410,7 +410,7 @@ obl_object *obl_slotted_atcnamed(const obl_object *slotted, const char *slotname
     return obl_slotted_at(slotted, obl_shape_slotcnamed(slotted->shape, slotname));
 }
 
-void obl_slotted_at_put(obl_object *slotted, const obl_uword index,
+void obl_slotted_at_put(obl_object *slotted, const obl_uint index,
         obl_object *value)
 {
     slotted->storage.slotted_storage->slots[index] = value;
@@ -428,7 +428,7 @@ void obl_slotted_atcnamed_put(obl_object *slotted, const char *slotname,
     obl_slotted_at_put(slotted, obl_shape_slotcnamed(slotted->shape, slotname), value);
 }
 
-obl_uword obl_shape_slotcount(const obl_object *shape)
+obl_uint obl_shape_slotcount(const obl_object *shape)
 {
     if (_storage_of(shape) != OBL_SHAPE) {
         return 0;
@@ -437,10 +437,10 @@ obl_uword obl_shape_slotcount(const obl_object *shape)
     return obl_fixed_size(shape->storage.shape_storage->slot_names);
 }
 
-obl_uword obl_shape_slotnamed(const obl_object *shape, const obl_object *name)
+obl_uint obl_shape_slotnamed(const obl_object *shape, const obl_object *name)
 {
     obl_object *slots;
-    obl_uword i;
+    obl_uint i;
 
     slots = shape->storage.shape_storage->slot_names;
     for (i = 0; i < obl_fixed_size(slots); i++) {
@@ -452,10 +452,10 @@ obl_uword obl_shape_slotnamed(const obl_object *shape, const obl_object *name)
     return -1;
 }
 
-obl_uword obl_shape_slotcnamed(const obl_object *shape, const char *name)
+obl_uint obl_shape_slotcnamed(const obl_object *shape, const char *name)
 {
     obl_object *temporary;
-    obl_uword result;
+    obl_uint result;
 
     temporary = obl_create_cstring(shape->database, name, strlen(name));
     if (temporary == NULL) {
@@ -621,7 +621,7 @@ inline obl_object *_allocate_object(obl_database *d)
 }
 
 /* Allocate and perform common initialization for STRING objects. */
-static obl_object *_allocate_string(obl_database *d, UChar *uc, obl_uword length)
+static obl_object *_allocate_string(obl_database *d, UChar *uc, obl_uint length)
 {
     obl_object *result;
     obl_string_storage *storage;

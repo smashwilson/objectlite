@@ -81,7 +81,7 @@ typedef struct
     /*
      * The internal storage format to be used for I/O of instances of this shape.
      */
-    obl_uword storage_format;
+    obl_uint storage_format;
 
 } obl_shape_storage;
 
@@ -114,7 +114,7 @@ typedef struct
 {
 
     /* The size of the collection. */
-    obl_uword length;
+    obl_uint length;
 
     /* Collection payload. */
     obl_object **contents;
@@ -148,7 +148,7 @@ typedef struct
 {
 
     /* Position of the page within the tree.  Leaves have a depth of 0. */
-    obl_uword depth;
+    obl_uint depth;
 
     /* Object pointers.  On leaves, these will be tree contents; on branches,
      * pointers to the next level.
@@ -164,7 +164,7 @@ typedef struct
  */
 typedef struct {
 
-    obl_word value;
+    obl_int value;
 
 } obl_integer_storage;
 
@@ -242,7 +242,7 @@ typedef struct
 {
 
     /* Size of the string, in code points (not in characters). */
-    obl_uword length;
+    obl_uint length;
 
     /* Array of code points. */
     UChar *contents;
@@ -259,7 +259,7 @@ typedef struct
 typedef struct {
 
     /* Truth is 1, Falsehood is 0. */
-    obl_uword value;
+    obl_uint value;
 
 } obl_boolean_storage;
 
@@ -363,13 +363,13 @@ obl_object *obl_create_char(obl_database *d, char c);
 obl_object *obl_create_uchar(obl_database *d, UChar32 uc);
 
 /* Unicode string to STRING object. */
-obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uword length);
+obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uint length);
 
 /* C string to UTF-16 STRING object. */
-obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uword length);
+obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uint length);
 
 /* Fixed-size collection creation. */
-obl_object *obl_create_fixed(obl_database *d, obl_uword length);
+obl_object *obl_create_fixed(obl_database *d, obl_uint length);
 
 /* Slotted object creation */
 obl_object *obl_create_slotted(obl_object *shape);
@@ -405,13 +405,13 @@ uint32_t obl_fixed_size(const obl_object *fixed);
  * Access an element of the fixed-size collection +o+ at the zero-based index
  * +index+.
  */
-obl_object *obl_fixed_at(const obl_object *fixed, const obl_uword index);
+obl_object *obl_fixed_at(const obl_object *fixed, const obl_uint index);
 
 /*
  * Set an element of the fixed-size collection +o+ at +index+ to point to the
  * object +value+.
  */
-void obl_fixed_at_put(obl_object *fixed, const obl_uword index, obl_object *value);
+void obl_fixed_at_put(obl_object *fixed, const obl_uint index, obl_object *value);
 
 /* STRING objects */
 
@@ -441,7 +441,7 @@ int obl_string_ccmp(const obl_object *string, const char *match);
 /*
  * Return the object at an indexed slot of +slotted+.
  */
-obl_object *obl_slotted_at(const obl_object *slotted, const obl_uword index);
+obl_object *obl_slotted_at(const obl_object *slotted, const obl_uint index);
 
 /*
  * Return the contents of a slot by name.
@@ -456,7 +456,7 @@ obl_object *obl_slotted_atcnamed(const obl_object *slotted, const char *slotname
 /*
  * Set the value of a slot by index.
  */
-void obl_slotted_at_put(obl_object *slotted, const obl_uword index,
+void obl_slotted_at_put(obl_object *slotted, const obl_uint index,
         obl_object *value);
 
 /*
@@ -476,18 +476,18 @@ void obl_slotted_atcnamed_put(obl_object *slotted, const char *slotname,
 /*
  * Return the number of slots present in the shape +o+.
  */
-obl_uword obl_shape_slotcount(const obl_object *shape);
+obl_uint obl_shape_slotcount(const obl_object *shape);
 
 /*
  * Return the index (zero-based) of a slot with a given name, or -1 if no slot
  * has that name.
  */
-obl_uword obl_shape_slotnamed(const obl_object *shape, const obl_object *name);
+obl_uint obl_shape_slotnamed(const obl_object *shape, const obl_object *name);
 
 /*
  * Convenience wrapper for +obl_shape_slotnamed+ that uses a C string.
  */
-obl_uword obl_shape_slotcnamed(const obl_object *shape, const char *name);
+obl_uint obl_shape_slotcnamed(const obl_object *shape, const char *name);
 
 /*
  * Accessor for the storage type of a SHAPE object.

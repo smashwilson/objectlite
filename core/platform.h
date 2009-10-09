@@ -17,17 +17,17 @@
  * quantities.  obl_words and obl_uwords are often used throughout the ObjectLite API to
  * communicate things like indices, offsets, or sizes.
  */
-typedef int32_t obl_word;
+typedef int32_t obl_int;
 
 /*
- * The same storage as an obl_word, but unsigned.
+ * The same storage as an obl_int, but unsigned.
  */
-typedef uint32_t obl_uword;
+typedef uint32_t obl_uint;
 
 /*
  * Width of an address unit, physical or logical.
  */
-typedef obl_uword obl_address;
+typedef obl_uint obl_address;
 
 /* 
  * The local networking libraries include byte-order conversion functions such
