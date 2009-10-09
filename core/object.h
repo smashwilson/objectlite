@@ -100,7 +100,7 @@ typedef struct
      * array size is determined by the number of slot names defined in the
      * object's shape.
      */
-    obl_object *slots;
+    obl_object **slots;
 
 } obl_slotted_storage;
 
@@ -353,6 +353,9 @@ obl_object *obl_create_cstring(obl_database *d, const char *c, int32_t length);
 /* Fixed-size collection creation. */
 obl_object *obl_create_fixed(obl_database *d, uint32_t length);
 
+/* Slotted object creation */
+obl_object *obl_create_slotted(obl_object *shape);
+
 /* Construction of SHAPE objects from individual shape components. */
 obl_object *obl_create_shape(obl_database *d,
         obl_object *name, obl_object *slot_names,
@@ -417,6 +420,39 @@ int obl_string_ccmp(const obl_object *string, const char *match);
 
 /* SLOTTED objects */
 
+/*
+ * Return the object at an indexed slot of +slotted+.
+ */
+obl_object *obl_slotted_at(const obl_object *slotted, const uint32_t index);
+
+/*
+ * Return the contents of a slot by name.
+ */
+obl_object *obl_slotted_atnamed(const obl_object *slotted, const obl_object *slotname);
+
+/*
+ * Return the contents of a slot by name, specified by C string.
+ */
+obl_object *obl_slotted_atcnamed(const obl_object *slotted, const char *slotname);
+
+/*
+ * Set the value of a slot by index.
+ */
+void obl_slotted_at_put(obl_object *slotted, const uint32_t index,
+        obl_object *value);
+
+/*
+ * Set the value of a slot by name.
+ */
+void obl_slotted_atnamed_put(obl_object *slotted, const obl_object *slotname,
+        obl_object *value);
+
+/*
+ * Set the value of a slot by name, specified as a C string.
+ */
+void obl_slotted_atcnamed_put(obl_object *slotted, const char *slotname,
+        obl_object *value);
+
 /* SHAPE objects */
 
 /*
@@ -428,12 +464,12 @@ uint32_t obl_shape_slotcount(const obl_object *shape);
  * Return the index (zero-based) of a slot with a given name, or -1 if no slot
  * has that name.
  */
-int obl_shape_slotnamed(const obl_object *shape, const obl_object *name);
+uint32_t obl_shape_slotnamed(const obl_object *shape, const obl_object *name);
 
 /*
  * Convenience wrapper for +obl_shape_slotnamed+ that uses a C string.
  */
-int obl_shape_slotcnamed(const obl_object *shape, const char *name);
+uint32_t obl_shape_slotcnamed(const obl_object *shape, const char *name);
 
 /*
  * Accessor for the storage type of a SHAPE object.

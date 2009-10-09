@@ -166,6 +166,47 @@ obl_object *obl_create_fixed(obl_database *d, uint32_t length)
     return result;
 }
 
+obl_object *obl_create_slotted(obl_object *shape)
+{
+    obl_object *result;
+    obl_slotted_storage *storage;
+    uint32_t slot_count;
+    obl_object **slots;
+    uint32_t i;
+
+    result = _allocate_object(shape->database);
+    if (result == NULL) {
+        return NULL;
+    }
+
+    storage = (obl_slotted_storage*) malloc(sizeof(obl_slotted_storage));
+    if (storage == NULL) {
+        obl_report_error(shape->database, OUT_OF_MEMORY,
+                "Unable to allocate an object.");
+        free(result);
+        return NULL;
+    }
+    result->storage.slotted_storage = storage;
+    result->shape = shape;
+
+    slot_count = obl_shape_slotcount(shape);
+    slots = (obl_object **) malloc(sizeof(obl_object*) * slot_count);
+    if (slots == NULL) {
+        obl_report_error(shape->database, OUT_OF_MEMORY,
+                "Unable to allocate an object.");
+        free(result);
+        free(storage);
+        return NULL;
+    }
+    storage->slots = slots;
+
+    for (i = 0; i < slot_count; i++) {
+        slots[i] = obl_nil(shape->database);
+    }
+
+    return result;
+}
+
 obl_object *obl_create_shape(obl_database *d,
         obl_object *name, obl_object *slot_names,
         obl_storage_type type)
@@ -354,6 +395,39 @@ int obl_string_ccmp(const obl_object *string, const char *match)
     return result;
 }
 
+obl_object *obl_slotted_at(const obl_object *slotted, const uint32_t index)
+{
+    return slotted->storage.slotted_storage->slots[index];
+}
+
+obl_object *obl_slotted_atnamed(const obl_object *slotted, const obl_object *slotname)
+{
+    return obl_slotted_at(slotted, obl_shape_slotnamed(slotted->shape, slotname));
+}
+
+obl_object *obl_slotted_atcnamed(const obl_object *slotted, const char *slotname)
+{
+    return obl_slotted_at(slotted, obl_shape_slotcnamed(slotted->shape, slotname));
+}
+
+void obl_slotted_at_put(obl_object *slotted, const uint32_t index,
+        obl_object *value)
+{
+    slotted->storage.slotted_storage->slots[index] = value;
+}
+
+void obl_slotted_atnamed_put(obl_object *slotted, const obl_object *slotname,
+        obl_object *value)
+{
+    obl_slotted_at_put(slotted, obl_shape_slotnamed(slotted->shape, slotname), value);
+}
+
+void obl_slotted_atcnamed_put(obl_object *slotted, const char *slotname,
+        obl_object *value)
+{
+    obl_slotted_at_put(slotted, obl_shape_slotcnamed(slotted->shape, slotname), value);
+}
+
 uint32_t obl_shape_slotcount(const obl_object *shape)
 {
     if (_storage_of(shape) != OBL_SHAPE) {
@@ -363,10 +437,10 @@ uint32_t obl_shape_slotcount(const obl_object *shape)
     return obl_fixed_size(shape->storage.shape_storage->slot_names);
 }
 
-int obl_shape_slotnamed(const obl_object *shape, const obl_object *name)
+uint32_t obl_shape_slotnamed(const obl_object *shape, const obl_object *name)
 {
     obl_object *slots;
-    int i;
+    uint32_t i;
 
     slots = shape->storage.shape_storage->slot_names;
     for (i = 0; i < obl_fixed_size(slots); i++) {
@@ -378,10 +452,10 @@ int obl_shape_slotnamed(const obl_object *shape, const obl_object *name)
     return -1;
 }
 
-int obl_shape_slotcnamed(const obl_object *shape, const char *name)
+uint32_t obl_shape_slotcnamed(const obl_object *shape, const char *name)
 {
     obl_object *temporary;
-    int result;
+    uint32_t result;
 
     temporary = obl_create_cstring(shape->database, name, strlen(name));
     if (temporary == NULL) {

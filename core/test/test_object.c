@@ -125,6 +125,36 @@ void test_create_shape(void)
     obl_destroy_database(d);
 }
 
+void test_create_slotted(void)
+{
+    char *slot_names[] = { "foo" , "bar" };
+    obl_database *d;
+    obl_object *shape;
+    obl_object *o;
+    obl_object *value;
+
+    d = obl_create_database("unit.obl");
+
+    shape = obl_create_cshape(d, "FooClass", 2, slot_names, OBL_SLOTTED);
+    o = obl_create_slotted(shape);
+
+    CU_ASSERT(obl_database_ok(d));
+    CU_ASSERT(obl_slotted_atcnamed(o, "foo") == obl_nil(d));
+    CU_ASSERT(obl_slotted_atcnamed(o, "bar") == obl_nil(d));
+
+    value = obl_create_integer(d, 4);
+    obl_slotted_atcnamed_put(o, "foo", value);
+    CU_ASSERT(obl_slotted_atcnamed(o, "foo") == value);
+    CU_ASSERT(obl_slotted_at(o, 0) == value);
+    CU_ASSERT(obl_slotted_atcnamed(o, "bar") == obl_nil(d));
+    CU_ASSERT(obl_slotted_at(o, 1) == obl_nil(d));
+
+    obl_destroy_cshape(shape);
+    obl_destroy_object(o);
+    obl_destroy_object(value);
+    obl_destroy_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -150,7 +180,10 @@ CU_pSuite initialize_object_suite(void)
                 test_create_fixed) == NULL) ||
         (CU_add_test(pSuite,
                 "Create a shape object with convenience methods.",
-                test_create_shape) == NULL)
+                test_create_shape) == NULL) ||
+        (CU_add_test(pSuite,
+                "Manipulate slotted objects.",
+                test_create_slotted) == NULL)
     ) {
         return NULL;
     }
