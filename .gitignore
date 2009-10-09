@@ -4,6 +4,11 @@
 # Ignore emacs temp files.
 *~
 
+# Eclipse metadata.
+.project
+.cproject
+.settings/*
+
 # Ignore object files, executibles, and libraries.
 *.o
 *.exe
