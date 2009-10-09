@@ -353,9 +353,6 @@ obl_object *obl_create_cstring(obl_database *d, const char *c, int32_t length);
 /* Fixed-size collection creation. */
 obl_object *obl_create_fixed(obl_database *d, uint32_t length);
 
-/* Placeholder for deferring an object load operation. */
-obl_object *obl_create_stub(obl_database *d, obl_logical_address address);
-
 /* Construction of SHAPE objects from individual shape components. */
 obl_object *obl_create_shape(obl_database *d,
         obl_object *name, obl_object *slot_names,
@@ -418,6 +415,8 @@ int obl_string_cmp(const obl_object *string_a, const obl_object *string_b);
  */
 int obl_string_ccmp(const obl_object *string, const char *match);
 
+/* SLOTTED objects */
+
 /* SHAPE objects */
 
 /*
@@ -477,5 +476,8 @@ obl_object *_obl_create_nil(obl_database *d);
 
 /* Creates the only instances of true (1) and false (0). */
 obl_object *_obl_create_bool(obl_database *d, int truth);
+
+/* Placeholder for deferring an object load operation. */
+obl_object *_obl_create_stub(obl_database *d, obl_logical_address address);
 
 #endif

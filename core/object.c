@@ -166,11 +166,6 @@ obl_object *obl_create_fixed(obl_database *d, uint32_t length)
     return result;
 }
 
-obl_object *obl_create_stub(obl_database *d, obl_logical_address address)
-{
-    return NULL;
-}
-
 obl_object *obl_create_shape(obl_database *d,
         obl_object *name, obl_object *slot_names,
         obl_storage_type type)
@@ -510,6 +505,11 @@ obl_object *_obl_create_bool(obl_database *d, int truth)
     result->storage.boolean_storage = storage;
 
     return result;
+}
+
+obl_object *_obl_create_stub(obl_database *d, obl_logical_address address)
+{
+    return NULL;
 }
 
 /*
