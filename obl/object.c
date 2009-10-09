@@ -224,7 +224,7 @@ obl_object *obl_create_shape(obl_database *d,
 
     storage = (obl_shape_storage*) malloc(sizeof(obl_shape_storage));
     if (storage == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }
@@ -249,14 +249,13 @@ obl_object *obl_create_cshape(obl_database *d,
 
     name_ob = obl_create_cstring(d, name, strlen(name));
     if (name_ob == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a shape name.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
     slots_ob = obl_create_fixed(d, slot_count);
     if (slots_ob == NULL) {
         obl_destroy_object(name_ob);
-        obl_report_error(d, OBL_OUT_OF_MEMORY,
-                "Unable to allocate a shape's slot names.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
@@ -268,7 +267,7 @@ obl_object *obl_create_cshape(obl_database *d,
             }
             obl_destroy_object(slots_ob);
             obl_destroy_object(name_ob);
-            obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a slot name.");
+            obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
             return NULL;
         }
         obl_fixed_at_put(slots_ob, i, slot_name_ob);
@@ -281,7 +280,7 @@ obl_object *obl_create_cshape(obl_database *d,
         }
         obl_destroy_object(slots_ob);
         obl_destroy_object(name_ob);
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate the shape itself.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
