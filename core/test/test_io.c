@@ -21,13 +21,15 @@
 
 void test_read_integer(void)
 {
+    CU_FAIL("I/O tests disabled for the moment.");
+
+    /*
     FILE *writable, *readable;
     obl_integer_storage payload = 0x11223344;
     uint32_t netlong;
     obl_object shape;
     obl_object *output;
 
-    /* Write the integer object to the file in network byte order. */
     writable = fopen(FILENAME, "wb");
     if (writable == NULL) {
         CU_FAIL("Unable to create temporary data file.");
@@ -55,6 +57,7 @@ void test_read_integer(void)
     CU_ASSERT(*(output->storage.integer_storage) == 0x11223344);
 
     free(output);
+    */
 }
 
 /*

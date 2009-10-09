@@ -81,7 +81,7 @@ typedef struct
     /*
      * The internal storage format to be used for I/O of instances of this shape.
      */
-    uint32_t storage_format;
+    obl_uword storage_format;
 
 } obl_shape_storage;
 
@@ -114,7 +114,7 @@ typedef struct
 {
 
     /* The size of the collection. */
-    uint32_t length;
+    obl_uword length;
 
     /* Collection payload. */
     obl_object **contents;
@@ -148,7 +148,7 @@ typedef struct
 {
 
     /* Position of the page within the tree.  Leaves have a depth of 0. */
-    uint32_t depth;
+    obl_uword depth;
 
     /* Object pointers.  On leaves, these will be tree contents; on branches,
      * pointers to the next level.
@@ -162,7 +162,11 @@ typedef struct
  *
  * A signed integer value within the range +/- 2^31 - 1.
  */
-typedef int32_t obl_integer_storage;
+typedef struct {
+
+    obl_word value;
+
+} obl_integer_storage;
 
 /*
  * Float
@@ -223,7 +227,11 @@ typedef struct
  *
  * Single unicode character (not a single code point).
  */
-typedef UChar32 obl_char_storage;
+typedef struct {
+
+    UChar32 value;
+
+} obl_char_storage;
 
 /*
  * String
@@ -234,7 +242,7 @@ typedef struct
 {
 
     /* Size of the string, in code points (not in characters). */
-    uint32_t length;
+    obl_uword length;
 
     /* Array of code points. */
     UChar *contents;
@@ -251,7 +259,7 @@ typedef struct
 typedef struct {
 
     /* Truth is 1, Falsehood is 0. */
-    uint32_t value;
+    obl_uword value;
 
 } obl_boolean_storage;
 
@@ -263,7 +271,11 @@ typedef struct {
  * internal storage at all: it's represented by a null pointer in the storage
  * field.
  */
-typedef uint32_t obl_nil_storage;
+typedef struct {
+
+    void *nothing;
+
+} obl_nil_storage;
 
 /*
  * Stub
@@ -276,7 +288,11 @@ typedef uint32_t obl_nil_storage;
  * Client code should never see an obl_object with stub storage, because the
  * object access API resolves them as they are seen.
  */
-typedef obl_logical_address obl_stub_storage;
+typedef struct {
+
+    obl_logical_address value;
+
+} obl_stub_storage;
 
 /*
  * A wrapper that contains an object's shape and internal storage.  Most
@@ -320,6 +336,8 @@ struct _obl_object
         obl_boolean_storage *boolean_storage;
         obl_nil_storage *nil_storage;
         obl_stub_storage *stub_storage;
+
+        void *any_storage;
     } storage;
 };
 
@@ -345,13 +363,13 @@ obl_object *obl_create_char(obl_database *d, char c);
 obl_object *obl_create_uchar(obl_database *d, UChar32 uc);
 
 /* Unicode string to STRING object. */
-obl_object *obl_create_string(obl_database *d, const UChar *uc, int32_t length);
+obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uword length);
 
 /* C string to UTF-16 STRING object. */
-obl_object *obl_create_cstring(obl_database *d, const char *c, int32_t length);
+obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uword length);
 
 /* Fixed-size collection creation. */
-obl_object *obl_create_fixed(obl_database *d, uint32_t length);
+obl_object *obl_create_fixed(obl_database *d, obl_uword length);
 
 /* Slotted object creation */
 obl_object *obl_create_slotted(obl_object *shape);
@@ -387,13 +405,13 @@ uint32_t obl_fixed_size(const obl_object *fixed);
  * Access an element of the fixed-size collection +o+ at the zero-based index
  * +index+.
  */
-obl_object *obl_fixed_at(const obl_object *fixed, const uint32_t index);
+obl_object *obl_fixed_at(const obl_object *fixed, const obl_uword index);
 
 /*
  * Set an element of the fixed-size collection +o+ at +index+ to point to the
  * object +value+.
  */
-void obl_fixed_at_put(obl_object *fixed, const uint32_t index, obl_object *value);
+void obl_fixed_at_put(obl_object *fixed, const obl_uword index, obl_object *value);
 
 /* STRING objects */
 
@@ -423,7 +441,7 @@ int obl_string_ccmp(const obl_object *string, const char *match);
 /*
  * Return the object at an indexed slot of +slotted+.
  */
-obl_object *obl_slotted_at(const obl_object *slotted, const uint32_t index);
+obl_object *obl_slotted_at(const obl_object *slotted, const obl_uword index);
 
 /*
  * Return the contents of a slot by name.
@@ -438,7 +456,7 @@ obl_object *obl_slotted_atcnamed(const obl_object *slotted, const char *slotname
 /*
  * Set the value of a slot by index.
  */
-void obl_slotted_at_put(obl_object *slotted, const uint32_t index,
+void obl_slotted_at_put(obl_object *slotted, const obl_uword index,
         obl_object *value);
 
 /*
@@ -458,18 +476,18 @@ void obl_slotted_atcnamed_put(obl_object *slotted, const char *slotname,
 /*
  * Return the number of slots present in the shape +o+.
  */
-uint32_t obl_shape_slotcount(const obl_object *shape);
+obl_uword obl_shape_slotcount(const obl_object *shape);
 
 /*
  * Return the index (zero-based) of a slot with a given name, or -1 if no slot
  * has that name.
  */
-uint32_t obl_shape_slotnamed(const obl_object *shape, const obl_object *name);
+obl_uword obl_shape_slotnamed(const obl_object *shape, const obl_object *name);
 
 /*
  * Convenience wrapper for +obl_shape_slotnamed+ that uses a C string.
  */
-uint32_t obl_shape_slotcnamed(const obl_object *shape, const char *name);
+obl_uword obl_shape_slotcnamed(const obl_object *shape, const char *name);
 
 /*
  * Accessor for the storage type of a SHAPE object.

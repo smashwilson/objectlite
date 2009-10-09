@@ -12,10 +12,22 @@
 #include <stdint.h>
 
 /*
- * Width of an address unit, physical or logical.  Ideally, compiling a build with
- * 64 bit addresses should be as simple as changing this typedef.
+ * A single ObjectLite "word".  This is the smallest unit in which anything can be addressed
+ * by, read from, or written to the database, and is used to store "small" signed numeric
+ * quantities.  obl_words and obl_uwords are often used throughout the ObjectLite API to
+ * communicate things like indices, offsets, or sizes.
  */
-typedef uint32_t obl_address;
+typedef int32_t obl_word;
+
+/*
+ * The same storage as an obl_word, but unsigned.
+ */
+typedef uint32_t obl_uword;
+
+/*
+ * Width of an address unit, physical or logical.
+ */
+typedef obl_uword obl_address;
 
 /* 
  * The local networking libraries include byte-order conversion functions such

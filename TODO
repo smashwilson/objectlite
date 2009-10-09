@@ -18,11 +18,11 @@ A rough timeline of the tasks to finish before we see release, large and small.
 - disentangle header includes.  use extern definitions whereever possible.
 - de-anonymize structs and enums.  it makes references nicer, but the C community
    frowns upon it, and it makes some things messier.
-- conversion functions from C data types to obl_object types.
+= conversion functions from C data types to obl_object types.
 - obl_at_address should hit fixed space and the cache.
 - relocate fixed space to high addresses instead of low ones.  it'll help future-
    proof obl databases.
-- take out all direct references to int32_t and uint32_t types; replace them with
+* take out all direct references to int32_t and uint32_t types; replace them with
    obl_word and obl_uword types in platform.h.
 
 # Primitive I/O
