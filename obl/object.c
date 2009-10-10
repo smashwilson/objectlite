@@ -9,6 +9,8 @@
 
 #include "object.h"
 
+#include "database.h"
+
 #include <stdlib.h>
 
 #include "unicode/ucnv.h"

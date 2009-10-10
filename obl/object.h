@@ -10,14 +10,15 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "unicode/utypes.h"
-
 #include <stdint.h>
 
+#include "constants.h"
 #include "platform.h"
 
-#include "constants.h"
-#include "database.h"
+#include "unicode/utypes.h"
+
+/* Defined in database.h */
+struct obl_database;
 
 /*
  * Possible values for kinds of internal storage.  Each of these corresponds to

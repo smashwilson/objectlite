@@ -12,7 +12,9 @@
 #include <stdio.h>
 
 #include "platform.h"
-#include "object.h"
+
+/* Defined in object.h */
+struct obl_object;
 
 /*
  * Signature of a function that reads and populates an object's internal state.

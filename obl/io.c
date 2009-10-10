@@ -6,11 +6,13 @@
  * Primitive functions to deal with file I/O.
  */
 
-#include <stdlib.h>
-
 #include "io.h"
+
 #include "database.h"
+#include "object.h"
 #include "platform.h"
+
+#include <stdlib.h>
 
 /*
  * The global array of object-reading functions: one for each internal state
