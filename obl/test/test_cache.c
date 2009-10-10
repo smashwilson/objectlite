@@ -9,6 +9,8 @@
 #include "CUnit/Headers/Basic.h"
 
 #include "cache.h"
+#include "object.h"
+#include "database.h"
 
 /* A macro to make cache cleanup less repetitive. */
 #define ISNT_NULL(pointer, message) \

@@ -13,12 +13,16 @@
 
 #include <stdlib.h>
 
-struct obl_cache;
-struct obl_cache_entry;
-struct obl_cache_age_entry;
+#include "platform.h"
 
-#include "object.h"
-#include "database.h"
+/* Defined in database.h */
+struct obl_database;
+
+/* Defined in object.h */
+struct obl_object;
+
+/* Forward declared for circular references with obl_cache_entry. */
+struct obl_cache_age_entry;
 
 struct obl_cache_entry {
     struct obl_object *object;
@@ -81,7 +85,7 @@ struct obl_object *obl_cache_get(struct obl_cache *cache,
  * Query the cache for an object at a given address.  Do not modify the recency
  * list whether it is found or not.
  */
-struct obl_object *
-obl_cache_get_quietly(struct obl_cache *cache, obl_logical_address address);
+struct obl_object *obl_cache_get_quietly(struct obl_cache *cache,
+        obl_logical_address address);
 
 #endif

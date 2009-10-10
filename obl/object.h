@@ -16,15 +16,6 @@
 
 #include "platform.h"
 
-/* Used to specify a physical word address within the .obl file. */
-typedef obl_address obl_physical_address;
-
-/* 
- * Used to specify the logical address of a remote object that's stored
- * elsewhere in the database.
- */
-typedef obl_address obl_logical_address;
-
 #include "constants.h"
 #include "database.h"
 

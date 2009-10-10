@@ -29,6 +29,15 @@ typedef uint32_t obl_uint;
  */
 typedef obl_uint obl_address;
 
+/* Used to specify a physical word address within the .obl file. */
+typedef obl_address obl_physical_address;
+
+/*
+ * Used to specify the logical address of a remote object that's stored
+ * elsewhere in the database.
+ */
+typedef obl_address obl_logical_address;
+
 /* 
  * The local networking libraries include byte-order conversion functions such
  * as ntohs() and ntohl().
