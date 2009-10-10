@@ -15,7 +15,7 @@
 void test_initialize_database(void)
 {
     obl_database *database;
-    obl_cache *cache;
+    struct obl_cache *cache;
 
     database = obl_create_database("foo.obl");
     CU_ASSERT_FATAL(database != NULL);

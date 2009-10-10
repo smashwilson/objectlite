@@ -36,7 +36,7 @@ static char *error_messages[] = {
 obl_database *obl_create_database(const char *filename)
 {
     obl_database *database;
-    obl_cache *cache;
+    struct obl_cache *cache;
 
     database = (obl_database*) malloc(sizeof(obl_database));
     if (database == NULL) {

@@ -18,28 +18,31 @@
  * Internal functions prototypes.
  */
 
-static int bucket_for_address(obl_cache *cache, obl_logical_address address);
+static int bucket_for_address(struct obl_cache *cache,
+        obl_logical_address address);
 
-static void insert_in_bucket(obl_cache *cache, int bucket_index,
-        obl_cache_entry *entry);
+static void insert_in_bucket(struct obl_cache *cache, int bucket_index,
+        struct obl_cache_entry *entry);
 
-static obl_cache_entry *lookup_address(obl_cache *cache,
-        obl_logical_address address, obl_cache_entry **previous);
+static struct obl_cache_entry *lookup_address(struct obl_cache *cache,
+        obl_logical_address address, struct obl_cache_entry **previous);
 
-static void remove_age_entry(obl_cache *cache, obl_cache_age_entry *age);
+static void remove_age_entry(struct obl_cache *cache,
+        struct obl_cache_age_entry *age);
 
-static void make_youngest(obl_cache *cache, obl_cache_age_entry *age);
+static void make_youngest(struct obl_cache *cache,
+        struct obl_cache_age_entry *age);
 
 /*
  * External functions definitions.
  */
 
-obl_cache *obl_create_cache(int bucket_count, int max_size)
+struct obl_cache *obl_create_cache(int bucket_count, int max_size)
 {
-    obl_cache *cache;
+    struct obl_cache *cache;
     int bucket_index;
 
-    cache = (obl_cache*) malloc(sizeof(obl_cache));
+    cache = (struct obl_cache*) malloc(sizeof(struct obl_cache));
     if (cache == NULL) {
         return NULL;
     }
@@ -48,8 +51,8 @@ obl_cache *obl_create_cache(int bucket_count, int max_size)
     cache->bucket_count = bucket_count;
 
     /* Allocate the cache buckets and initialize them to NULL. */
-    cache->buckets = (obl_cache_entry**) malloc(sizeof(obl_cache_entry*)
-            * cache->bucket_count);
+    cache->buckets = (struct obl_cache_entry**)
+            malloc(sizeof(struct obl_cache_entry*) * cache->bucket_count);
     if (cache->buckets == NULL) {
         free(cache);
         return NULL;
@@ -64,11 +67,11 @@ obl_cache *obl_create_cache(int bucket_count, int max_size)
     return cache;
 }
 
-void obl_destroy_cache(obl_cache *cache)
+void obl_destroy_cache(struct obl_cache *cache)
 {
     int bucket_index;
-    obl_cache_entry *current, *previous;
-    obl_cache_age_entry *current_age, *previous_age;
+    struct obl_cache_entry *current, *previous;
+    struct obl_cache_age_entry *current_age, *previous_age;
 
     for (bucket_index = 0; bucket_index < cache->bucket_count; bucket_index++) {
         current = cache->buckets[bucket_index];
@@ -90,13 +93,14 @@ void obl_destroy_cache(obl_cache *cache)
     free(cache);
 }
 
-void obl_cache_insert(obl_cache *cache, struct obl_object *object)
+void obl_cache_insert(struct obl_cache *cache, struct obl_object *object)
 {
-    obl_cache_entry *entry;
-    obl_cache_age_entry *age;
+    struct obl_cache_entry *entry;
+    struct obl_cache_age_entry *age;
     int bucket;
 
-    entry = (obl_cache_entry*) malloc(sizeof(obl_cache_entry));
+    entry = (struct obl_cache_entry*)
+            malloc(sizeof(struct obl_cache_entry));
     if (entry == NULL) {
         obl_report_error(cache->database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate cache entry.");
@@ -105,7 +109,8 @@ void obl_cache_insert(obl_cache *cache, struct obl_object *object)
     entry->object = object;
     entry->next = NULL;
 
-    age = (obl_cache_age_entry*) malloc(sizeof(obl_cache_age_entry));
+    age = (struct obl_cache_age_entry*)
+            malloc(sizeof(struct obl_cache_age_entry));
     if (entry == NULL) {
         obl_report_error(cache->database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate cache age list entry.");
@@ -127,15 +132,16 @@ void obl_cache_insert(obl_cache *cache, struct obl_object *object)
     }
 }
 
-void obl_cache_delete(obl_cache *cache, struct obl_object *object)
+void obl_cache_delete(struct obl_cache *cache, struct obl_object *object)
 {
     obl_cache_delete_at(cache, object->logical_address);
 }
 
-void obl_cache_delete_at(obl_cache *cache, obl_logical_address address)
+void obl_cache_delete_at(struct obl_cache *cache,
+        obl_logical_address address)
 {
-    obl_cache_entry *previous_bucket, *found_bucket;
-    obl_cache_age_entry *found_age;
+    struct obl_cache_entry *previous_bucket, *found_bucket;
+    struct obl_cache_age_entry *found_age;
 
     found_bucket = lookup_address(cache, address, &previous_bucket);
     if (found_bucket == NULL) {
@@ -160,9 +166,10 @@ void obl_cache_delete_at(obl_cache *cache, obl_logical_address address)
     cache->current_size--;
 }
 
-struct obl_object *obl_cache_get(obl_cache *cache, obl_logical_address address)
+struct obl_object *obl_cache_get(struct obl_cache *cache,
+        obl_logical_address address)
 {
-    obl_cache_entry *result;
+    struct obl_cache_entry *result;
 
     result = lookup_address(cache, address, NULL);
     if (result == NULL) {
@@ -176,10 +183,10 @@ struct obl_object *obl_cache_get(obl_cache *cache, obl_logical_address address)
     return result->object;
 }
 
-struct obl_object *obl_cache_get_quietly(obl_cache *cache,
+struct obl_object *obl_cache_get_quietly(struct obl_cache *cache,
         obl_logical_address address)
 {
-    obl_cache_entry *result;
+    struct obl_cache_entry *result;
 
     result = lookup_address(cache, address, NULL);
 
@@ -199,7 +206,8 @@ struct obl_object *obl_cache_get_quietly(obl_cache *cache,
  * an even distribution of object logical addresses (the hash key), these should
  * be evenly distributed within the interval [0..bucket_count].
  */
-static int bucket_for_address(obl_cache *cache, obl_logical_address address)
+static int bucket_for_address(struct obl_cache *cache,
+        obl_logical_address address)
 {
     return (int) address % cache->bucket_count;
 }
@@ -209,10 +217,10 @@ static int bucket_for_address(obl_cache *cache, obl_logical_address address)
  * index.  Each bucket is either empty (NULL) or a linked list of existing
  * entries ordered by object address.
  */
-static void insert_in_bucket(obl_cache *cache, int bucket_index,
-        obl_cache_entry *entry)
+static void insert_in_bucket(struct obl_cache *cache, int bucket_index,
+        struct obl_cache_entry *entry)
 {
-    obl_cache_entry *head, *current, *previous;
+    struct obl_cache_entry *head, *current, *previous;
     obl_logical_address address;
 
     address = entry->object->logical_address;
@@ -244,10 +252,10 @@ static void insert_in_bucket(obl_cache *cache, int bucket_index,
  * Return NULL if it isn't.  On a successful lookup, if previous is not NULL, it
  * will also be set to point to the previous entry.
  */
-static obl_cache_entry *lookup_address(obl_cache *cache,
-        obl_logical_address address, obl_cache_entry **previous)
+static struct obl_cache_entry *lookup_address(struct obl_cache *cache,
+        obl_logical_address address, struct obl_cache_entry **previous)
 {
-    obl_cache_entry *head, *current, *last;
+    struct obl_cache_entry *head, *current, *last;
     int bucket_index;
 
     bucket_index = bucket_for_address(cache, address);
@@ -275,10 +283,11 @@ static obl_cache_entry *lookup_address(obl_cache *cache,
  * Remove an age entry from the cache, either to promote it to the front, or to
  * correspond to an element removal.  This does not free its memory.
  */
-static void remove_age_entry(obl_cache *cache, obl_cache_age_entry *age)
+static void remove_age_entry(struct obl_cache *cache,
+        struct obl_cache_age_entry *age)
 {
-    struct _obl_cache_age_entry *older;
-    struct _obl_cache_age_entry *younger;
+    struct obl_cache_age_entry *older;
+    struct obl_cache_age_entry *younger;
 
     older = age->older;
     younger = age->younger;
@@ -304,7 +313,8 @@ static void remove_age_entry(obl_cache *cache, obl_cache_age_entry *age)
 /*
  * Add the provided age entry to the cache as the most recently used thing.
  */
-static void make_youngest(obl_cache *cache, obl_cache_age_entry *age)
+static void make_youngest(struct obl_cache *cache,
+        struct obl_cache_age_entry *age)
 {
     age->older = cache->youngest;
     if (cache->youngest != NULL) {

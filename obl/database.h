@@ -60,7 +60,7 @@ struct _obl_database
      * Object cache to prevent unnecessary address translations
      * and support self-referential object structures.
      */
-    obl_cache *cache;
+    struct obl_cache *cache;
 
     /* Fixed object space. */
     struct obl_object **fixed;
