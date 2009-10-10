@@ -14,7 +14,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
    live).
 = the rest of the obl_object internal format structs.
 * manual creation functions for obl_shape objects.
-- consistent handling of obl_object type errors.
+* consistent handling of obl_object type errors.
 - disentangle header includes.  use extern definitions whereever possible.
 - de-anonymize structs and enums.  it makes references nicer, but the C community
    frowns upon it, and it makes some things messier.

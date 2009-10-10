@@ -3,7 +3,7 @@
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
  *
- * Unit tests for obl_object creation, access, and manipulation API.
+ * Unit tests for struct obl_object creation, access, and manipulation API.
  */
 
 #include "object.h"
@@ -19,7 +19,7 @@
 void test_create_integer(void)
 {
     obl_database *d;
-    obl_object *o;
+    struct obl_object *o;
 
     d = obl_create_database("unit.obl");
 
@@ -37,7 +37,7 @@ void test_create_string(void)
 {
     char *string = "NULL-terminated C string.";
     obl_database *d;
-    obl_object *o;
+    struct obl_object *o;
     char *buffer;
     int i;
 
@@ -64,9 +64,9 @@ void test_create_string(void)
 void test_create_fixed(void)
 {
     const size_t length = 3;
-    obl_object *items[length];
+    struct obl_object *items[length];
     obl_database *d;
-    obl_object *o;
+    struct obl_object *o;
     int i;
 
     d = obl_create_database("unit.obl");
@@ -100,8 +100,8 @@ void test_create_shape(void)
 {
     char *slot_names[] = { "one", "two" };
     obl_database *d;
-    obl_object *o;
-    obl_shape_storage *storage;
+    struct obl_object *o;
+    struct obl_shape_storage *storage;
 
     d = obl_create_database("unit.obl");
 
@@ -129,9 +129,9 @@ void test_create_slotted(void)
 {
     char *slot_names[] = { "foo" , "bar" };
     obl_database *d;
-    obl_object *shape;
-    obl_object *o;
-    obl_object *value;
+    struct obl_object *shape;
+    struct obl_object *o;
+    struct obl_object *value;
 
     d = obl_create_database("unit.obl");
 

@@ -18,12 +18,12 @@
  * ============================================================================
  */
 
-static inline obl_storage_type _storage_of(const obl_object *o);
+static inline obl_storage_type _storage_of(const struct obl_object *o);
 
-static inline obl_object *_allocate_object(obl_database *d);
+static inline struct obl_object *_allocate_object(obl_database *d);
 
-static obl_object *_allocate_string(obl_database *d, UChar *uc,
-        obl_uint length);
+static struct obl_object *_allocate_string(obl_database *d,
+        UChar *uc, obl_uint length);
 
 /*
  * ============================================================================
@@ -31,10 +31,10 @@ static obl_object *_allocate_string(obl_database *d, UChar *uc,
  * ============================================================================
  */
 
-obl_object *obl_create_integer(obl_database *d, int i)
+struct obl_object *obl_create_integer(obl_database *d, int i)
 {
-    obl_object *result;
-    obl_integer_storage *storage;
+    struct obl_object *result;
+    struct obl_integer_storage *storage;
 
     if (i < INT32_MIN || i > INT32_MAX) {
         obl_report_error(d, OBL_CONVERSION_ERROR, "Integer out of range.");
@@ -46,7 +46,8 @@ obl_object *obl_create_integer(obl_database *d, int i)
         return NULL;
     }
 
-    storage = (obl_integer_storage *) malloc(sizeof(obl_integer_storage));
+    storage = (struct obl_integer_storage *)
+            malloc(sizeof(struct obl_integer_storage));
     if (storage == NULL) {
         obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);
@@ -59,27 +60,28 @@ obl_object *obl_create_integer(obl_database *d, int i)
     return result;
 }
 
-obl_object *obl_create_float(obl_database *d, float f)
+struct obl_object *obl_create_float(obl_database *d, float f)
 {
     return NULL;
 }
 
-obl_object *obl_create_double(obl_database *d, double dbl)
+struct obl_object *obl_create_double(obl_database *d, double dbl)
 {
     return NULL;
 }
 
-obl_object *obl_create_char(obl_database *d, char c)
+struct obl_object *obl_create_char(obl_database *d, char c)
 {
     return NULL;
 }
 
-obl_object *obl_create_uchar(obl_database *d, UChar32 uc)
+struct obl_object *obl_create_uchar(obl_database *d, UChar32 uc)
 {
     return NULL;
 }
 
-obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uint length)
+struct obl_object *obl_create_string(obl_database *d,
+        const UChar *uc, obl_uint length)
 {
     UChar *copied;
     size_t bytes;
@@ -96,7 +98,8 @@ obl_object *obl_create_string(obl_database *d, const UChar *uc, obl_uint length)
     return _allocate_string(d, copied, length);
 }
 
-obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uint length)
+struct obl_object *obl_create_cstring(obl_database *d,
+        const char *c, obl_uint length)
 {
     UConverter *converter;
     size_t output_length;
@@ -133,10 +136,10 @@ obl_object *obl_create_cstring(obl_database *d, const char *c, obl_uint length)
     return _allocate_string(d, output_string, (obl_uint) converted_length);
 }
 
-obl_object *obl_create_fixed(obl_database *d, obl_uint length)
+struct obl_object *obl_create_fixed(obl_database *d, obl_uint length)
 {
-    obl_object *result;
-    obl_fixed_storage *storage;
+    struct obl_object *result;
+    struct obl_fixed_storage *storage;
     obl_uint i;
 
     result = _allocate_object(d);
@@ -144,7 +147,8 @@ obl_object *obl_create_fixed(obl_database *d, obl_uint length)
         return NULL;
     }
 
-    storage = (obl_fixed_storage *) malloc(sizeof(obl_fixed_storage));
+    storage = (struct obl_fixed_storage *)
+            malloc(sizeof(struct obl_fixed_storage));
     if (storage == NULL) {
         obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);
@@ -154,7 +158,8 @@ obl_object *obl_create_fixed(obl_database *d, obl_uint length)
     result->shape = obl_at_address(d, OBL_FIXED_SHAPE_ADDR);
 
     storage->length = length;
-    storage->contents = (obl_object **) malloc(sizeof(obl_object*) * length);
+    storage->contents = (struct obl_object **)
+            malloc(sizeof(struct obl_object*) * length);
     if (storage->contents == NULL) {
         obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);
@@ -169,12 +174,12 @@ obl_object *obl_create_fixed(obl_database *d, obl_uint length)
     return result;
 }
 
-obl_object *obl_create_slotted(obl_object *shape)
+struct obl_object *obl_create_slotted(struct obl_object *shape)
 {
-    obl_object *result;
-    obl_slotted_storage *storage;
+    struct obl_object *result;
+    struct obl_slotted_storage *storage;
     obl_uint slot_count;
-    obl_object **slots;
+    struct obl_object **slots;
     obl_uint i;
 
     if (_storage_of(shape) != OBL_SHAPE) {
@@ -188,7 +193,8 @@ obl_object *obl_create_slotted(obl_object *shape)
         return NULL;
     }
 
-    storage = (obl_slotted_storage*) malloc(sizeof(obl_slotted_storage));
+    storage = (struct obl_slotted_storage*)
+            malloc(sizeof(struct obl_slotted_storage));
     if (storage == NULL) {
         obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
         free(result);
@@ -198,7 +204,8 @@ obl_object *obl_create_slotted(obl_object *shape)
     result->shape = shape;
 
     slot_count = obl_shape_slotcount(shape);
-    slots = (obl_object **) malloc(sizeof(obl_object*) * slot_count);
+    slots = (struct obl_object **)
+            malloc(sizeof(struct obl_object*) * slot_count);
     if (slots == NULL) {
         obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
         free(result);
@@ -214,19 +221,20 @@ obl_object *obl_create_slotted(obl_object *shape)
     return result;
 }
 
-obl_object *obl_create_shape(obl_database *d,
-        obl_object *name, obl_object *slot_names,
+struct obl_object *obl_create_shape(obl_database *d,
+        struct obl_object *name, struct obl_object *slot_names,
         obl_storage_type type)
 {
-    obl_object *result;
-    obl_shape_storage *storage;
+    struct obl_object *result;
+    struct obl_shape_storage *storage;
 
     result = _allocate_object(d);
     if (result == NULL) {
         return NULL;
     }
 
-    storage = (obl_shape_storage*) malloc(sizeof(obl_shape_storage));
+    storage = (struct obl_shape_storage*)
+            malloc(sizeof(struct obl_shape_storage));
     if (storage == NULL) {
         obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);
@@ -243,12 +251,12 @@ obl_object *obl_create_shape(obl_database *d,
     return result;
 }
 
-obl_object *obl_create_cshape(obl_database *d,
+struct obl_object *obl_create_cshape(obl_database *d,
         char *name, size_t slot_count, char **slot_names,
         obl_storage_type type)
 {
-    obl_object *name_ob, *slots_ob, *slot_name_ob;
-    obl_object *result;
+    struct obl_object *name_ob, *slots_ob, *slot_name_ob;
+    struct obl_object *result;
     int i, j;
 
     name_ob = obl_create_cstring(d, name, strlen(name));
@@ -264,7 +272,8 @@ obl_object *obl_create_cshape(obl_database *d,
     }
 
     for (i = 0; i < slot_count; i++) {
-        slot_name_ob = obl_create_cstring(d, slot_names[i], strlen(slot_names[i]));
+        slot_name_ob = obl_create_cstring(d,
+                slot_names[i], strlen(slot_names[i]));
         if (slot_name_ob == NULL) {
             for (j = 0; j < i; j++) {
                 obl_destroy_object(obl_fixed_at(slots_ob, j));
@@ -297,7 +306,7 @@ obl_object *obl_create_cshape(obl_database *d,
  * ============================================================================
  */
 
-obl_uint obl_fixed_size(const obl_object *fixed)
+obl_uint obl_fixed_size(const struct obl_object *fixed)
 {
     if (_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
@@ -308,7 +317,8 @@ obl_uint obl_fixed_size(const obl_object *fixed)
     return fixed->storage.fixed_storage->length;
 }
 
-obl_object *obl_fixed_at(const obl_object *fixed, const obl_uint index)
+struct obl_object *obl_fixed_at(const struct obl_object *fixed,
+        const obl_uint index)
 {
     if (_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
@@ -319,7 +329,8 @@ obl_object *obl_fixed_at(const obl_object *fixed, const obl_uint index)
     return fixed->storage.fixed_storage->contents[index];
 }
 
-void obl_fixed_at_put(obl_object *fixed, const obl_uint index, obl_object *value)
+void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
+        struct obl_object *value)
 {
     if (_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
@@ -330,7 +341,7 @@ void obl_fixed_at_put(obl_object *fixed, const obl_uint index, obl_object *value
     fixed->storage.fixed_storage->contents[index] = value;
 }
 
-obl_uint obl_string_size(const obl_object *string)
+obl_uint obl_string_size(const struct obl_object *string)
 {
     if (_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
@@ -341,9 +352,10 @@ obl_uint obl_string_size(const obl_object *string)
     return string->storage.string_storage->length;
 }
 
-size_t obl_string_chars(const obl_object *string, char *buffer, size_t buffer_size)
+size_t obl_string_chars(const struct obl_object *string,
+        char *buffer, size_t buffer_size)
 {
-    obl_string_storage *storage;
+    struct obl_string_storage *storage;
     UConverter *converter;
     obl_uint converted_length;
     UErrorCode status = U_ZERO_ERROR;
@@ -377,7 +389,8 @@ size_t obl_string_chars(const obl_object *string, char *buffer, size_t buffer_si
     return converted_length;
 }
 
-int obl_string_cmp(const obl_object *string_a, const obl_object *string_b)
+int obl_string_cmp(const struct obl_object *string_a,
+        const struct obl_object *string_b)
 {
     obl_uint length;
 
@@ -396,9 +409,9 @@ int obl_string_cmp(const obl_object *string_a, const obl_object *string_b)
             length * sizeof(UChar));
 }
 
-int obl_string_ccmp(const obl_object *string, const char *match)
+int obl_string_ccmp(const struct obl_object *string, const char *match)
 {
-    obl_object *temp;
+    struct obl_object *temp;
     int result;
 
     if (_storage_of(string) != OBL_STRING) {
@@ -418,7 +431,8 @@ int obl_string_ccmp(const obl_object *string, const char *match)
     return result;
 }
 
-obl_object *obl_slotted_at(const obl_object *slotted, const obl_uint index)
+struct obl_object *obl_slotted_at(const struct obl_object *slotted,
+        const obl_uint index)
 {
     if (_storage_of(slotted) != OBL_SLOTTED) {
         obl_report_error(slotted->database, OBL_WRONG_STORAGE,
@@ -429,18 +443,20 @@ obl_object *obl_slotted_at(const obl_object *slotted, const obl_uint index)
     return slotted->storage.slotted_storage->slots[index];
 }
 
-obl_object *obl_slotted_atnamed(const obl_object *slotted, const obl_object *slotname)
+struct obl_object *obl_slotted_atnamed(const struct obl_object *slotted,
+        const struct obl_object *slotname)
 {
     return obl_slotted_at(slotted, obl_shape_slotnamed(slotted->shape, slotname));
 }
 
-obl_object *obl_slotted_atcnamed(const obl_object *slotted, const char *slotname)
+struct obl_object *obl_slotted_atcnamed(const struct obl_object *slotted,
+        const char *slotname)
 {
     return obl_slotted_at(slotted, obl_shape_slotcnamed(slotted->shape, slotname));
 }
 
-void obl_slotted_at_put(obl_object *slotted, const obl_uint index,
-        obl_object *value)
+void obl_slotted_at_put(struct obl_object *slotted,
+        const obl_uint index, struct obl_object *value)
 {
     if (_storage_of(slotted) != OBL_SLOTTED) {
         obl_report_error(slotted->database, OBL_WRONG_STORAGE,
@@ -451,19 +467,19 @@ void obl_slotted_at_put(obl_object *slotted, const obl_uint index,
     slotted->storage.slotted_storage->slots[index] = value;
 }
 
-void obl_slotted_atnamed_put(obl_object *slotted, const obl_object *slotname,
-        obl_object *value)
+void obl_slotted_atnamed_put(struct obl_object *slotted,
+        const struct obl_object *slotname, struct obl_object *value)
 {
     obl_slotted_at_put(slotted, obl_shape_slotnamed(slotted->shape, slotname), value);
 }
 
-void obl_slotted_atcnamed_put(obl_object *slotted, const char *slotname,
-        obl_object *value)
+void obl_slotted_atcnamed_put(struct obl_object *slotted,
+        const char *slotname, struct obl_object *value)
 {
     obl_slotted_at_put(slotted, obl_shape_slotcnamed(slotted->shape, slotname), value);
 }
 
-obl_uint obl_shape_slotcount(const obl_object *shape)
+obl_uint obl_shape_slotcount(const struct obl_object *shape)
 {
     if (_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
@@ -474,9 +490,10 @@ obl_uint obl_shape_slotcount(const obl_object *shape)
     return obl_fixed_size(shape->storage.shape_storage->slot_names);
 }
 
-obl_uint obl_shape_slotnamed(const obl_object *shape, const obl_object *name)
+obl_uint obl_shape_slotnamed(const struct obl_object *shape,
+        const struct obl_object *name)
 {
-    obl_object *slots;
+    struct obl_object *slots;
     obl_uint i;
 
     if (_storage_of(shape) != OBL_SHAPE) {
@@ -495,9 +512,10 @@ obl_uint obl_shape_slotnamed(const obl_object *shape, const obl_object *name)
     return -1;
 }
 
-obl_uint obl_shape_slotcnamed(const obl_object *shape, const char *name)
+obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
+        const char *name)
 {
-    obl_object *temporary;
+    struct obl_object *temporary;
     obl_uint result;
 
     if (_storage_of(shape) != OBL_SHAPE) {
@@ -516,7 +534,7 @@ obl_uint obl_shape_slotcnamed(const obl_object *shape, const char *name)
     return result;
 }
 
-obl_storage_type obl_shape_storagetype(const obl_object *shape)
+obl_storage_type obl_shape_storagetype(const struct obl_object *shape)
 {
     if (_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
@@ -530,11 +548,11 @@ obl_storage_type obl_shape_storagetype(const obl_object *shape)
 
 /*
  * ============================================================================
- * Functions to translate obl_object values into primitive C types.
+ * Functions to translate struct obl_object values into primitive C types.
  * ============================================================================
  */
 
-int obl_integer_value(const obl_object *integer)
+int obl_integer_value(const struct obl_object *integer)
 {
     if (_storage_of(integer) != OBL_INTEGER) {
         obl_report_error(integer->database, OBL_WRONG_STORAGE,
@@ -545,9 +563,10 @@ int obl_integer_value(const obl_object *integer)
     return (int) (integer->storage.integer_storage->value);
 }
 
-size_t obl_string_value(const obl_object *string, UChar *buffer, size_t buffer_size)
+size_t obl_string_value(const struct obl_object *string,
+        UChar *buffer, size_t buffer_size)
 {
-    obl_string_storage *storage;
+    struct obl_string_storage *storage;
     size_t count , bytes;
 
     if (_storage_of(string) != OBL_STRING) {
@@ -571,7 +590,7 @@ size_t obl_string_value(const obl_object *string, UChar *buffer, size_t buffer_s
  * ============================================================================
  */
 
-void obl_destroy_object(obl_object *o)
+void obl_destroy_object(struct obl_object *o)
 {
     if (o->storage.any_storage != NULL ) {
         free(o->storage.any_storage);
@@ -580,9 +599,9 @@ void obl_destroy_object(obl_object *o)
 }
 
 /* Free exactly those structures created by obl_create_shape. */
-void obl_destroy_cshape(obl_object *shape)
+void obl_destroy_cshape(struct obl_object *shape)
 {
-    obl_shape_storage *storage;
+    struct obl_shape_storage *storage;
     int slot_count, i;
 
     storage = shape->storage.shape_storage;
@@ -601,9 +620,9 @@ void obl_destroy_cshape(obl_object *shape)
  * ============================================================================
  */
 
-obl_object *_obl_create_nil(obl_database *d)
+struct obl_object *_obl_create_nil(obl_database *d)
 {
-    obl_object *result, *shape;
+    struct obl_object *result, *shape;
 
     result = _allocate_object(d);
     if (result == NULL) {
@@ -616,17 +635,18 @@ obl_object *_obl_create_nil(obl_database *d)
     return result;
 }
 
-obl_object *_obl_create_bool(obl_database *d, int truth)
+struct obl_object *_obl_create_bool(obl_database *d, int truth)
 {
-    obl_object *result, *shape;
-    obl_boolean_storage *storage;
+    struct obl_object *result, *shape;
+    struct obl_boolean_storage *storage;
 
     result = _allocate_object(d);
     if (result == NULL) {
         return NULL;
     }
 
-    storage = (obl_boolean_storage*) malloc(sizeof(obl_boolean_storage));
+    storage = (struct obl_boolean_storage*)
+            malloc(sizeof(struct obl_boolean_storage));
     if (storage == NULL) {
         free(result);
         obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
@@ -641,7 +661,8 @@ obl_object *_obl_create_bool(obl_database *d, int truth)
     return result;
 }
 
-obl_object *_obl_create_stub(obl_database *d, obl_logical_address address)
+struct obl_object *_obl_create_stub(obl_database *d,
+        obl_logical_address address)
 {
     return NULL;
 }
@@ -653,7 +674,7 @@ obl_object *_obl_create_stub(obl_database *d, obl_logical_address address)
  */
 
 /* Retrieve the internal storage type of an object from its assigned shape. */
-inline obl_storage_type _storage_of(const obl_object *o)
+inline obl_storage_type _storage_of(const struct obl_object *o)
 {
     if (o->shape == NULL) {
         return OBL_SHAPE;
@@ -662,10 +683,11 @@ inline obl_storage_type _storage_of(const obl_object *o)
     }
 }
 
-/* Allocate and perform common initialization for an unpersisted obl_object. */
-inline obl_object *_allocate_object(obl_database *d)
+/* Allocate and perform common initialization for an unpersisted struct obl_object. */
+inline struct obl_object *_allocate_object(obl_database *d)
 {
-    obl_object *result = (obl_object *) malloc(sizeof(obl_object));
+    struct obl_object *result = (struct obl_object *)
+            malloc(sizeof(struct obl_object));
 
     if (result == NULL) {
         obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
@@ -679,17 +701,19 @@ inline obl_object *_allocate_object(obl_database *d)
 }
 
 /* Allocate and perform common initialization for STRING objects. */
-static obl_object *_allocate_string(obl_database *d, UChar *uc, obl_uint length)
+static struct obl_object *_allocate_string(obl_database *d,
+        UChar *uc, obl_uint length)
 {
-    obl_object *result;
-    obl_string_storage *storage;
+    struct obl_object *result;
+    struct obl_string_storage *storage;
 
     result = _allocate_object(d);
     if (result == NULL) {
         return NULL;
     }
 
-    storage = (obl_string_storage *) malloc(sizeof(obl_string_storage));
+    storage = (struct obl_string_storage *)
+            malloc(sizeof(struct obl_string_storage));
     if (storage == NULL) {
         obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);

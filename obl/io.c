@@ -16,30 +16,32 @@
  * The global array of object-reading functions: one for each internal state
  * specified in "object.h" and at the same index as its corresponding #define.
  */
-obl_object_read_function obl_read_functions[] = { &obl_read_shape,
-        &obl_read_slotted, &obl_read_integer, &obl_read_boolean };
+obl_object_read_function obl_read_functions[] = {
+        &obl_read_shape,
+        &obl_read_slotted, &obl_read_integer, &obl_read_boolean
+};
 
-obl_object *obl_read_integer(obl_object *shape, FILE *source)
+struct obl_object *obl_read_integer(struct obl_object *shape, FILE *source)
 {
     return NULL;
 }
 
-obl_object *obl_read_boolean(obl_object *shape, FILE *source)
+struct obl_object *obl_read_boolean(struct obl_object *shape, FILE *source)
 {
     return NULL;
 }
 
-obl_object *obl_read_slotted(obl_object *shape, FILE *source)
+struct obl_object *obl_read_slotted(struct obl_object *shape, FILE *source)
 {
     return NULL;
 }
 
-obl_object *obl_read_shape(obl_object *shape, FILE *source)
+struct obl_object *obl_read_shape(struct obl_object *shape, FILE *source)
 {
     return NULL;
 }
 
-obl_object *obl_read_object(FILE *source)
+struct obl_object *obl_read_object(FILE *source)
 {
     return NULL;
 }

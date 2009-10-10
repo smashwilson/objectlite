@@ -38,7 +38,7 @@ void test_initialize_cache(void)
 void test_cache_noncolliding(void)
 {
     obl_cache *cache;
-    obl_object o1, o2;
+    struct obl_object o1, o2;
     obl_cache_entry *entry;
     obl_cache_age_entry *age1, *age2;
 
@@ -92,7 +92,7 @@ void test_cache_noncolliding(void)
 void test_cache_colliding(void)
 {
     obl_cache *cache;
-    obl_object o1, o2, o3;
+    struct obl_object o1, o2, o3;
     obl_cache_entry *entry;
 
     cache = obl_create_cache(10, 100);
@@ -137,8 +137,8 @@ void test_cache_colliding(void)
 void test_quiet_cache_retrieval(void)
 {
     obl_cache *cache;
-    obl_object o[30];
-    obl_object *result;
+    struct obl_object o[30];
+    struct obl_object *result;
     int index;
 
     cache = obl_create_cache(10, 100);
@@ -178,8 +178,8 @@ void test_quiet_cache_retrieval(void)
 void test_cache_retrieval(void)
 {
     obl_cache *cache;
-    obl_object o[30];
-    obl_object *result;
+    struct obl_object o[30];
+    struct obl_object *result;
     int index;
 
     cache = obl_create_cache(10, 100);
@@ -217,7 +217,7 @@ void test_cache_retrieval(void)
 void test_cache_deletion(void)
 {
     obl_cache *cache;
-    obl_object o[10];
+    struct obl_object o[10];
     obl_cache_entry *current_entry;
     obl_cache_age_entry *current_age;
     int index, count;
@@ -260,7 +260,7 @@ void test_cache_deletion(void)
 void test_cache_overfill(void)
 {
     obl_cache *cache;
-    obl_object o[101];
+    struct obl_object o[101];
     int index;
 
     cache = obl_create_cache(30, 100);

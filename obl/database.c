@@ -66,7 +66,7 @@ obl_database *obl_create_database(const char *filename)
     return database;
 }
 
-obl_object *obl_at_address(obl_database *database,
+struct obl_object *obl_at_address(obl_database *database,
         const obl_logical_address address)
 {
     /* Check for fixed addresses first. */
@@ -77,17 +77,17 @@ obl_object *obl_at_address(obl_database *database,
     return NULL;
 }
 
-obl_object *obl_nil(obl_database *database)
+struct obl_object *obl_nil(obl_database *database)
 {
     return obl_at_address(database, OBL_NIL_ADDR);
 }
 
-obl_object *obl_true(obl_database *database)
+struct obl_object *obl_true(obl_database *database)
 {
     return obl_at_address(database, OBL_TRUE_ADDR);
 }
 
-obl_object *obl_false(obl_database *database)
+struct obl_object *obl_false(obl_database *database)
 {
     return obl_at_address(database, OBL_FALSE_ADDR);
 }
@@ -95,7 +95,7 @@ obl_object *obl_false(obl_database *database)
 void obl_destroy_database(obl_database *database)
 {
     int i;
-    obl_object *o;
+    struct obl_object *o;
 
     if (database->cache != NULL) {
         obl_destroy_cache(database->cache);
@@ -189,7 +189,7 @@ static int _initialize_fixed_objects(obl_database *database)
     int i;
     char *no_slots[0];
 
-    database->fixed = (obl_object **) malloc(sizeof(obl_object*)
+    database->fixed = (struct obl_object **) malloc(sizeof(struct obl_object*)
             * OBL_FIXED_ADDR_MAX);
     if (database->fixed == NULL) {
         return 1;

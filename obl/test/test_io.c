@@ -27,8 +27,8 @@ void test_read_integer(void)
     FILE *writable, *readable;
     obl_integer_storage payload = 0x11223344;
     uint32_t netlong;
-    obl_object shape;
-    obl_object *output;
+    struct obl_object shape;
+    struct obl_object *output;
 
     writable = fopen(FILENAME, "wb");
     if (writable == NULL) {

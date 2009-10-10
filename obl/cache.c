@@ -90,7 +90,7 @@ void obl_destroy_cache(obl_cache *cache)
     free(cache);
 }
 
-void obl_cache_insert(obl_cache *cache, obl_object *object)
+void obl_cache_insert(obl_cache *cache, struct obl_object *object)
 {
     obl_cache_entry *entry;
     obl_cache_age_entry *age;
@@ -127,7 +127,7 @@ void obl_cache_insert(obl_cache *cache, obl_object *object)
     }
 }
 
-void obl_cache_delete(obl_cache *cache, obl_object *object)
+void obl_cache_delete(obl_cache *cache, struct obl_object *object)
 {
     obl_cache_delete_at(cache, object->logical_address);
 }
@@ -160,7 +160,7 @@ void obl_cache_delete_at(obl_cache *cache, obl_logical_address address)
     cache->current_size--;
 }
 
-obl_object *obl_cache_get(obl_cache *cache, obl_logical_address address)
+struct obl_object *obl_cache_get(obl_cache *cache, obl_logical_address address)
 {
     obl_cache_entry *result;
 
@@ -176,7 +176,8 @@ obl_object *obl_cache_get(obl_cache *cache, obl_logical_address address)
     return result->object;
 }
 
-obl_object *obl_cache_get_quietly(obl_cache *cache, obl_logical_address address)
+struct obl_object *obl_cache_get_quietly(obl_cache *cache,
+        obl_logical_address address)
 {
     obl_cache_entry *result;
 

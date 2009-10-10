@@ -73,7 +73,7 @@ void test_report_error(void)
 void test_allocate_fixed_space(void)
 {
     obl_database *d;
-    obl_object *o;
+    struct obl_object *o;
 
     d = obl_create_database("foo.obl");
     CU_ASSERT_FATAL(d != NULL);
