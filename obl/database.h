@@ -22,10 +22,15 @@ struct obl_object;
 /* Fixed allocation.  These logical addresses will always resolve to universally
  * accessible, constant objects that do not reside in the database.
  */
+#define OBL_FIXED_SIZE 12
+
 typedef enum
 {
+    /* A useful constant marking the lowest fixed address. */
+    OBL_FIXED_ADDR_MIN = OBL_ADDRESS_MAX - OBL_FIXED_SIZE + 1,
+
     /* Special constants: nil, true, and false. */
-    OBL_NIL_ADDR,
+    OBL_NIL_ADDR = OBL_FIXED_ADDR_MIN,
     OBL_TRUE_ADDR,
     OBL_FALSE_ADDR,
 
@@ -42,10 +47,7 @@ typedef enum
 
     /* Virtual Shape objects. */
     OBL_NIL_SHAPE_ADDR,
-    OBL_BOOLEAN_SHAPE_ADDR,
-
-    /* A useful constant that specifies the extent of fixed space. */
-    OBL_FIXED_ADDR_MAX
+    OBL_BOOLEAN_SHAPE_ADDR
 } obl_fixed_address;
 
 /*

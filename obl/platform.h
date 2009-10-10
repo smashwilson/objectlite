@@ -25,6 +25,14 @@ typedef int32_t obl_int;
 typedef uint32_t obl_uint;
 
 /*
+ * Minimum and maximum values that can be assigned to obl_ints and obl_uints.
+ */
+#define OBL_INT_MIN INT32_MIN
+#define OBL_INT_MAX INT32_MAX
+
+#define OBL_UINT_MAX UINT32_MAX
+
+/*
  * Width of an address unit, physical or logical.
  */
 typedef obl_uint obl_address;
@@ -37,6 +45,11 @@ typedef obl_address obl_physical_address;
  * elsewhere in the database.
  */
 typedef obl_address obl_logical_address;
+
+/*
+ * Valid ranges for the address types.
+ */
+#define OBL_ADDRESS_MAX OBL_UINT_MAX
 
 /* 
  * The local networking libraries include byte-order conversion functions such

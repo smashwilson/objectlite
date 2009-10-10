@@ -23,6 +23,8 @@ static inline int _is_fixed_address(const obl_logical_address addr);
 
 static int _initialize_fixed_objects(struct obl_database *database);
 
+static inline int _index_for_fixed(obl_logical_address addr);
+
 /* Error codes: one for each error_code in error.h. */
 
 static char *error_messages[] = {
@@ -72,7 +74,7 @@ struct obl_object *obl_at_address(struct obl_database *database,
 {
     /* Check for fixed addresses first. */
     if (_is_fixed_address(address)) {
-        return database->fixed[address];
+        return database->fixed[_index_for_fixed(address)];
     }
 
     return NULL;
@@ -102,7 +104,7 @@ void obl_destroy_database(struct obl_database *database)
         obl_destroy_cache(database->cache);
     }
 
-    for (i = 0; i < OBL_FIXED_ADDR_MAX; i++) {
+    for (i = 0; i < OBL_FIXED_SIZE; i++) {
         o = database->fixed[i];
         if (o->shape == NULL) {
             obl_destroy_cshape(o);
@@ -182,50 +184,60 @@ void obl_report_errorf(struct obl_database *database, error_code code,
 
 static inline int _is_fixed_address(const obl_logical_address addr)
 {
-    return addr < OBL_FIXED_ADDR_MAX;
+    return addr >= OBL_FIXED_ADDR_MIN;
 }
 
 static int _initialize_fixed_objects(struct obl_database *database)
 {
     int i;
+    obl_logical_address addr;
     char *no_slots[0];
 
-    database->fixed = (struct obl_object **) malloc(sizeof(struct obl_object*)
-            * OBL_FIXED_ADDR_MAX);
+    database->fixed = (struct obl_object **)
+            malloc(sizeof(struct obl_object*) * OBL_FIXED_SIZE);
     if (database->fixed == NULL) {
         return 1;
     }
 
-    database->fixed[OBL_INTEGER_SHAPE_ADDR] = obl_create_cshape(database,
-            "Integer", 0, no_slots, OBL_INTEGER);
-    database->fixed[OBL_FLOAT_SHAPE_ADDR] = obl_create_cshape(database,
-            "Float", 0, no_slots, OBL_FLOAT);
-    database->fixed[OBL_DOUBLE_SHAPE_ADDR] = obl_create_cshape(database,
-            "Double", 0, no_slots, OBL_DOUBLE);
+    database->fixed[_index_for_fixed(OBL_INTEGER_SHAPE_ADDR)] =
+            obl_create_cshape(database, "Integer", 0, no_slots, OBL_INTEGER);
+    database->fixed[_index_for_fixed(OBL_FLOAT_SHAPE_ADDR)] =
+            obl_create_cshape(database, "Float", 0, no_slots, OBL_FLOAT);
+    database->fixed[_index_for_fixed(OBL_DOUBLE_SHAPE_ADDR)] =
+            obl_create_cshape(database, "Double", 0, no_slots, OBL_DOUBLE);
+    database->fixed[_index_for_fixed(OBL_CHAR_SHAPE_ADDR)] =
+            obl_create_cshape(database, "Character", 0, no_slots, OBL_CHAR);
+    database->fixed[_index_for_fixed(OBL_STRING_SHAPE_ADDR)] =
+            obl_create_cshape(database, "String", 0, no_slots, OBL_STRING);
 
-    database->fixed[OBL_CHAR_SHAPE_ADDR] = obl_create_cshape(database,
-            "Character", 0, no_slots, OBL_CHAR);
-    database->fixed[OBL_STRING_SHAPE_ADDR] = obl_create_cshape(database,
-            "String", 0, no_slots, OBL_STRING);
+    database->fixed[_index_for_fixed(OBL_FIXED_SHAPE_ADDR)] =
+            obl_create_cshape(database, "FixedCollection", 0,
+                    no_slots, OBL_FIXED);
+    database->fixed[_index_for_fixed(OBL_CHUNK_SHAPE_ADDR)] =
+            obl_create_cshape(database, "OblChunk", 0, no_slots, OBL_CHUNK);
 
-    database->fixed[OBL_FIXED_SHAPE_ADDR] = obl_create_cshape(database,
-            "FixedCollection", 0, no_slots, OBL_FIXED);
-    database->fixed[OBL_CHUNK_SHAPE_ADDR] = obl_create_cshape(database,
-            "OblChunk", 0, no_slots, OBL_CHUNK);
+    database->fixed[_index_for_fixed(OBL_NIL_SHAPE_ADDR)] =
+            obl_create_cshape(database, "Undefined", 0, no_slots, OBL_NIL);
+    database->fixed[_index_for_fixed(OBL_BOOLEAN_SHAPE_ADDR)] =
+            obl_create_cshape(database, "Boolean", 0, no_slots, OBL_BOOLEAN);
 
-    database->fixed[OBL_NIL_SHAPE_ADDR] = obl_create_cshape(database,
-            "Undefined", 0, no_slots, OBL_NIL);
-    database->fixed[OBL_BOOLEAN_SHAPE_ADDR] = obl_create_cshape(database,
-            "Boolean", 0, no_slots, OBL_BOOLEAN);
-
-    database->fixed[OBL_NIL_ADDR] = _obl_create_nil(database);
-    database->fixed[OBL_TRUE_ADDR] = _obl_create_bool(database, 1);
-    database->fixed[OBL_FALSE_ADDR] = _obl_create_bool(database, 0);
+    database->fixed[_index_for_fixed(OBL_NIL_ADDR)] =
+            _obl_create_nil(database);
+    database->fixed[_index_for_fixed(OBL_TRUE_ADDR)] =
+            _obl_create_bool(database, 1);
+    database->fixed[_index_for_fixed(OBL_FALSE_ADDR)] =
+            _obl_create_bool(database, 0);
 
     /* Set logical addresses of these objects. */
-    for (i = 0; i < OBL_FIXED_ADDR_MAX; i++) {
-        database->fixed[i]->logical_address = (obl_logical_address) i;
+    for (i = 0; i < OBL_FIXED_SIZE; i++) {
+        addr = OBL_FIXED_ADDR_MIN + i;
+        database->fixed[i]->logical_address = addr;
     }
 
     return 0;
+}
+
+static int _index_for_fixed(obl_logical_address addr)
+{
+    return addr - OBL_FIXED_ADDR_MIN;
 }
