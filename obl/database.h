@@ -10,11 +10,14 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
-struct obl_database;
-
-#include "cache.h"
 #include "log.h"
-#include "object.h"
+#include "platform.h"
+
+/* Defined in cache.h */
+struct obl_cache;
+
+/* Defined in object.h */
+struct obl_object;
 
 /* Fixed allocation.  These logical addresses will always resolve to universally
  * accessible, constant objects that do not reside in the database.

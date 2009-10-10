@@ -9,8 +9,9 @@
 
 #include "database.h"
 
-#include "log.h"
+#include "cache.h"
 #include "constants.h"
+#include "log.h"
 #include "object.h"
 
 #include <stdio.h>

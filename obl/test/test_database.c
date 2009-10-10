@@ -9,8 +9,10 @@
 
 #include "CUnit/Headers/Basic.h"
 
-#include "database.h"
+#include "cache.h"
 #include "constants.h"
+#include "database.h"
+#include "object.h"
 
 void test_initialize_database(void)
 {
