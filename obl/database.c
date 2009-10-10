@@ -28,7 +28,7 @@ static char *error_messages[] = {
         NULL,
         "Unable to allocate an object", "Unable to read file",
         "Unable to open file", "Error during Unicode conversion",
-        "Incorrect object storage type"
+        "Incorrect object storage type", "Bad argument length"
 };
 
 /* External functions definitions. */

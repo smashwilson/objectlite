@@ -146,7 +146,7 @@ obl_object *obl_create_fixed(obl_database *d, obl_uint length)
 
     storage = (obl_fixed_storage *) malloc(sizeof(obl_fixed_storage));
     if (storage == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }
@@ -156,7 +156,7 @@ obl_object *obl_create_fixed(obl_database *d, obl_uint length)
     storage->length = length;
     storage->contents = (obl_object **) malloc(sizeof(obl_object*) * length);
     if (storage->contents == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, "Unable to allocate a new object.");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         free(storage);
         return NULL;
@@ -177,6 +177,12 @@ obl_object *obl_create_slotted(obl_object *shape)
     obl_object **slots;
     obl_uint i;
 
+    if (_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+                "obl_create_slotted requires a SHAPE object.");
+        return NULL;
+    }
+
     result = _allocate_object(shape->database);
     if (result == NULL) {
         return NULL;
@@ -184,8 +190,7 @@ obl_object *obl_create_slotted(obl_object *shape)
 
     storage = (obl_slotted_storage*) malloc(sizeof(obl_slotted_storage));
     if (storage == NULL) {
-        obl_report_error(shape->database, OBL_OUT_OF_MEMORY,
-                "Unable to allocate an object.");
+        obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }
@@ -195,8 +200,7 @@ obl_object *obl_create_slotted(obl_object *shape)
     slot_count = obl_shape_slotcount(shape);
     slots = (obl_object **) malloc(sizeof(obl_object*) * slot_count);
     if (slots == NULL) {
-        obl_report_error(shape->database, OBL_OUT_OF_MEMORY,
-                "Unable to allocate an object.");
+        obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         free(storage);
         return NULL;
@@ -295,18 +299,22 @@ obl_object *obl_create_cshape(obl_database *d,
 
 obl_uint obl_fixed_size(const obl_object *fixed)
 {
-    /* if (_storage_of(o) != OBL_FIXED_STORAGE) {
-     return 0;
-     } */
+    if (_storage_of(fixed) != OBL_FIXED) {
+        obl_report_error(fixed->database, OBL_WRONG_STORAGE,
+                "obl_fixed_size requires an object with FIXED storage.");
+        return 0;
+    }
 
     return fixed->storage.fixed_storage->length;
 }
 
 obl_object *obl_fixed_at(const obl_object *fixed, const obl_uint index)
 {
-    /* if (_storage_of(o) != OBL_FIXED_STORAGE) {
-     return 0;
-     } */
+    if (_storage_of(fixed) != OBL_FIXED) {
+        obl_report_error(fixed->database, OBL_WRONG_STORAGE,
+                        "obl_fixed_at requires an object with FIXED storage.");
+        return NULL;
+    }
 
     return fixed->storage.fixed_storage->contents[index];
 }
@@ -314,22 +322,26 @@ obl_object *obl_fixed_at(const obl_object *fixed, const obl_uint index)
 void obl_fixed_at_put(obl_object *fixed, const obl_uint index, obl_object *value)
 {
     if (_storage_of(fixed) != OBL_FIXED) {
+        obl_report_error(fixed->database, OBL_WRONG_STORAGE,
+                        "obl_fixed_at requires an object with FIXED storage.");
         return ;
     }
 
     fixed->storage.fixed_storage->contents[index] = value;
 }
 
-size_t obl_string_size(const obl_object *string)
+obl_uint obl_string_size(const obl_object *string)
 {
     if (_storage_of(string) != OBL_STRING) {
+        obl_report_error(string->database, OBL_WRONG_STORAGE,
+                "obl_string_size requires an object with STRING storage.");
         return 0;
     }
 
     return string->storage.string_storage->length;
 }
 
-obl_uint obl_string_chars(const obl_object *string, char *buffer, size_t buffer_size)
+size_t obl_string_chars(const obl_object *string, char *buffer, size_t buffer_size)
 {
     obl_string_storage *storage;
     UConverter *converter;
@@ -337,13 +349,16 @@ obl_uint obl_string_chars(const obl_object *string, char *buffer, size_t buffer_
     UErrorCode status = U_ZERO_ERROR;
 
     if (_storage_of(string) != OBL_STRING) {
+        obl_report_error(string->database, OBL_WRONG_STORAGE,
+                "obl_string_chars requires an object with STRING storage.");
         return 0;
     }
 
     converter = ucnv_open(NULL, &status);
     if (U_FAILURE(status)) {
-        obl_report_error(string->database, OBL_OUT_OF_MEMORY,
-                "Unable to allocate Unicode converter.");
+        obl_report_errorf(string->database, OBL_CONVERSION_ERROR,
+                "Error opening Unicode converter: %s",
+                u_errorName(status));
         return 0;
     }
 
@@ -354,8 +369,9 @@ obl_uint obl_string_chars(const obl_object *string, char *buffer, size_t buffer_
     ucnv_close(converter);
 
     if (U_FAILURE(status)) {
-        obl_report_error(string->database, OBL_CONVERSION_ERROR,
-                "Unable to convert string from UTF-16.");
+        obl_report_errorf(string->database, OBL_CONVERSION_ERROR,
+                "Unable to convert string from UTF-16: %s",
+                u_errorName(status));
     }
 
     return converted_length;
@@ -366,12 +382,12 @@ int obl_string_cmp(const obl_object *string_a, const obl_object *string_b)
     obl_uint length;
 
     if (_storage_of(string_a) != OBL_STRING || _storage_of(string_b) != OBL_STRING) {
-        return 1;
+        return -1;
     }
 
     length = obl_string_size(string_a);
     if (obl_string_size(string_b) != length) {
-        return 2;
+        return -1;
     }
 
     return memcmp(
@@ -385,10 +401,15 @@ int obl_string_ccmp(const obl_object *string, const char *match)
     obl_object *temp;
     int result;
 
+    if (_storage_of(string) != OBL_STRING) {
+        obl_report_error(string->database, OBL_WRONG_STORAGE,
+                "obl_string_ccmp requires a STRING object.");
+        return -1;
+    }
+
     temp = obl_create_cstring(string->database, match, strlen(match));
     if (temp == NULL) {
-        obl_report_error(string->database, OBL_OUT_OF_MEMORY,
-                "Unable to allocate a string for comparison");
+        obl_report_error(string->database, OBL_OUT_OF_MEMORY, NULL);
         return -1;
     }
     result = obl_string_cmp(string, temp);
@@ -399,6 +420,12 @@ int obl_string_ccmp(const obl_object *string, const char *match)
 
 obl_object *obl_slotted_at(const obl_object *slotted, const obl_uint index)
 {
+    if (_storage_of(slotted) != OBL_SLOTTED) {
+        obl_report_error(slotted->database, OBL_WRONG_STORAGE,
+                "obl_slotted_at requires a SLOTTED object.");
+        return obl_nil(slotted->database);
+    }
+
     return slotted->storage.slotted_storage->slots[index];
 }
 
@@ -415,6 +442,12 @@ obl_object *obl_slotted_atcnamed(const obl_object *slotted, const char *slotname
 void obl_slotted_at_put(obl_object *slotted, const obl_uint index,
         obl_object *value)
 {
+    if (_storage_of(slotted) != OBL_SLOTTED) {
+        obl_report_error(slotted->database, OBL_WRONG_STORAGE,
+                "obl_slotted_at_put requires a SLOTTED object.");
+        return ;
+    }
+
     slotted->storage.slotted_storage->slots[index] = value;
 }
 
@@ -433,6 +466,8 @@ void obl_slotted_atcnamed_put(obl_object *slotted, const char *slotname,
 obl_uint obl_shape_slotcount(const obl_object *shape)
 {
     if (_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+                "obl_shape_slotcount invoked with a non SHAPE object.");
         return 0;
     }
 
@@ -443,6 +478,12 @@ obl_uint obl_shape_slotnamed(const obl_object *shape, const obl_object *name)
 {
     obl_object *slots;
     obl_uint i;
+
+    if (_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+                "obl_shape_slotnamed invoked with a non SHAPE object.");
+        return 0;
+    }
 
     slots = shape->storage.shape_storage->slot_names;
     for (i = 0; i < obl_fixed_size(slots); i++) {
@@ -459,6 +500,12 @@ obl_uint obl_shape_slotcnamed(const obl_object *shape, const char *name)
     obl_object *temporary;
     obl_uint result;
 
+    if (_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+                "obl_shape_slotcnamed invoked with a non SHAPE object.");
+        return 0;
+    }
+
     temporary = obl_create_cstring(shape->database, name, strlen(name));
     if (temporary == NULL) {
         return -1;
@@ -471,6 +518,12 @@ obl_uint obl_shape_slotcnamed(const obl_object *shape, const char *name)
 
 obl_storage_type obl_shape_storagetype(const obl_object *shape)
 {
+    if (_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+                "obl_shape_storagetype invoked with a non SHAPE object.");
+        return 0;
+    }
+
     return (obl_storage_type)
             shape->storage.shape_storage->storage_format;
 }
@@ -484,6 +537,8 @@ obl_storage_type obl_shape_storagetype(const obl_object *shape)
 int obl_integer_value(const obl_object *integer)
 {
     if (_storage_of(integer) != OBL_INTEGER) {
+        obl_report_error(integer->database, OBL_WRONG_STORAGE,
+                "obl_integer_value called with a non-INTEGER object.");
         return 0;
     }
 
@@ -496,6 +551,8 @@ size_t obl_string_value(const obl_object *string, UChar *buffer, size_t buffer_s
     size_t count , bytes;
 
     if (_storage_of(string) != OBL_STRING) {
+        obl_report_error(string->database, OBL_WRONG_STORAGE,
+                "obl_string_value called with a non-STRING object.");
         return 0;
     }
 
@@ -572,8 +629,7 @@ obl_object *_obl_create_bool(obl_database *d, int truth)
     storage = (obl_boolean_storage*) malloc(sizeof(obl_boolean_storage));
     if (storage == NULL) {
         free(result);
-        obl_report_error(d, OBL_OUT_OF_MEMORY,
-                "Unable to allocate a boolean");
+        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 

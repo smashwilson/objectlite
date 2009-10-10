@@ -416,7 +416,7 @@ void obl_fixed_at_put(obl_object *fixed, const obl_uint index, obl_object *value
 /* STRING objects */
 
 /* Return the number of code points contained in the STRING object +o+. */
-size_t obl_string_size(const obl_object *string);
+obl_uint obl_string_size(const obl_object *string);
 
 /*
  * Acquire at most +buffer_size+ US-ASCII characters into +buffer+.  Return the
