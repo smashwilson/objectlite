@@ -3,7 +3,7 @@
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
  *
- * Platform-specific compile-time options.
+ * Platform-specific types and codes.
  */
 
 #ifndef PLATFORM_H
@@ -56,9 +56,40 @@ typedef obl_address obl_logical_address;
  * as ntohs() and ntohl().
  */
 #ifdef WIN32
+
 #include <Winsock2.h>
+
 #else
+
 #include <netinet/in.h>
+
+#endif
+
+/*
+ * Memory mapping and unmapping functions: native on POSIX systems, emulated
+ * on WIN32.
+ */
+#ifdef WIN32
+#include <sys/types.h>
+
+void *mmap(void *start, size_t length, int prot, int flags, int fd,
+        off_t offset);
+
+int munmap(void *start, size_t length);
+
+/* +prot+ and +flags+ constants. */
+#ifndef PROT_READ
+#define PROT_READ 1
+#define PROT_WRITE 2
+#define MAP_PRIVATE 1
+#define MAP_FAILED ((void*) -1)
+#endif
+
+#else
+
+#include <sys/mman.h>
+#include <stdio.h>
+
 #endif
 
 #endif

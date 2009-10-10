@@ -61,6 +61,56 @@ void test_read_integer(void)
 }
 
 /*
+ * Verify that the (possibly emulated) version of mmap() currently being used
+ * via platform.h actually works.
+ */
+void test_mmap(void)
+{
+    const char contents[10] = {
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'
+    };
+    FILE *f;
+    char *mapped;
+    int i, fd;
+
+    f = fopen(FILENAME, "wb");
+    for (i = 0; i < 10; i++) {
+        fputc(contents[i], f);
+    }
+    fclose(f);
+
+    f = fopen(FILENAME, "r+b");
+    fd = fileno(f);
+
+    mapped = (char*) mmap(0, 10, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+    if (mapped == MAP_FAILED) {
+        CU_FAIL("Unable to map memory.");
+        fclose(f);
+        return ;
+    }
+    fclose(f);
+
+    /* Ensure that data can be read properly from the mapped segment. */
+    CU_ASSERT(mapped[0] == 'a');
+    CU_ASSERT(mapped[4] == 'e');
+
+    /* Write data back to the file via the mapped segment. */
+    mapped[2] = 'z';
+
+    munmap(mapped, 10);
+
+    /* Check the written data in the actual file. */
+    f = fopen(FILENAME, "rb");
+    for (i = 0; i < 10; i++) {
+        if (i == 2) {
+            CU_ASSERT(fgetc(f) == 'z');
+        } else {
+            CU_ASSERT(fgetc(f) == contents[i]);
+        }
+    }
+}
+
+/*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
  */
@@ -73,8 +123,14 @@ CU_pSuite initialize_io_suite(void)
         return NULL;
     }
 
-    if ((CU_add_test(pSuite, "Read an Integer object from raw bytes.",
-            test_read_integer) == NULL)) {
+    if (
+        (CU_add_test(pSuite,
+                "Read an Integer object from raw bytes.",
+                test_read_integer) == NULL) ||
+        (CU_add_test(pSuite,
+                "Verify that mmap() is functional.",
+                test_mmap) == NULL)
+    ) {
         return NULL;
     }
 

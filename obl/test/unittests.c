@@ -31,9 +31,11 @@ int main()
     }
 
     if (
-    /*  (initialize_io_suite() == NULL) || */
-    (initialize_cache_suite() == NULL) || (initialize_database_suite() == NULL)
-            || (initialize_object_suite() == NULL)) {
+            (initialize_io_suite() == NULL) ||
+            (initialize_cache_suite() == NULL) ||
+            (initialize_database_suite() == NULL) ||
+            (initialize_object_suite() == NULL)
+    ) {
         CU_cleanup_registry();
         return CU_get_error();
     }
