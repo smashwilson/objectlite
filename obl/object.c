@@ -10,6 +10,7 @@
 #include "object.h"
 
 #include "database.h"
+#include "log.h"
 
 #include <stdlib.h>
 
@@ -568,6 +569,16 @@ int obl_integer_value(const struct obl_object *integer)
     return (int) (integer->storage.integer_storage->value);
 }
 
+int obl_boolean_value(const struct obl_object *bool)
+{
+    if (_storage_of(bool) != OBL_BOOLEAN) {
+        OBL_WARN(bool->database, "Non-boolean object: assuming truth.");
+        return 1;
+    }
+
+    return (int) (bool->storage.boolean_storage->value);
+}
+
 size_t obl_string_value(const struct obl_object *string,
         UChar *buffer, size_t buffer_size)
 {
@@ -591,7 +602,7 @@ size_t obl_string_value(const struct obl_object *string,
 
 /*
  * ============================================================================
- * Orderly object destruction.
+ * Various methods of object destruction.
  * ============================================================================
  */
 

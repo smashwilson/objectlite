@@ -52,7 +52,8 @@ struct obl_database *obl_create_database(const char *filename)
 
     cache = obl_create_cache(DEFAULT_CACHE_BUCKETS, DEFAULT_CACHE_SIZE);
     if (cache == NULL) {
-        obl_report_error(database, OBL_OUT_OF_MEMORY, "Unable to allocate cache.");
+        obl_report_error(database, OBL_OUT_OF_MEMORY,
+                "Unable to allocate cache.");
         free(database);
         return NULL;
     }
@@ -72,9 +73,17 @@ struct obl_database *obl_create_database(const char *filename)
 struct obl_object *obl_at_address(struct obl_database *database,
         const obl_logical_address address)
 {
+    struct obl_object *o;
+
     /* Check for fixed addresses first. */
     if (_is_fixed_address(address)) {
         return database->fixed[_index_for_fixed(address)];
+    }
+
+    /* Check for a cache hit. */
+    o = obl_cache_get(database->cache, address);
+    if (o != NULL) {
+        return o;
     }
 
     return NULL;

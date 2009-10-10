@@ -101,6 +101,30 @@ void test_allocate_fixed_space(void)
     obl_destroy_database(d);
 }
 
+void test_at_address(void)
+{
+    struct obl_database *d;
+    struct obl_object *in;
+    struct obl_object *out;
+
+    d = obl_create_database("foo.obl");
+
+    /* obl_at_address should defer to fixed space when appropriate. */
+    out = obl_at_address(d, OBL_TRUE_ADDR);
+    CU_ASSERT(obl_boolean_value(out));
+
+    /* obl_at_address should hit the cache. */
+    in = obl_create_integer(d, 14);
+    in->logical_address = 123;
+    obl_cache_insert(d->cache, in);
+
+    out = obl_at_address(d, 123);
+    CU_ASSERT(in == out);
+    CU_ASSERT(obl_integer_value(out) == 14);
+
+    obl_destroy_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -123,7 +147,10 @@ CU_pSuite initialize_database_suite(void)
                 test_report_error) == NULL) ||
         (CU_add_test(pSuite,
                 "Fixed space allocation.",
-                test_allocate_fixed_space) == NULL)
+                test_allocate_fixed_space) == NULL) ||
+        (CU_add_test(pSuite,
+                "Direct object access by logical address.",
+                test_at_address) == NULL)
     ) {
         return NULL;
     }

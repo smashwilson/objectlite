@@ -20,7 +20,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
    frowns upon it, and it makes some things messier.
 = conversion functions from C data types to obl_object types.
    remaining: chunk; treepage; float; double; char; stub
-- obl_at_address should hit fixed space and the cache.
+* obl_at_address should hit fixed space and the cache.
 * relocate fixed space to high addresses instead of low ones.  it'll help future-
    proof obl databases.
 * take out all direct references to int32_t and uint32_t types; replace them with

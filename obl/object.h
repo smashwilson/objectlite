@@ -477,7 +477,16 @@ obl_storage_type obl_shape_storagetype(const struct obl_object *shape);
  * ============================================================================
  */
 
+/*
+ * Return the stored value of an integer object +o+ as a C int.
+ */
 int obl_integer_value(const struct obl_object *o);
+
+/*
+ * Convert the +obl_true()+ or +obl_false()+ objects into the appropriate truth
+ * value for C if statements and so on.
+ */
+int obl_boolean_value(const struct obl_object *o);
 
 /*
  * Acquire at most +buffer_size+ code points contained within a STRING object
@@ -485,6 +494,12 @@ int obl_integer_value(const struct obl_object *o);
  */
 size_t obl_string_value(const struct obl_object *o,
         UChar *buffer, size_t buffer_size);
+
+/*
+ * ============================================================================
+ * Various methods of object destruction.
+ * ============================================================================
+ */
 
 /*
  * Orderly struct obl_object deallocation.

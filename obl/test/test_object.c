@@ -155,6 +155,18 @@ void test_create_slotted(void)
     obl_destroy_database(d);
 }
 
+void test_boolean_objects(void)
+{
+    struct obl_database *d;
+
+    d = obl_create_database("unit.obl");
+
+    CU_ASSERT(obl_boolean_value(obl_true(d)));
+    CU_ASSERT(! obl_boolean_value(obl_false(d)));
+
+    obl_destroy_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -179,11 +191,14 @@ CU_pSuite initialize_object_suite(void)
                 "Create an OBL_FIXED collection.",
                 test_create_fixed) == NULL) ||
         (CU_add_test(pSuite,
-                "Create a shape object with convenience methods.",
+                "Create a SHAPE object with convenience methods.",
                 test_create_shape) == NULL) ||
         (CU_add_test(pSuite,
-                "Manipulate slotted objects.",
-                test_create_slotted) == NULL)
+                "Manipulate SLOTTED objects.",
+                test_create_slotted) == NULL) ||
+        (CU_add_test(pSuite,
+                "Use BOOLEAN object.",
+                test_boolean_objects) == NULL)
     ) {
         return NULL;
     }
