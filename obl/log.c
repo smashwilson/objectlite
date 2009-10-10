@@ -16,7 +16,7 @@ static const char *level_names[] = { "DEBUG", "INFO", "NOTICE", "WARN",
 
 #define TS_SIZE 24
 
-void obl_log(obl_log_configuration *config, obl_log_level level,
+void obl_log(struct obl_log_configuration *config, obl_log_level level,
         const char *message)
 {
     FILE *log_file;

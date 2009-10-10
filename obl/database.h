@@ -86,7 +86,7 @@ struct obl_database {
     struct obl_object **fixed;
 
     /* Logging and error structures. */
-    obl_log_configuration log_config;
+    struct obl_log_configuration log_config;
     struct error last_error;
 };
 

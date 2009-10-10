@@ -14,13 +14,12 @@ typedef enum
     L_DEBUG, L_INFO, L_NOTICE, L_WARN, L_ERROR, L_NONE
 } obl_log_level;
 
-typedef struct
-{
+struct obl_log_configuration {
     char *filename;
     obl_log_level level;
-} obl_log_configuration;
+};
 
-void obl_log(obl_log_configuration *config, obl_log_level level,
+void obl_log(struct obl_log_configuration *config, obl_log_level level,
         const char *message);
 
 #ifndef DISABLE_LOGGING
