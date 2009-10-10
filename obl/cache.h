@@ -39,7 +39,7 @@ struct obl_cache {
     struct obl_cache_entry **buckets;
     struct obl_cache_age_entry *oldest;
     struct obl_cache_age_entry *youngest;
-    obl_database *database;
+    struct obl_database *database;
 };
 
 /*

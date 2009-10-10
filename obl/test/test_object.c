@@ -18,7 +18,7 @@
 
 void test_create_integer(void)
 {
-    obl_database *d;
+    struct obl_database *d;
     struct obl_object *o;
 
     d = obl_create_database("unit.obl");
@@ -36,7 +36,7 @@ void test_create_integer(void)
 void test_create_string(void)
 {
     char *string = "NULL-terminated C string.";
-    obl_database *d;
+    struct obl_database *d;
     struct obl_object *o;
     char *buffer;
     int i;
@@ -65,7 +65,7 @@ void test_create_fixed(void)
 {
     const size_t length = 3;
     struct obl_object *items[length];
-    obl_database *d;
+    struct obl_database *d;
     struct obl_object *o;
     int i;
 
@@ -99,7 +99,7 @@ void test_create_fixed(void)
 void test_create_shape(void)
 {
     char *slot_names[] = { "one", "two" };
-    obl_database *d;
+    struct obl_database *d;
     struct obl_object *o;
     struct obl_shape_storage *storage;
 
@@ -128,7 +128,7 @@ void test_create_shape(void)
 void test_create_slotted(void)
 {
     char *slot_names[] = { "foo" , "bar" };
-    obl_database *d;
+    struct obl_database *d;
     struct obl_object *shape;
     struct obl_object *o;
     struct obl_object *value;

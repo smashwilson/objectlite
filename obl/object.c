@@ -3,7 +3,8 @@
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
  *
- * Defines the in-memory representations of objects that can be stored in ObjectLite.
+ * Defines the in-memory representations of objects that can be stored in
+ * ObjectLite.
  */
 
 #include "object.h"
@@ -20,9 +21,9 @@
 
 static inline obl_storage_type _storage_of(const struct obl_object *o);
 
-static inline struct obl_object *_allocate_object(obl_database *d);
+static inline struct obl_object *_allocate_object(struct obl_database *d);
 
-static struct obl_object *_allocate_string(obl_database *d,
+static struct obl_object *_allocate_string(struct obl_database *d,
         UChar *uc, obl_uint length);
 
 /*
@@ -31,7 +32,7 @@ static struct obl_object *_allocate_string(obl_database *d,
  * ============================================================================
  */
 
-struct obl_object *obl_create_integer(obl_database *d, int i)
+struct obl_object *obl_create_integer(struct obl_database *d, int i)
 {
     struct obl_object *result;
     struct obl_integer_storage *storage;
@@ -60,27 +61,27 @@ struct obl_object *obl_create_integer(obl_database *d, int i)
     return result;
 }
 
-struct obl_object *obl_create_float(obl_database *d, float f)
+struct obl_object *obl_create_float(struct obl_database *d, float f)
 {
     return NULL;
 }
 
-struct obl_object *obl_create_double(obl_database *d, double dbl)
+struct obl_object *obl_create_double(struct obl_database *d, double dbl)
 {
     return NULL;
 }
 
-struct obl_object *obl_create_char(obl_database *d, char c)
+struct obl_object *obl_create_char(struct obl_database *d, char c)
 {
     return NULL;
 }
 
-struct obl_object *obl_create_uchar(obl_database *d, UChar32 uc)
+struct obl_object *obl_create_uchar(struct obl_database *d, UChar32 uc)
 {
     return NULL;
 }
 
-struct obl_object *obl_create_string(obl_database *d,
+struct obl_object *obl_create_string(struct obl_database *d,
         const UChar *uc, obl_uint length)
 {
     UChar *copied;
@@ -98,7 +99,7 @@ struct obl_object *obl_create_string(obl_database *d,
     return _allocate_string(d, copied, length);
 }
 
-struct obl_object *obl_create_cstring(obl_database *d,
+struct obl_object *obl_create_cstring(struct obl_database *d,
         const char *c, obl_uint length)
 {
     UConverter *converter;
@@ -136,7 +137,7 @@ struct obl_object *obl_create_cstring(obl_database *d,
     return _allocate_string(d, output_string, (obl_uint) converted_length);
 }
 
-struct obl_object *obl_create_fixed(obl_database *d, obl_uint length)
+struct obl_object *obl_create_fixed(struct obl_database *d, obl_uint length)
 {
     struct obl_object *result;
     struct obl_fixed_storage *storage;
@@ -221,7 +222,7 @@ struct obl_object *obl_create_slotted(struct obl_object *shape)
     return result;
 }
 
-struct obl_object *obl_create_shape(obl_database *d,
+struct obl_object *obl_create_shape(struct obl_database *d,
         struct obl_object *name, struct obl_object *slot_names,
         obl_storage_type type)
 {
@@ -251,7 +252,7 @@ struct obl_object *obl_create_shape(obl_database *d,
     return result;
 }
 
-struct obl_object *obl_create_cshape(obl_database *d,
+struct obl_object *obl_create_cshape(struct obl_database *d,
         char *name, size_t slot_count, char **slot_names,
         obl_storage_type type)
 {
@@ -446,13 +447,15 @@ struct obl_object *obl_slotted_at(const struct obl_object *slotted,
 struct obl_object *obl_slotted_atnamed(const struct obl_object *slotted,
         const struct obl_object *slotname)
 {
-    return obl_slotted_at(slotted, obl_shape_slotnamed(slotted->shape, slotname));
+    return obl_slotted_at(slotted,
+            obl_shape_slotnamed(slotted->shape, slotname));
 }
 
 struct obl_object *obl_slotted_atcnamed(const struct obl_object *slotted,
         const char *slotname)
 {
-    return obl_slotted_at(slotted, obl_shape_slotcnamed(slotted->shape, slotname));
+    return obl_slotted_at(slotted,
+            obl_shape_slotcnamed(slotted->shape, slotname));
 }
 
 void obl_slotted_at_put(struct obl_object *slotted,
@@ -620,7 +623,7 @@ void obl_destroy_cshape(struct obl_object *shape)
  * ============================================================================
  */
 
-struct obl_object *_obl_create_nil(obl_database *d)
+struct obl_object *_obl_create_nil(struct obl_database *d)
 {
     struct obl_object *result, *shape;
 
@@ -635,7 +638,7 @@ struct obl_object *_obl_create_nil(obl_database *d)
     return result;
 }
 
-struct obl_object *_obl_create_bool(obl_database *d, int truth)
+struct obl_object *_obl_create_bool(struct obl_database *d, int truth)
 {
     struct obl_object *result, *shape;
     struct obl_boolean_storage *storage;
@@ -661,7 +664,7 @@ struct obl_object *_obl_create_bool(obl_database *d, int truth)
     return result;
 }
 
-struct obl_object *_obl_create_stub(obl_database *d,
+struct obl_object *_obl_create_stub(struct obl_database *d,
         obl_logical_address address)
 {
     return NULL;
@@ -679,12 +682,15 @@ inline obl_storage_type _storage_of(const struct obl_object *o)
     if (o->shape == NULL) {
         return OBL_SHAPE;
     } else {
-        return (obl_storage_type) o->shape->storage.shape_storage->storage_format;
+        return (obl_storage_type)
+                o->shape->storage.shape_storage->storage_format;
     }
 }
 
-/* Allocate and perform common initialization for an unpersisted struct obl_object. */
-inline struct obl_object *_allocate_object(obl_database *d)
+/*
+ * Allocate and perform common initialization for an unpersisted obl_object.
+ */
+inline struct obl_object *_allocate_object(struct obl_database *d)
 {
     struct obl_object *result = (struct obl_object *)
             malloc(sizeof(struct obl_object));
@@ -701,7 +707,7 @@ inline struct obl_object *_allocate_object(obl_database *d)
 }
 
 /* Allocate and perform common initialization for STRING objects. */
-static struct obl_object *_allocate_string(obl_database *d,
+static struct obl_object *_allocate_string(struct obl_database *d,
         UChar *uc, obl_uint length)
 {
     struct obl_object *result;

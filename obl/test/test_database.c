@@ -14,7 +14,7 @@
 
 void test_initialize_database(void)
 {
-    obl_database *database;
+    struct obl_database *database;
     struct obl_cache *cache;
 
     database = obl_create_database("foo.obl");
@@ -41,7 +41,7 @@ void test_initialize_database(void)
 
 void test_report_error(void)
 {
-    obl_database *database;
+    struct obl_database *database;
 
     database = obl_create_database("foo.obl");
     CU_ASSERT_FATAL(database != NULL);
@@ -72,7 +72,7 @@ void test_report_error(void)
 
 void test_allocate_fixed_space(void)
 {
-    obl_database *d;
+    struct obl_database *d;
     struct obl_object *o;
 
     d = obl_create_database("foo.obl");

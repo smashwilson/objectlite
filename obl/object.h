@@ -277,7 +277,7 @@ struct obl_object
 {
 
     /* Database that this object is stored in, or NULL. */
-    obl_database *database;
+    struct obl_database *database;
 
     /* The logical address of this object, if one has been assigned. */
     obl_logical_address logical_address;
@@ -322,36 +322,36 @@ struct obl_object
  */
 
 /* int to INTEGER object. */
-struct obl_object *obl_create_integer(obl_database *d, int i);
+struct obl_object *obl_create_integer(struct obl_database *d, int i);
 
 /* float to FLOAT object. */
-struct obl_object *obl_create_float(obl_database *d, float f);
+struct obl_object *obl_create_float(struct obl_database *d, float f);
 
 /* double to DOUBLE object. */
-struct obl_object *obl_create_double(obl_database *d, double dbl);
+struct obl_object *obl_create_double(struct obl_database *d, double dbl);
 
 /* char to CHAR object, including translation from US-ASCII to UTF-16. */
-struct obl_object *obl_create_char(obl_database *d, char c);
+struct obl_object *obl_create_char(struct obl_database *d, char c);
 
 /* Unicode UChar32 to CHAR object. */
-struct obl_object *obl_create_uchar(obl_database *d, UChar32 uc);
+struct obl_object *obl_create_uchar(struct obl_database *d, UChar32 uc);
 
 /* Unicode string to STRING object. */
-struct obl_object *obl_create_string(obl_database *d,
+struct obl_object *obl_create_string(struct obl_database *d,
         const UChar *uc, obl_uint length);
 
 /* C string to UTF-16 STRING object. */
-struct obl_object *obl_create_cstring(obl_database *d,
+struct obl_object *obl_create_cstring(struct obl_database *d,
         const char *c, obl_uint length);
 
 /* Fixed-size collection creation. */
-struct obl_object *obl_create_fixed(obl_database *d, obl_uint length);
+struct obl_object *obl_create_fixed(struct obl_database *d, obl_uint length);
 
 /* Slotted object creation */
 struct obl_object *obl_create_slotted(struct obl_object *shape);
 
 /* Construction of SHAPE objects from individual shape components. */
-struct obl_object *obl_create_shape(obl_database *d,
+struct obl_object *obl_create_shape(struct obl_database *d,
         struct obl_object *name, struct obl_object *slot_names,
         obl_storage_type type);
 
@@ -360,7 +360,7 @@ struct obl_object *obl_create_shape(obl_database *d,
  * created with this function *must* be destroyed with +obl_destroy_cshape+ to
  * deallocate internal objects.
  */
-struct obl_object *obl_create_cshape(obl_database *d,
+struct obl_object *obl_create_cshape(struct obl_database *d,
         char *name, size_t slot_count, char **slot_names,
         obl_storage_type type);
 
@@ -512,13 +512,13 @@ void obl_destroy_cshape(struct obl_object *o);
  */
 
 /* Creates the one and only NIL instance in the database. */
-struct obl_object *_obl_create_nil(obl_database *d);
+struct obl_object *_obl_create_nil(struct obl_database *d);
 
 /* Creates the only instances of true (1) and false (0). */
-struct obl_object *_obl_create_bool(obl_database *d, int truth);
+struct obl_object *_obl_create_bool(struct obl_database *d, int truth);
 
 /* Placeholder for deferring an object load operation. */
-struct obl_object *_obl_create_stub(obl_database *d,
+struct obl_object *_obl_create_stub(struct obl_database *d,
         obl_logical_address address);
 
 #endif

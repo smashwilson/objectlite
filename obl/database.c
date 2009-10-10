@@ -20,7 +20,7 @@
 
 static inline int _is_fixed_address(const obl_logical_address addr);
 
-static int _initialize_fixed_objects(obl_database *database);
+static int _initialize_fixed_objects(struct obl_database *database);
 
 /* Error codes: one for each error_code in error.h. */
 
@@ -33,12 +33,12 @@ static char *error_messages[] = {
 
 /* External functions definitions. */
 
-obl_database *obl_create_database(const char *filename)
+struct obl_database *obl_create_database(const char *filename)
 {
-    obl_database *database;
+    struct obl_database *database;
     struct obl_cache *cache;
 
-    database = (obl_database*) malloc(sizeof(obl_database));
+    database = (struct obl_database*) malloc(sizeof(struct obl_database));
     if (database == NULL) {
         return NULL;
     }
@@ -66,7 +66,7 @@ obl_database *obl_create_database(const char *filename)
     return database;
 }
 
-struct obl_object *obl_at_address(obl_database *database,
+struct obl_object *obl_at_address(struct obl_database *database,
         const obl_logical_address address)
 {
     /* Check for fixed addresses first. */
@@ -77,22 +77,22 @@ struct obl_object *obl_at_address(obl_database *database,
     return NULL;
 }
 
-struct obl_object *obl_nil(obl_database *database)
+struct obl_object *obl_nil(struct obl_database *database)
 {
     return obl_at_address(database, OBL_NIL_ADDR);
 }
 
-struct obl_object *obl_true(obl_database *database)
+struct obl_object *obl_true(struct obl_database *database)
 {
     return obl_at_address(database, OBL_TRUE_ADDR);
 }
 
-struct obl_object *obl_false(obl_database *database)
+struct obl_object *obl_false(struct obl_database *database)
 {
     return obl_at_address(database, OBL_FALSE_ADDR);
 }
 
-void obl_destroy_database(obl_database *database)
+void obl_destroy_database(struct obl_database *database)
 {
     int i;
     struct obl_object *o;
@@ -117,12 +117,12 @@ void obl_destroy_database(obl_database *database)
     free(database);
 }
 
-int obl_database_ok(const obl_database *database)
+int obl_database_ok(const struct obl_database *database)
 {
     return database->last_error.code == OBL_OK;
 }
 
-void obl_clear_error(obl_database *database)
+void obl_clear_error(struct obl_database *database)
 {
     if (database->last_error.message != NULL) {
         free(database->last_error.message);
@@ -131,7 +131,7 @@ void obl_clear_error(obl_database *database)
     database->last_error.code = OBL_OK;
 }
 
-void obl_report_error(obl_database *database, error_code code, const char *message)
+void obl_report_error(struct obl_database *database, error_code code, const char *message)
 {
     char *buffer;
     size_t message_size;
@@ -155,7 +155,7 @@ void obl_report_error(obl_database *database, error_code code, const char *messa
     database->last_error.code = code;
 }
 
-void obl_report_errorf(obl_database *database, error_code code,
+void obl_report_errorf(struct obl_database *database, error_code code,
         const char *format, ...)
 {
     va_list args;
@@ -184,7 +184,7 @@ static inline int _is_fixed_address(const obl_logical_address addr)
     return addr < OBL_FIXED_ADDR_MAX;
 }
 
-static int _initialize_fixed_objects(obl_database *database)
+static int _initialize_fixed_objects(struct obl_database *database)
 {
     int i;
     char *no_slots[0];
