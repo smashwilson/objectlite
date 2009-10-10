@@ -25,7 +25,7 @@ static int _initialize_fixed_objects(struct obl_database *database);
 /* Error codes: one for each error_code in error.h. */
 
 static char *error_messages[] = {
-        NULL,
+        "EVERYTHING IS FINE",
         "Unable to allocate an object", "Unable to read file",
         "Unable to open file", "Error during Unicode conversion",
         "Incorrect object storage type", "Bad argument length"

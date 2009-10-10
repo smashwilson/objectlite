@@ -11,8 +11,9 @@
 #include <stdio.h>
 #include <time.h>
 
-static const char *level_names[] = { "DEBUG", "INFO", "NOTICE", "WARN",
-        "ERROR", "NONE" };
+static const char *level_names[] = {
+        "DEBUG", "INFO", "NOTICE", "WARN", "ERROR", "NONE"
+};
 
 #define TS_SIZE 24
 

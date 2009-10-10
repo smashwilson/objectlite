@@ -16,7 +16,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
 * manual creation functions for obl_shape objects.
 * consistent handling of obl_object type errors.
 - disentangle header includes.  use extern definitions whereever possible.
-- de-anonymize structs and enums.  it makes references nicer, but the C community
+* de-anonymize structs and enums.  it makes references nicer, but the C community
    frowns upon it, and it makes some things messier.
 = conversion functions from C data types to obl_object types.
 - obl_at_address should hit fixed space and the cache.
