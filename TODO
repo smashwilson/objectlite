@@ -12,13 +12,14 @@ A rough timeline of the tasks to finish before we see release, large and small.
 - make the SConstruct files a little more cross-platform.
 * obl_database struct (a place for the cache, logger, and error handlers to
    live).
-= the rest of the obl_object internal format structs.
+* the rest of the obl_object internal format structs.
 * manual creation functions for obl_shape objects.
 * consistent handling of obl_object type errors.
-- disentangle header includes.  use extern definitions whereever possible.
+* disentangle header includes.  use extern definitions whereever possible.
 * de-anonymize structs and enums.  it makes references nicer, but the C community
    frowns upon it, and it makes some things messier.
 = conversion functions from C data types to obl_object types.
+   remaining: chunk; treepage; float; double; char; stub
 - obl_at_address should hit fixed space and the cache.
 - relocate fixed space to high addresses instead of low ones.  it'll help future-
    proof obl databases.
@@ -28,11 +29,11 @@ A rough timeline of the tasks to finish before we see release, large and small.
 # Primitive I/O
 
 - implement mmap() and munmap() equivalents for MinGW.
-- read/write integer objects.
-- read/write the rest of the single-word object formats.
+- read/write the single-word object formats:
+   remaining: integer; float; double; char
 - read/write slotted objects.
 - read/write fixed objects and Unicode strings.
-- read/write chunks and manipulate chunked objects.
+- read/write chunks.
 - read/write tree pages.
 - read/write arbitrary objects by reading the shape word and delegating to one
    of the other object-reading functions.
