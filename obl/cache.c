@@ -11,7 +11,6 @@
 #include "cache.h"
 
 #include "log.h"
-#include "error.h"
 #include "database.h"
 
 /*

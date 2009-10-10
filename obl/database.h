@@ -14,7 +14,6 @@ struct obl_database;
 
 #include "cache.h"
 #include "log.h"
-#include "error.h"
 #include "object.h"
 
 /* Fixed allocation.  These logical addresses will always resolve to universally
@@ -47,6 +46,29 @@ typedef enum
 } obl_fixed_address;
 
 /*
+ * The available error codes.  Each error code should correspond to one
+ * exception class in each language's binding.
+ */
+typedef enum
+{
+    OBL_OK,
+    OBL_OUT_OF_MEMORY,
+    OBL_UNABLE_TO_READ_FILE,
+    OBL_UNABLE_TO_OPEN_FILE,
+    OBL_CONVERSION_ERROR,
+    OBL_WRONG_STORAGE,
+    OBL_ARGUMENT_SIZE
+} error_code;
+
+/*
+ * A structure for storing information about an error that's occurred.
+ */
+struct error {
+    char *message;
+    error_code code;
+};
+
+/*
  * ObjectLite interface layer.
  */
 struct obl_database {
@@ -65,7 +87,7 @@ struct obl_database {
 
     /* Logging and error structures. */
     obl_log_configuration log_config;
-    error last_error;
+    struct error last_error;
 };
 
 /*
