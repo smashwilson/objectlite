@@ -108,7 +108,7 @@ void test_create_shape(void)
     o = obl_create_cshape(d, "Foo", 2, slot_names, OBL_SLOTTED);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->database == d);
-    CU_ASSERT(o->shape == NULL);
+    CU_ASSERT(o->shape == obl_nil(d));
 
     storage = o->storage.shape_storage;
     CU_ASSERT_FATAL(storage != NULL);

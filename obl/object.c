@@ -238,7 +238,7 @@ struct obl_object *obl_create_shape(struct obl_database *d,
         free(result);
         return NULL;
     }
-    result->shape = NULL;
+    result->shape = obl_nil(d);
 
     storage->name = name;
     storage->slot_names = slot_names;
@@ -700,7 +700,7 @@ struct obl_object *_obl_create_stub(struct obl_database *d,
 
 obl_storage_type _obl_storage_of(const struct obl_object *o)
 {
-    if (o->shape == NULL) {
+    if (o->shape == obl_nil(o->database)) {
         return OBL_SHAPE;
     } else {
         return (obl_storage_type)

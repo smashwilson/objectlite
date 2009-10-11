@@ -212,8 +212,8 @@ static int _initialize_fixed_objects(struct obl_database *database)
     int i;
     obl_logical_address addr;
     char *no_slots[0];
-    struct obl_object *fixed_shape;
-    struct obl_object *string_shape;
+    struct obl_object *fixed_shape, *string_shape, *undefined_shape;
+    struct obl_object *nil;
 
     database->fixed = (struct obl_object **)
             malloc(sizeof(struct obl_object*) * OBL_FIXED_SIZE);
@@ -226,21 +226,36 @@ static int _initialize_fixed_objects(struct obl_database *database)
     }
 
     /*
-     * The FixedCollection and String shapes are used inside of shape objects
-     * (including their own).  Create these shapes first and manually correct
-     * the structures of their shape members.
+     * The FixedCollection, String, Undefined shapes and Nil object are used
+     * inside of shape objects (including their own).  Create these objects
+     * first and manually correct the structures of their shape members.
      */
     fixed_shape = obl_create_cshape(database, "FixedCollection",
             0, no_slots, OBL_FIXED);
     string_shape = obl_create_cshape(database, "String",
             0, no_slots, OBL_STRING);
+    undefined_shape = obl_create_cshape(database, "Undefined",
+            0, no_slots, OBL_NIL);
+    nil = _obl_create_nil(database);
+
+    fixed_shape->shape = nil;
+    fixed_shape->storage.shape_storage->current_shape = nil;
     fixed_shape->storage.shape_storage->name->shape = string_shape;
     fixed_shape->storage.shape_storage->slot_names->shape = fixed_shape;
+    string_shape->shape = nil;
+    string_shape->storage.shape_storage->current_shape = nil;
     string_shape->storage.shape_storage->name->shape = string_shape;
     string_shape->storage.shape_storage->slot_names->shape = fixed_shape;
+    undefined_shape->shape = nil;
+    undefined_shape->storage.shape_storage->current_shape = nil;
+    undefined_shape->storage.shape_storage->name->shape = string_shape;
+    undefined_shape->storage.shape_storage->slot_names->shape = fixed_shape;
+    nil->shape = undefined_shape;
 
     database->fixed[_index_for_fixed(OBL_FIXED_SHAPE_ADDR)] = fixed_shape;
     database->fixed[_index_for_fixed(OBL_STRING_SHAPE_ADDR)] = string_shape;
+    database->fixed[_index_for_fixed(OBL_NIL_SHAPE_ADDR)] = undefined_shape;
+    database->fixed[_index_for_fixed(OBL_NIL_ADDR)] = nil;
 
     /*
      * Allocate the rest of the fixed-space shape objects.
@@ -256,20 +271,15 @@ static int _initialize_fixed_objects(struct obl_database *database)
 
     database->fixed[_index_for_fixed(OBL_CHUNK_SHAPE_ADDR)] =
             obl_create_cshape(database, "OblChunk", 0, no_slots, OBL_CHUNK);
-
-    database->fixed[_index_for_fixed(OBL_NIL_SHAPE_ADDR)] =
-            obl_create_cshape(database, "Undefined", 0, no_slots, OBL_NIL);
     database->fixed[_index_for_fixed(OBL_BOOLEAN_SHAPE_ADDR)] =
             obl_create_cshape(database, "Boolean", 0, no_slots, OBL_BOOLEAN);
     database->fixed[_index_for_fixed(OBL_STUB_SHAPE_ADDR)] =
             obl_create_cshape(database, "OblStub", 0, no_slots, OBL_STUB);
 
     /*
-     * Allocate the only instances of the three immutables: nil, true, and
-     * false.
+     * Allocate the only instances of the other two of the three immutables:
+     * true, and false.
      */
-    database->fixed[_index_for_fixed(OBL_NIL_ADDR)] =
-            _obl_create_nil(database);
     database->fixed[_index_for_fixed(OBL_TRUE_ADDR)] =
             _obl_create_bool(database, 1);
     database->fixed[_index_for_fixed(OBL_FALSE_ADDR)] =
