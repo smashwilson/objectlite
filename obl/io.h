@@ -31,6 +31,10 @@ typedef struct obl_object *(*obl_object_read_function)(
 struct obl_object *obl_read_integer(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset);
 
+/* Read a length-prefixed UTF-16BE string object. */
+struct obl_object *obl_read_string(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset);
+
 /*
  * Read a slotted object.  The number of slots expected is determined by the
  * provided shape.

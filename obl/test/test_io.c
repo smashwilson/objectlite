@@ -40,6 +40,29 @@ void test_read_integer(void)
     obl_destroy_database(d);
 }
 
+void test_read_string(void)
+{
+    /* length obl_uword, UTF-16BE */
+    char contents[] = {
+            0x0, 0x0, 0x0, 0x4,
+            0x0, 'a',
+            0x0, 'b',
+            0x0, 'c',
+            0x0, 'd'
+    };
+    struct obl_database *d;
+    struct obl_object *shape, *o;
+
+    d = obl_create_database(FILENAME);
+
+    shape = obl_at_address(d, OBL_STRING_SHAPE_ADDR);
+    o = obl_read_string(shape, (obl_uint*) contents, 0);
+    CU_ASSERT(obl_string_size(o) == 4);
+    CU_ASSERT(obl_string_ccmp(o, "abcd") == 0);
+
+    obl_destroy_database(d);
+}
+
 /*
  * Verify that the (possibly emulated) version of mmap() currently being used
  * via platform.h actually works.
@@ -107,6 +130,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_read_integer",
                 test_read_integer) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_read_string",
+                test_read_string) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)

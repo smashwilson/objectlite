@@ -29,14 +29,14 @@ A rough timeline of the tasks to finish before we see release, large and small.
 # Primitive I/O
 
 * implement mmap() and munmap() equivalents for MinGW.
-= read/write the single-word object formats:
+= read/ - write the single-word object formats:
    remaining: integer; float; double; char
-- read/write string objects.
-- read/write slotted objects.
-- read/write fixed objects.
-- read/write chunks.
-- read/write tree pages.
-- read/write arbitrary objects by reading the shape word and delegating to one
+* read/ - write string objects.
+- read/ - write slotted objects.
+- read/ - write fixed objects.
+- read/ - write chunks.
+- read/ - write tree pages.
+- read/ - write arbitrary objects by reading the shape word and delegating to one
    of the other object-reading functions.
 - implement the address map with tree pages.
 - implement the address allocator.

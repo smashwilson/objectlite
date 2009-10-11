@@ -34,7 +34,7 @@ obl_object_read_function obl_read_functions[] = {
         &obl_invalid_storage, /* OBL_FLOAT */
         &obl_invalid_storage, /* OBL_DOUBLE */
         &obl_invalid_storage, /* OBL_CHAR */
-        &obl_invalid_storage, /* OBL_STRING */
+        &obl_read_string,     /* OBL_STRING */
         &obl_invalid_storage, /* OBL_BOOLEAN (invalid) */
         &obl_invalid_storage, /* OBL_NIL (invalid) */
         &obl_invalid_storage  /* OBL_STUB (invalid) */
@@ -51,6 +51,36 @@ struct obl_object *obl_read_integer(struct obl_object *shape,
     o = obl_create_integer(shape->database, value);
     o->physical_address = offset;
 
+    return o;
+}
+
+/* Strings are stored as UTF-16BE with a one-word length prefix. */
+struct obl_object *obl_read_string(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset)
+{
+    obl_uint length;
+    obl_uint i;
+    UChar *casted_source;
+    int casted_offset;
+    UChar *contents;
+    struct obl_object *o;
+
+    length = readable_uint(source[offset]);
+    contents = (UChar*) malloc(length * sizeof(UChar));
+    if (contents == NULL) {
+        obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
+        return obl_nil(shape->database);
+    }
+
+    casted_source = (UChar *) source;
+    casted_offset = (offset + 1) * (sizeof(obl_uint) / sizeof(UChar));
+    for (i = 0; i < length; i++) {
+        contents[i] = readable_UChar(
+                casted_source[casted_offset + i]);
+    }
+
+    o = obl_create_string(shape->database, contents, length);
+    free(contents);
     return o;
 }
 
