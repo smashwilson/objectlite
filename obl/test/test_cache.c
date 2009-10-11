@@ -301,20 +301,29 @@ CU_pSuite initialize_cache_suite(void)
         return NULL;
     }
 
-    if ((CU_add_test(pSuite, "Initialize and destroy a cache.",
-            test_initialize_cache) == NULL) || (CU_add_test(pSuite,
-            "Insert non-colliding values into a cache.",
-            test_cache_noncolliding) == NULL) || (CU_add_test(pSuite,
-            "Insert colliding values into a cache.", test_cache_colliding)
-            == NULL) || (CU_add_test(pSuite,
-            "Cache queries that don't modify entry age.",
-            test_quiet_cache_retrieval) == NULL) || (CU_add_test(pSuite,
-            "Cache queries that do modify entry age.", test_cache_retrieval)
-            == NULL) || (CU_add_test(pSuite,
-            "Removing entries manually from the cache.", test_cache_deletion)
-            == NULL) || (CU_add_test(pSuite,
-            "Automatically removing the oldest element.", test_cache_overfill)
-            == NULL)) {
+    if (
+            (CU_add_test(pSuite,
+                    "test_initialize_cache",
+                    test_initialize_cache) == NULL) ||
+            (CU_add_test(pSuite,
+                    "test_cache_noncolliding",
+                    test_cache_noncolliding) == NULL) ||
+            (CU_add_test(pSuite,
+                    "test_cache_colliding",
+                    test_cache_colliding) == NULL) ||
+            (CU_add_test(pSuite,
+                    "test_quiet_cache_retrieval",
+                    test_quiet_cache_retrieval) == NULL) ||
+            (CU_add_test(pSuite,
+                    "test_cache_retrieval",
+                    test_cache_retrieval) == NULL) ||
+            (CU_add_test(pSuite,
+                    "test_cache_deletion",
+                    test_cache_deletion) == NULL) ||
+            (CU_add_test(pSuite,
+                    "test_cache_overfill",
+                    test_cache_overfill) == NULL)
+    ) {
         return NULL;
     }
 

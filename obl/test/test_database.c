@@ -143,16 +143,16 @@ CU_pSuite initialize_database_suite(void)
 
     if (
         (CU_add_test(pSuite,
-                "Initialize the database structure.",
+                "test_initialize_database",
                 test_initialize_database) == NULL) ||
         (CU_add_test(pSuite,
-                "Reporting and clearing errors.",
+                "test_report_error",
                 test_report_error) == NULL) ||
         (CU_add_test(pSuite,
-                "Fixed space allocation.",
+                "test_allocate_fixed_space",
                 test_allocate_fixed_space) == NULL) ||
         (CU_add_test(pSuite,
-                "Direct object access by logical address.",
+                "test_at_address",
                 test_at_address) == NULL)
     ) {
         return NULL;

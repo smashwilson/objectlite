@@ -182,22 +182,22 @@ CU_pSuite initialize_object_suite(void)
 
     if (
         (CU_add_test(pSuite,
-                "Create an OBL_INTEGER object.",
+                "test_create_integer",
                 test_create_integer) == NULL) ||
         (CU_add_test(pSuite,
-                "Create an OBL_STRING object from a C string.",
+                "test_create_string",
                 test_create_string) == NULL) ||
         (CU_add_test(pSuite,
-                "Create an OBL_FIXED collection.",
+                "test_create_fixed",
                 test_create_fixed) == NULL) ||
         (CU_add_test(pSuite,
-                "Create a SHAPE object with convenience methods.",
+                "test_create_shape",
                 test_create_shape) == NULL) ||
         (CU_add_test(pSuite,
-                "Manipulate SLOTTED objects.",
+                "test_create_slotted",
                 test_create_slotted) == NULL) ||
         (CU_add_test(pSuite,
-                "Use BOOLEAN object.",
+                "test_create_boolean",
                 test_boolean_objects) == NULL)
     ) {
         return NULL;

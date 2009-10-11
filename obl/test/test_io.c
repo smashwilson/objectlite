@@ -22,6 +22,7 @@
 
 void test_read_integer(void)
 {
+    /* Emulate big-endian (network) byte order storage. */
     char contents[4] = {
             0x11, 0x22, 0x33, 0x44
     };
@@ -104,10 +105,10 @@ CU_pSuite initialize_io_suite(void)
 
     if (
         (CU_add_test(pSuite,
-                "Read an Integer object from raw bytes.",
+                "test_read_integer",
                 test_read_integer) == NULL) ||
         (CU_add_test(pSuite,
-                "Verify that mmap() is functional.",
+                "test_mmap",
                 test_mmap) == NULL)
     ) {
         return NULL;
