@@ -82,7 +82,26 @@ struct obl_object *obl_read_string(struct obl_object *shape,
 struct obl_object *obl_read_slotted(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth)
 {
-    return obl_nil(shape->database);
+    struct obl_object *result;
+    obl_uint slot_count;
+    obl_uint i;
+    obl_logical_address addr;
+    struct obl_object *linked;
+
+    result = obl_create_slotted(shape);
+
+    slot_count = obl_shape_slotcount(shape);
+    for (i = 0; i < slot_count; i++) {
+        addr = (obl_logical_address) readable_uint(source[offset + i]);
+        if (depth <= 0) {
+            linked = _obl_create_stub(shape->database, addr);
+        } else {
+            linked = obl_at_address_depth(shape->database, addr, depth - 1);
+        }
+        obl_slotted_at_put(result, i, linked);
+    }
+
+    return result;
 }
 
 struct obl_object *obl_read_fixed(struct obl_object *shape,
@@ -101,7 +120,7 @@ struct obl_object *obl_read_fixed(struct obl_object *shape,
 
     for (i = 0; i < length; i++) {
         addr = (obl_logical_address) readable_uint(source[offset + 1 + i]);
-        if (depth == 0) {
+        if (depth <= 0) {
             linked = _obl_create_stub(shape->database, addr);
         } else {
             linked = obl_at_address_depth(shape->database, addr, depth - 1);

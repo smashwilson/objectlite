@@ -183,6 +183,45 @@ void test_read_shape(void)
     obl_destroy_database(d);
 }
 
+void test_read_slotted(void)
+{
+    char contents[] = {
+            0x00, 0x00, 0x00, 0xAA,
+            0x00, 0x00, 0x00, 0xBB
+    };
+    char *slot_names[2] = {
+            "one", "two"
+    };
+    struct obl_database *d;
+    struct obl_object *shape;
+    struct obl_object *one, *two;
+    struct obl_object *o;
+
+    d = obl_create_database(FILENAME);
+
+    shape = obl_create_cshape(d, "FooClass", 2, slot_names, OBL_SLOTTED);
+    one = obl_create_integer(d, (obl_int) -17);
+    one->logical_address = (obl_logical_address) 0xAA;
+    two = obl_create_cstring(d, "value", 5);
+    two->logical_address = (obl_logical_address) 0xBB;
+
+    obl_cache_insert(d->cache, one);
+    obl_cache_insert(d->cache, two);
+
+    o = obl_read_slotted(shape, (obl_uint *) contents, 0, 1);
+    CU_ASSERT(obl_slotted_at(o, 0) == one);
+    CU_ASSERT(obl_slotted_at(o, 1) == two);
+    CU_ASSERT(obl_slotted_atcnamed(o, "one") == one);
+    CU_ASSERT(obl_slotted_atcnamed(o, "two") == two);
+
+    obl_destroy_object(o);
+    obl_destroy_object(one);
+    obl_destroy_object(two);
+    obl_destroy_cshape(shape);
+
+    obl_destroy_database(d);
+}
+
 /*
  * Verify that the (possibly emulated) version of mmap() currently being used
  * via platform.h actually works.
@@ -259,6 +298,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_read_shape",
                 test_read_shape) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_read_slotted",
+                test_read_slotted) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)

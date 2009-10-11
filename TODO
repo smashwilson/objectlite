@@ -32,7 +32,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
 = read/ - write the single-word object formats:
    remaining: integer; float; double; char
 * read/ - write string objects.
-- read/ - write slotted objects.
+* read/ - write slotted objects.
 * read/ - write fixed objects.
 - read/ - write chunks.
 - read/ - write tree pages.
