@@ -115,7 +115,31 @@ struct obl_object *obl_read_fixed(struct obl_object *shape,
 struct obl_object *obl_read_shape(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth)
 {
-    return obl_nil(shape->database);
+    struct obl_object *result;
+    obl_logical_address addr;
+    struct obl_object *name, *slot_names, *current_shape;
+    obl_uint storage_format;
+
+    addr = (obl_logical_address) readable_uint(source[offset]);
+    name = obl_at_address_depth(shape->database, addr, depth - 1);
+
+    addr = (obl_logical_address) readable_uint(source[offset + 1]);
+    slot_names = obl_at_address_depth(shape->database, addr, depth - 1);
+
+    addr = (obl_logical_address) readable_uint(source[offset + 2]);
+    current_shape = obl_at_address_depth(shape->database, addr, depth - 1);
+
+    storage_format = readable_uint(source[offset + 3]);
+    if (storage_format > OBL_STORAGE_TYPE_MAX) {
+        obl_report_errorf(shape->database, OBL_WRONG_STORAGE,
+                "Shape at physical address %ul has invalid storage format.",
+                (unsigned long) offset);
+    }
+
+    result = obl_create_shape(shape->database,
+            name, slot_names, storage_format);
+    result->storage.shape_storage->current_shape = current_shape;
+    return result;
 }
 
 struct obl_object *obl_invalid_storage(struct obl_object *shape,

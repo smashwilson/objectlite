@@ -136,6 +136,53 @@ void test_read_fixed(void)
     obl_destroy_database(d);
 }
 
+void test_read_shape(void)
+{
+    /*
+     * logical addresses for: name, slot names, current shape; obl_uint for
+     * storage format.
+     */
+    char contents[] = {
+            0x00, 0x00, 0x00, 0x01,
+            0x00, 0x00, 0x00, 0x02,
+            0xff, 0xff, 0xff, 0xf3, /* OBL_NIL_ADDR */
+            0x00, 0x00, 0x00, 0x01, /* OBL_SLOTTED = format 2 */
+    };
+    struct obl_database *d;
+    struct obl_object *name, *slot_names;
+    struct obl_object *slot_one_name, *slot_two_name;
+    struct obl_object *out;
+
+    d = obl_create_database(FILENAME);
+
+    name = obl_create_cstring(d, "FooClass", 8);
+    name->logical_address = (obl_logical_address) 1;
+
+    slot_one_name = obl_create_cstring(d, "first slot", 10);
+    slot_two_name = obl_create_cstring(d, "second slot", 11);
+    slot_names = obl_create_fixed(d, (obl_uint) 2);
+    obl_fixed_at_put(slot_names, 0, slot_one_name);
+    obl_fixed_at_put(slot_names, 1, slot_two_name);
+    slot_names->logical_address = (obl_logical_address) 2;
+
+    obl_cache_insert(d->cache, name);
+    obl_cache_insert(d->cache, slot_names);
+
+    out = obl_read_shape(obl_nil(d), (obl_uint*) contents, 0, 2);
+    CU_ASSERT(obl_shape_storagetype(out) == OBL_SLOTTED);
+    CU_ASSERT(out->storage.shape_storage->name == name);
+    CU_ASSERT(out->storage.shape_storage->slot_names == slot_names);
+    CU_ASSERT(out->storage.shape_storage->current_shape == obl_nil(d));
+
+    obl_destroy_object(name);
+    obl_destroy_object(slot_one_name);
+    obl_destroy_object(slot_two_name);
+    obl_destroy_object(slot_names);
+    obl_destroy_object(out);
+
+    obl_destroy_database(d);
+}
+
 /*
  * Verify that the (possibly emulated) version of mmap() currently being used
  * via platform.h actually works.
@@ -209,6 +256,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_read_fixed",
                 test_read_fixed) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_read_shape",
+                test_read_shape) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)
