@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "CUnit/Headers/Basic.h"
 
@@ -254,6 +255,29 @@ void test_read_arbitrary(void)
     obl_destroy_database(d);
 }
 
+void test_write_integer(void)
+{
+    struct obl_database *d;
+    struct obl_object *o;
+    char contents[8] = { 0 };
+    const char expected[] = {
+            0x00, 0x00, 0x00, 0x00, /* Space for the shape address. */
+            0x12, 0x34, 0x56, 0x78
+    };
+
+    d = obl_create_database(FILENAME);
+
+    o = obl_create_integer(d, (obl_int) 0x12345678);
+    o->physical_address = (obl_physical_address) 0;
+    obl_write_integer(o, (obl_uint*) contents);
+
+    CU_ASSERT(memcmp(contents, expected, 8) == 0);
+
+    obl_destroy_object(o);
+
+    obl_destroy_database(d);
+}
+
 /*
  * Verify that the (possibly emulated) version of mmap() currently being used
  * via platform.h actually works.
@@ -336,6 +360,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_read_arbitrary",
                 test_read_arbitrary) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_write_integer",
+                test_write_integer) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)

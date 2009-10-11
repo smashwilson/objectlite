@@ -29,8 +29,8 @@ A rough timeline of the tasks to finish before we see release, large and small.
 # Primitive I/O
 
 * implement mmap() and munmap() equivalents for MinGW.
-= read/ - write the single-word object formats:
-   remaining: integer; float; double; char
+= read/ = write the single-word object formats:
+   remaining: rw float; rw double; rw char
 * read/ - write string objects.
 * read/ - write slotted objects.
 * read/ - write fixed objects.

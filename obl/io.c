@@ -19,20 +19,41 @@
  * specified in "object.h" and at the same index as its index in the
  * +obl_storage_type+ enumeration.
  */
-obl_object_read_function obl_read_functions[] = {
+static obl_object_read_function obl_read_functions[] = {
         &obl_read_shape,      /* OBL_SHAPE */
         &obl_read_slotted,    /* OBL_SLOTTED */
-        &obl_invalid_storage, /* OBL_FIXED */
-        &obl_invalid_storage, /* OBL_CHUNK */
-        &obl_invalid_storage, /* OBL_TREEPAGE */
+        &obl_invalid_read, /* OBL_FIXED */
+        &obl_invalid_read, /* OBL_CHUNK */
+        &obl_invalid_read, /* OBL_TREEPAGE */
         &obl_read_integer,    /* OBL_INTEGER */
-        &obl_invalid_storage, /* OBL_FLOAT */
-        &obl_invalid_storage, /* OBL_DOUBLE */
-        &obl_invalid_storage, /* OBL_CHAR */
+        &obl_invalid_read, /* OBL_FLOAT */
+        &obl_invalid_read, /* OBL_DOUBLE */
+        &obl_invalid_read, /* OBL_CHAR */
         &obl_read_string,     /* OBL_STRING */
-        &obl_invalid_storage, /* OBL_BOOLEAN (invalid) */
-        &obl_invalid_storage, /* OBL_NIL (invalid) */
-        &obl_invalid_storage  /* OBL_STUB (invalid) */
+        &obl_invalid_read, /* OBL_BOOLEAN (invalid) */
+        &obl_invalid_read, /* OBL_NIL (invalid) */
+        &obl_invalid_read  /* OBL_STUB (invalid) */
+};
+
+/*
+ * The array of object-writing functions.  Each function serializes an object
+ * of a certain storage type, not including its header byte word, to the
+ * location specified by its pre-set physical address.
+ */
+static obl_object_write_function obl_write_functions[] = {
+        &obl_invalid_write, /* OBL_SHAPE */
+        &obl_invalid_write, /* OBL_SLOTTED */
+        &obl_invalid_write, /* OBL_FIXED */
+        &obl_invalid_write, /* OBL_CHUNK */
+        &obl_invalid_write, /* OBL_TREEPAGE */
+        &obl_invalid_write, /* OBL_INTEGER */
+        &obl_invalid_write, /* OBL_FLOAT */
+        &obl_invalid_write, /* OBL_DOUBLE */
+        &obl_invalid_write, /* OBL_CHAR */
+        &obl_invalid_write, /* OBL_STRING */
+        &obl_invalid_write, /* OBL_BOOLEAN (invalid) */
+        &obl_invalid_write, /* OBL_NIL (invalid) */
+        &obl_invalid_write  /* OBL_STUB (invalid) */
 };
 
 /* Integers are stored in 32 bits, network byte order. */
@@ -157,7 +178,7 @@ struct obl_object *obl_read_shape(struct obl_object *shape,
     return result;
 }
 
-struct obl_object *obl_invalid_storage(struct obl_object *shape,
+struct obl_object *obl_invalid_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth)
 {
     obl_report_errorf(shape->database, OBL_WRONG_STORAGE,
@@ -195,4 +216,23 @@ struct obl_object *obl_read_object(struct obl_database *d,
     result->physical_address = offset;
 
     return result;
+}
+
+void obl_write_integer(struct obl_object *integer, obl_uint *dest)
+{
+    obl_int value;
+
+    value = obl_integer_value(integer);
+    dest[integer->physical_address + 1] = writable_int(value);
+}
+
+/*
+ * Invoked for any storage type that is either not defined yet, or isn't
+ * supposed to actually be written to the database.
+ */
+void obl_invalid_write(struct obl_object *o, obl_uint *dest)
+{
+    obl_report_errorf(o->database, OBL_WRONG_STORAGE,
+            "Attempt to write an object with an invalid storage type (%ul).",
+            _obl_storage_of(o));
 }

@@ -27,6 +27,14 @@ typedef struct obl_object *(*obl_object_read_function)(
         struct obl_object *shape, obl_uint *source,
         obl_physical_address offset, int depth);
 
+/*
+ * Signature of a function that writes an obl_object into a memory-mapped file,
+ * not including its shape header word.  The object will be written at a
+ * location specified by its assigned physical address.
+ */
+typedef void (*obl_object_write_function)(
+        struct obl_object *object, obl_uint *source);
+
 /* Read a single-word obl_integer_object. */
 struct obl_object *obl_read_integer(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
@@ -59,7 +67,7 @@ struct obl_object *obl_read_shape(struct obl_object *shape,
  * Invoked for any storage type that is either not yet defined properly, or
  * isn't supposed to actually be stored in the database.
  */
-struct obl_object *obl_invalid_storage(struct obl_object *shape,
+struct obl_object *obl_invalid_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
 /*
@@ -73,5 +81,16 @@ struct obl_object *obl_invalid_storage(struct obl_object *shape,
  */
 struct obl_object *obl_read_object(struct obl_database *d,
         obl_uint *source, obl_physical_address offset, int depth);
+
+/*
+ * Write an integer object.
+ */
+void obl_write_integer(struct obl_object *integer, obl_uint *dest);
+
+/*
+ * Invoked for any storage type that is either not defined yet, or isn't
+ * supposed to actually be written to the database.
+ */
+void obl_invalid_write(struct obl_object *o, obl_uint *dest);
 
 #endif
