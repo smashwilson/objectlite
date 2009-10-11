@@ -314,7 +314,7 @@ struct obl_object
  */
 
 /* int to INTEGER object. */
-struct obl_object *obl_create_integer(struct obl_database *d, int i);
+struct obl_object *obl_create_integer(struct obl_database *d, obl_int i);
 
 /* float to FLOAT object. */
 struct obl_object *obl_create_float(struct obl_database *d, float f);
@@ -480,7 +480,7 @@ obl_storage_type obl_shape_storagetype(const struct obl_object *shape);
 /*
  * Return the stored value of an integer object +o+ as a C int.
  */
-int obl_integer_value(const struct obl_object *o);
+obl_int obl_integer_value(const struct obl_object *o);
 
 /*
  * Convert the +obl_true()+ or +obl_false()+ objects into the appropriate truth

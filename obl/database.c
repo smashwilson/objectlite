@@ -47,6 +47,9 @@ struct obl_database *obl_create_database(const char *filename)
     }
 
     database->filename = filename;
+    database->log_config.filename = NULL;
+    database->log_config.level = L_DEBUG;
+    database->last_error.code = OBL_OK;
     database->last_error.message = NULL;
     obl_clear_error(database);
 
@@ -143,7 +146,8 @@ void obl_clear_error(struct obl_database *database)
     database->last_error.code = OBL_OK;
 }
 
-void obl_report_error(struct obl_database *database, error_code code, const char *message)
+void obl_report_error(struct obl_database *database,
+        error_code code, const char *message)
 {
     char *buffer;
     size_t message_size;
@@ -156,7 +160,7 @@ void obl_report_error(struct obl_database *database, error_code code, const char
     }
 
     if (message != NULL) {
-        message_size = strlen(message);
+        message_size = strlen(message) + 1;
         buffer = (char*) malloc(message_size);
         memcpy(buffer, message, message_size);
 
@@ -174,7 +178,7 @@ void obl_report_errorf(struct obl_database *database, error_code code,
     size_t required_size;
     char *buffer;
 
-    /* Include the terminating NULL byte. */
+    /* Include the terminating NULL byte in required_size. */
     va_start(args, format);
     required_size = vsnprintf(NULL, 0, format, args) + 1;
     va_end(args);
@@ -201,6 +205,8 @@ static int _initialize_fixed_objects(struct obl_database *database)
     int i;
     obl_logical_address addr;
     char *no_slots[0];
+    struct obl_object *fixed_shape;
+    struct obl_object *string_shape;
 
     database->fixed = (struct obl_object **)
             malloc(sizeof(struct obl_object*) * OBL_FIXED_SIZE);
@@ -208,6 +214,30 @@ static int _initialize_fixed_objects(struct obl_database *database)
         return 1;
     }
 
+    for (i = 0; i < OBL_FIXED_SIZE; i++) {
+        database->fixed[i] = NULL;
+    }
+
+    /*
+     * The FixedCollection and String shapes are used inside of shape objects
+     * (including their own).  Create these shapes first and manually correct
+     * the structures of their shape members.
+     */
+    fixed_shape = obl_create_cshape(database, "FixedCollection",
+            0, no_slots, OBL_FIXED);
+    string_shape = obl_create_cshape(database, "String",
+            0, no_slots, OBL_STRING);
+    fixed_shape->storage.shape_storage->name->shape = string_shape;
+    fixed_shape->storage.shape_storage->slot_names->shape = fixed_shape;
+    string_shape->storage.shape_storage->name->shape = string_shape;
+    string_shape->storage.shape_storage->slot_names->shape = fixed_shape;
+
+    database->fixed[_index_for_fixed(OBL_FIXED_SHAPE_ADDR)] = fixed_shape;
+    database->fixed[_index_for_fixed(OBL_STRING_SHAPE_ADDR)] = string_shape;
+
+    /*
+     * Allocate the rest of the fixed-space shape objects.
+     */
     database->fixed[_index_for_fixed(OBL_INTEGER_SHAPE_ADDR)] =
             obl_create_cshape(database, "Integer", 0, no_slots, OBL_INTEGER);
     database->fixed[_index_for_fixed(OBL_FLOAT_SHAPE_ADDR)] =
@@ -216,12 +246,7 @@ static int _initialize_fixed_objects(struct obl_database *database)
             obl_create_cshape(database, "Double", 0, no_slots, OBL_DOUBLE);
     database->fixed[_index_for_fixed(OBL_CHAR_SHAPE_ADDR)] =
             obl_create_cshape(database, "Character", 0, no_slots, OBL_CHAR);
-    database->fixed[_index_for_fixed(OBL_STRING_SHAPE_ADDR)] =
-            obl_create_cshape(database, "String", 0, no_slots, OBL_STRING);
 
-    database->fixed[_index_for_fixed(OBL_FIXED_SHAPE_ADDR)] =
-            obl_create_cshape(database, "FixedCollection", 0,
-                    no_slots, OBL_FIXED);
     database->fixed[_index_for_fixed(OBL_CHUNK_SHAPE_ADDR)] =
             obl_create_cshape(database, "OblChunk", 0, no_slots, OBL_CHUNK);
 
@@ -230,6 +255,10 @@ static int _initialize_fixed_objects(struct obl_database *database)
     database->fixed[_index_for_fixed(OBL_BOOLEAN_SHAPE_ADDR)] =
             obl_create_cshape(database, "Boolean", 0, no_slots, OBL_BOOLEAN);
 
+    /*
+     * Allocate the only instances of the three immutables: nil, true, and
+     * false.
+     */
     database->fixed[_index_for_fixed(OBL_NIL_ADDR)] =
             _obl_create_nil(database);
     database->fixed[_index_for_fixed(OBL_TRUE_ADDR)] =
@@ -237,9 +266,10 @@ static int _initialize_fixed_objects(struct obl_database *database)
     database->fixed[_index_for_fixed(OBL_FALSE_ADDR)] =
             _obl_create_bool(database, 0);
 
-    /* Set logical addresses of these objects. */
+    /* Set the logical and physical addresses of these objects. */
     for (i = 0; i < OBL_FIXED_SIZE; i++) {
-        addr = OBL_FIXED_ADDR_MIN + i;
+        addr = (obl_logical_address) OBL_FIXED_ADDR_MIN + i;
+        database->fixed[i]->physical_address = (obl_physical_address) 0;
         database->fixed[i]->logical_address = addr;
     }
 

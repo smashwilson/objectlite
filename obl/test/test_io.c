@@ -13,51 +13,30 @@
 
 #include "CUnit/Headers/Basic.h"
 
-#include "platform.h"
+#include "database.h"
 #include "io.h"
 #include "object.h"
+#include "platform.h"
 
 #define FILENAME "testing.obl"
 
 void test_read_integer(void)
 {
-    CU_FAIL("I/O tests disabled for the moment.");
+    char contents[4] = {
+            0x11, 0x22, 0x33, 0x44
+    };
+    struct obl_database *d;
+    struct obl_object *shape, *o;
 
-    /*
-    FILE *writable, *readable;
-    obl_integer_storage payload = 0x11223344;
-    uint32_t netlong;
-    struct obl_object shape;
-    struct obl_object *output;
+    d = obl_create_database(FILENAME);
 
-    writable = fopen(FILENAME, "wb");
-    if (writable == NULL) {
-        CU_FAIL("Unable to create temporary data file.");
-        return;
-    }
-    netlong = htonl((uint32_t) payload);
-    CU_ASSERT(fwrite(&netlong, sizeof(uint32_t), 1, writable) == 1);
-    CU_ASSERT_FATAL(fclose(writable) == 0);
+    shape = obl_at_address(d, OBL_INTEGER_SHAPE_ADDR);
+    o = obl_read_integer(shape, (obl_uint*) contents, 0);
+    CU_ASSERT(obl_integer_value(o) == 0x11223344);
+    CU_ASSERT(o->physical_address == (obl_physical_address) 0);
 
-    readable = fopen(FILENAME, "rb");
-    if (readable == NULL) {
-        CU_FAIL("Unable to reopen temporary data file.");
-        return;
-    }
-
-    shape.storage.shape_storage = (obl_shape_storage*) malloc(
-            sizeof(obl_shape_storage));
-    shape.storage.shape_storage->storage_format = OBL_INTEGER;
-
-    output = obl_read_integer(&shape, readable);
-    CU_ASSERT(fclose(readable) == 0);
-    CU_ASSERT(output != NULL);
-
-    CU_ASSERT(output->shape == &shape);
-    CU_ASSERT(*(output->storage.integer_storage) == 0x11223344);
-
-    free(output);
-    */
+    obl_destroy_object(o);
+    obl_destroy_database(d);
 }
 
 /*

@@ -21,6 +21,7 @@ void test_initialize_database(void)
 
     database = obl_create_database("foo.obl");
     CU_ASSERT_FATAL(database != NULL);
+    CU_ASSERT(obl_database_ok(database));
 
     if (database->filename != NULL) {
         CU_ASSERT(strcmp(database->filename, "foo.obl") == 0);
@@ -48,6 +49,8 @@ void test_report_error(void)
     database = obl_create_database("foo.obl");
     CU_ASSERT_FATAL(database != NULL);
     CU_ASSERT(obl_database_ok(database));
+
+    database->log_config.level = L_NONE;
 
     obl_report_error(database, OBL_OUT_OF_MEMORY, "A sample error message.");
 
@@ -114,13 +117,13 @@ void test_at_address(void)
     CU_ASSERT(obl_boolean_value(out));
 
     /* obl_at_address should hit the cache. */
-    in = obl_create_integer(d, 14);
+    in = obl_create_integer(d, (obl_int) 14);
     in->logical_address = 123;
     obl_cache_insert(d->cache, in);
 
     out = obl_at_address(d, 123);
     CU_ASSERT(in == out);
-    CU_ASSERT(obl_integer_value(out) == 14);
+    CU_ASSERT(obl_integer_value(out) == (obl_int) 14);
 
     obl_destroy_database(d);
 }

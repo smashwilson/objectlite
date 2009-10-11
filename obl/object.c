@@ -13,6 +13,7 @@
 #include "log.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "unicode/ucnv.h"
 
@@ -35,15 +36,10 @@ static struct obl_object *_allocate_string(struct obl_database *d,
  * ============================================================================
  */
 
-struct obl_object *obl_create_integer(struct obl_database *d, int i)
+struct obl_object *obl_create_integer(struct obl_database *d, obl_int i)
 {
     struct obl_object *result;
     struct obl_integer_storage *storage;
-
-    if (i < INT32_MIN || i > INT32_MAX) {
-        obl_report_error(d, OBL_CONVERSION_ERROR, "Integer out of range.");
-        return NULL;
-    }
 
     result = _allocate_object(d);
     if (result == NULL) {
@@ -59,7 +55,7 @@ struct obl_object *obl_create_integer(struct obl_database *d, int i)
     }
 
     result->shape = obl_at_address(d, OBL_INTEGER_SHAPE_ADDR);
-    storage->value = (obl_int) i;
+    storage->value = i;
     result->storage.integer_storage = storage;
     return result;
 }
@@ -558,7 +554,7 @@ obl_storage_type obl_shape_storagetype(const struct obl_object *shape)
  * ============================================================================
  */
 
-int obl_integer_value(const struct obl_object *integer)
+obl_int obl_integer_value(const struct obl_object *integer)
 {
     if (_storage_of(integer) != OBL_INTEGER) {
         obl_report_error(integer->database, OBL_WRONG_STORAGE,
@@ -566,7 +562,7 @@ int obl_integer_value(const struct obl_object *integer)
         return 0;
     }
 
-    return (int) (integer->storage.integer_storage->value);
+    return integer->storage.integer_storage->value;
 }
 
 int obl_boolean_value(const struct obl_object *bool)

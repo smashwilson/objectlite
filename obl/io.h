@@ -9,38 +9,48 @@
 #ifndef IO_H
 #define IO_H
 
-#include <stdio.h>
-
 #include "platform.h"
 
 /* Defined in object.h */
 struct obl_object;
 
+/* Declared in database.h */
+struct obl_database;
+
 /*
  * Signature of a function that reads and populates an object's internal state.
- * Each such function is provided the shape determined from the shape word and a
- * FILE* positioned immediately after the shape word.
+ * Each such function is provided the shape determined from the shape word, the
+ * memory mapped to the database file, and an offset at which reading is to
+ * occur.
  */
 typedef struct obl_object *(*obl_object_read_function)(
-        struct obl_object *shape, FILE *source);
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address offset);
 
 /* Read a single-word obl_integer_object. */
-struct obl_object *obl_read_integer(struct obl_object *shape, FILE *source);
-
-/* Read a single-word obl_boolean_object. */
-struct obl_object *obl_read_boolean(struct obl_object *shape, FILE *source);
+struct obl_object *obl_read_integer(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset);
 
 /*
  * Read a slotted object.  The number of slots expected is determined by the
  * provided shape.
  */
-struct obl_object *obl_read_slotted(struct obl_object *shape, FILE *source);
+struct obl_object *obl_read_slotted(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset);
 
 /*
  * Read a shape object.  Shapes are themselves a fixed shape (sorry, no turtles
  * all the way down -- yet).
  */
-struct obl_object *obl_read_shape(struct obl_object *shape, FILE *source);
+struct obl_object *obl_read_shape(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset);
+
+/*
+ * Invoked for any storage type that is either not yet defined properly, or
+ * isn't supposed to actually be stored in the database.
+ */
+struct obl_object *obl_invalid_storage(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset);
 
 /*
  * Read a shape word from the current position of the file <source>, retrieve
@@ -51,6 +61,7 @@ struct obl_object *obl_read_shape(struct obl_object *shape, FILE *source);
  * The created object lives on the heap and must be destroyed with a call to
  * obl_destroy_object() as defined in "object.h".
  */
-struct obl_object *obl_read_object(FILE *source);
+struct obl_object *obl_read_object(struct obl_database *d,
+        obl_uint *source, obl_physical_address offset);
 
 #endif

@@ -23,11 +23,11 @@ void test_create_integer(void)
 
     d = obl_create_database("unit.obl");
 
-    o = obl_create_integer(d, 42);
+    o = obl_create_integer(d, (obl_int) 42);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->database == d);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_INTEGER_SHAPE_ADDR));
-    CU_ASSERT(obl_integer_value(o) == 42);
+    CU_ASSERT(obl_integer_value(o) == (obl_int) 42);
 
     obl_destroy_object(o);
     obl_destroy_database(d);
@@ -78,9 +78,9 @@ void test_create_fixed(void)
     CU_ASSERT(obl_fixed_size(o) == length);
     CU_ASSERT(obl_fixed_at(o, 1) == obl_nil(d));
 
-    items[0] = obl_create_integer(d, 100);
-    items[1] = obl_create_integer(d, 101);
-    items[2] = obl_create_integer(d, 102);
+    items[0] = obl_create_integer(d, (obl_int) 100);
+    items[1] = obl_create_integer(d, (obl_int) 101);
+    items[2] = obl_create_integer(d, (obl_int) 102);
 
     obl_fixed_at_put(o, 0, items[0]);
     obl_fixed_at_put(o, 1, items[1]);
@@ -142,7 +142,7 @@ void test_create_slotted(void)
     CU_ASSERT(obl_slotted_atcnamed(o, "foo") == obl_nil(d));
     CU_ASSERT(obl_slotted_atcnamed(o, "bar") == obl_nil(d));
 
-    value = obl_create_integer(d, 4);
+    value = obl_create_integer(d, (obl_int) 4);
     obl_slotted_atcnamed_put(o, "foo", value);
     CU_ASSERT(obl_slotted_atcnamed(o, "foo") == value);
     CU_ASSERT(obl_slotted_at(o, 0) == value);

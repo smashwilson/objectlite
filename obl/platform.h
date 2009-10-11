@@ -10,17 +10,21 @@
 #define PLATFORM_H
 
 #include <stdint.h>
+#include <limits.h>
+
+#include "unicode/utypes.h"
 
 /*
- * A single ObjectLite "word".  This is the smallest unit in which anything can be addressed
- * by, read from, or written to the database, and is used to store "small" signed numeric
- * quantities.  obl_words and obl_uwords are often used throughout the ObjectLite API to
- * communicate things like indices, offsets, or sizes.
+ * A single ObjectLite "word".  This is the smallest unit in which anything can
+ * be addressed by, read from, or written to the database, and is used to store
+ * "small" signed numeric quantities.  obl_words and obl_uwords are often used
+ * throughout the ObjectLite API to communicate things like indices, offsets, or
+ * sizes.
  */
 typedef int32_t obl_int;
 
 /*
- * The same storage as an obl_int, but unsigned.
+ * The same storage size as an obl_int, but unsigned.
  */
 typedef uint32_t obl_uint;
 
@@ -51,19 +55,44 @@ typedef obl_address obl_logical_address;
  */
 #define OBL_ADDRESS_MAX OBL_UINT_MAX
 
-/* 
- * The local networking libraries include byte-order conversion functions such
- * as ntohs() and ntohl().
+/*
+ * The functions writable_uint() and readable_uint() use networking library functions
+ * ntohl() and htonl() to convert between network-byte order file storage and
+ * host-byte order memory storage when necessary.
+ *
+ * If the obl_uint and unsigned long types ever differ in storage size, these
+ * functions will require slightly more bit math to correctly pack and unpack
+ * values, although that case will also cause data format compatibility issues.
+ * This is not the case on any of our target platforms.
+ *
+ * These functions will also need to be redefined if we support 64 bit
+ * repositories.
  */
 #ifdef WIN32
-
 #include <Winsock2.h>
+#else
+#include <netinet/in.h>
+#endif
+
+#if OBL_UINT_MAX == ULONG_MAX
+
+#define writable_uint(in) htonl(in)
+#define readable_uint(in) ((obl_uint) ntohl(in))
+
+#define writable_int(in) htonl(in)
+#define readable_int(in) ((obl_int) ntohl(in))
 
 #else
-
-#include <netinet/in.h>
-
+#error "<obl_uint> and <unsigned long> types differ in size."
 #endif
+
+/* A UChar is guaranteed to be 16 bits wide. */
+#define writable_UChar(ch) htons(ch)
+#define readable_UChar(ch) ((UChar) ntohs(ch))
+
+/* A UChar32 is guaranteed to be 32 bits wide. */
+#define writable_UChar32(ch) htonl(ch)
+#define readable_UChar32(ch) ((UChar32) ntohl(ch))
 
 /*
  * Memory mapping and unmapping functions: native on POSIX systems, emulated
