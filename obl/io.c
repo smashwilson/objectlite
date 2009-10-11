@@ -14,11 +14,6 @@
 
 #include <stdlib.h>
 
-    /* OBL_SHAPE,
-    OBL_SLOTTED, OBL_FIXED, OBL_CHUNK, OBL_TREEPAGE,
-    OBL_INTEGER, OBL_FLOAT, OBL_DOUBLE, OBL_CHAR, OBL_STRING, OBL_BOOLEAN,
-    OBL_NIL, OBL_STUB, */
-
 /*
  * The array of object-reading functions: one for each internal state
  * specified in "object.h" and at the same index as its index in the
@@ -109,7 +104,7 @@ struct obl_object *obl_read_fixed(struct obl_object *shape,
         if (depth == 0) {
             linked = _obl_create_stub(shape->database, addr);
         } else {
-            linked = obl_at_address(shape->database, addr);
+            linked = obl_at_address_depth(shape->database, addr, depth - 1);
         }
         obl_fixed_at_put(o, i, linked);
     }

@@ -94,6 +94,9 @@ struct obl_database {
     /* Logging and error structures. */
     struct obl_log_configuration log_config;
     struct error last_error;
+
+    /* Stubbing control. */
+    int default_stub_depth;
 };
 
 /*
@@ -105,9 +108,16 @@ struct obl_database *obl_create_database(const char *filename);
 
 /*
  * The most basic query: return an object that lives at a known logical address.
+ * Use the default stub depth as configures in +database+.
  */
 struct obl_object *obl_at_address(struct obl_database *database,
         const obl_logical_address address);
+
+/*
+ * Retrieve an object to a specified stub depth.
+ */
+struct obl_object *obl_at_address_depth(struct obl_database *database,
+        const obl_logical_address address, int depth);
 
 /*
  * Return the single instance of +nil+.

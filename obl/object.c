@@ -702,7 +702,9 @@ struct obl_object *_obl_create_stub(struct obl_database *d,
 
 struct obl_object *_obl_resolve_stub(struct obl_object *stub, int depth)
 {
-    return obl_at_address(stub->database, stub->storage.stub_storage->value);
+    return obl_at_address_depth(stub->database,
+            stub->storage.stub_storage->value,
+            depth);
 }
 
 int _obl_is_stub(struct obl_object *o)

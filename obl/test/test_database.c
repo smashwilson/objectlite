@@ -37,6 +37,11 @@ void test_initialize_database(void)
         CU_FAIL("Cache not allocated.");
     }
 
+    CU_ASSERT(database->log_config.filename == NULL);
+    CU_ASSERT(database->log_config.level == L_DEBUG);
+
+    CU_ASSERT(database->default_stub_depth == 4);
+
     CU_ASSERT(obl_database_ok(database));
 
     obl_destroy_database(database);

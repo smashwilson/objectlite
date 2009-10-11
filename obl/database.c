@@ -51,7 +51,7 @@ struct obl_database *obl_create_database(const char *filename)
     database->log_config.level = L_DEBUG;
     database->last_error.code = OBL_OK;
     database->last_error.message = NULL;
-    obl_clear_error(database);
+    database->default_stub_depth = 4;
 
     cache = obl_create_cache(DEFAULT_CACHE_BUCKETS, DEFAULT_CACHE_SIZE);
     if (cache == NULL) {
@@ -75,6 +75,13 @@ struct obl_database *obl_create_database(const char *filename)
 
 struct obl_object *obl_at_address(struct obl_database *database,
         const obl_logical_address address)
+{
+    return obl_at_address_depth(database, address,
+            database->default_stub_depth);
+}
+
+struct obl_object *obl_at_address_depth(struct obl_database *database,
+        const obl_logical_address address, int depth)
 {
     struct obl_object *o;
 
