@@ -222,6 +222,38 @@ void test_read_slotted(void)
     obl_destroy_database(d);
 }
 
+void test_read_arbitrary(void)
+{
+    char contents[] = {
+            /* Physical 0: an integer */
+            0xff, 0xff, 0xff, 0xf6, /* Integer shape addr */
+            0x00, 0x00, 0x00, 0x0A, /* Integer value */
+            /* Physical 2: a string */
+            0xff, 0xff, 0xff, 0xfa, /* String shape addr */
+            0x00, 0x00, 0x00, 0x05, /* Length: 5 */
+            0x00, 0x68, 0x00, 0x65, /* 'h' 'e' */
+            0x00, 0x6C, 0x00, 0x6C, /* 'l' 'l' */
+            0x00, 0x6F, 0x00, 0x00, /* 'o' padding byte */
+    };
+    struct obl_database *d;
+    struct obl_object *integer, *string;
+
+    d = obl_create_database(FILENAME);
+
+    integer = obl_read_object(d, (obl_uint*) contents, 0, 1);
+    CU_ASSERT(integer->shape == obl_at_address(d, OBL_INTEGER_SHAPE_ADDR));
+    CU_ASSERT(obl_integer_value(integer) == (obl_int) 10)
+
+    string = obl_read_object(d, (obl_uint*) contents, 2, 1);
+    CU_ASSERT(string->shape == obl_at_address(d, OBL_STRING_SHAPE_ADDR));
+    CU_ASSERT(obl_string_ccmp(string, "hello") == 0);
+
+    obl_destroy_object(integer);
+    obl_destroy_object(string);
+
+    obl_destroy_database(d);
+}
+
 /*
  * Verify that the (possibly emulated) version of mmap() currently being used
  * via platform.h actually works.
@@ -301,6 +333,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_read_slotted",
                 test_read_slotted) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_read_arbitrary",
+                test_read_arbitrary) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)

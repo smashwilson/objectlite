@@ -23,8 +23,6 @@
  * ============================================================================
  */
 
-static inline obl_storage_type _storage_of(const struct obl_object *o);
-
 static inline struct obl_object *_allocate_object(struct obl_database *d);
 
 static struct obl_object *_allocate_string(struct obl_database *d,
@@ -182,7 +180,7 @@ struct obl_object *obl_create_slotted(struct obl_object *shape)
     struct obl_object **slots;
     obl_uint i;
 
-    if (_storage_of(shape) != OBL_SHAPE) {
+    if (_obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_create_slotted requires a SHAPE object.");
         return NULL;
@@ -308,7 +306,7 @@ struct obl_object *obl_create_cshape(struct obl_database *d,
 
 obl_uint obl_fixed_size(const struct obl_object *fixed)
 {
-    if (_storage_of(fixed) != OBL_FIXED) {
+    if (_obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
                 "obl_fixed_size requires an object with FIXED storage.");
         return 0;
@@ -320,7 +318,7 @@ obl_uint obl_fixed_size(const struct obl_object *fixed)
 struct obl_object *obl_fixed_at(const struct obl_object *fixed,
         const obl_uint index)
 {
-    if (_storage_of(fixed) != OBL_FIXED) {
+    if (_obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
                         "obl_fixed_at requires an object with FIXED storage.");
         return NULL;
@@ -332,7 +330,7 @@ struct obl_object *obl_fixed_at(const struct obl_object *fixed,
 void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
         struct obl_object *value)
 {
-    if (_storage_of(fixed) != OBL_FIXED) {
+    if (_obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
                         "obl_fixed_at requires an object with FIXED storage.");
         return ;
@@ -343,7 +341,7 @@ void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
 
 obl_uint obl_string_size(const struct obl_object *string)
 {
-    if (_storage_of(string) != OBL_STRING) {
+    if (_obl_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
                 "obl_string_size requires an object with STRING storage.");
         return 0;
@@ -360,7 +358,7 @@ size_t obl_string_chars(const struct obl_object *string,
     obl_uint converted_length;
     UErrorCode status = U_ZERO_ERROR;
 
-    if (_storage_of(string) != OBL_STRING) {
+    if (_obl_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
                 "obl_string_chars requires an object with STRING storage.");
         return 0;
@@ -394,7 +392,7 @@ int obl_string_cmp(const struct obl_object *string_a,
 {
     obl_uint length;
 
-    if (_storage_of(string_a) != OBL_STRING || _storage_of(string_b) != OBL_STRING) {
+    if (_obl_storage_of(string_a) != OBL_STRING || _obl_storage_of(string_b) != OBL_STRING) {
         return -1;
     }
 
@@ -414,7 +412,7 @@ int obl_string_ccmp(const struct obl_object *string, const char *match)
     struct obl_object *temp;
     int result;
 
-    if (_storage_of(string) != OBL_STRING) {
+    if (_obl_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
                 "obl_string_ccmp requires a STRING object.");
         return -1;
@@ -434,7 +432,7 @@ int obl_string_ccmp(const struct obl_object *string, const char *match)
 struct obl_object *obl_slotted_at(const struct obl_object *slotted,
         const obl_uint index)
 {
-    if (_storage_of(slotted) != OBL_SLOTTED) {
+    if (_obl_storage_of(slotted) != OBL_SLOTTED) {
         obl_report_error(slotted->database, OBL_WRONG_STORAGE,
                 "obl_slotted_at requires a SLOTTED object.");
         return obl_nil(slotted->database);
@@ -460,7 +458,7 @@ struct obl_object *obl_slotted_atcnamed(const struct obl_object *slotted,
 void obl_slotted_at_put(struct obl_object *slotted,
         const obl_uint index, struct obl_object *value)
 {
-    if (_storage_of(slotted) != OBL_SLOTTED) {
+    if (_obl_storage_of(slotted) != OBL_SLOTTED) {
         obl_report_error(slotted->database, OBL_WRONG_STORAGE,
                 "obl_slotted_at_put requires a SLOTTED object.");
         return ;
@@ -483,7 +481,7 @@ void obl_slotted_atcnamed_put(struct obl_object *slotted,
 
 obl_uint obl_shape_slotcount(const struct obl_object *shape)
 {
-    if (_storage_of(shape) != OBL_SHAPE) {
+    if (_obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_slotcount invoked with a non SHAPE object.");
         return 0;
@@ -498,7 +496,7 @@ obl_uint obl_shape_slotnamed(const struct obl_object *shape,
     struct obl_object *slots;
     obl_uint i;
 
-    if (_storage_of(shape) != OBL_SHAPE) {
+    if (_obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_slotnamed invoked with a non SHAPE object.");
         return 0;
@@ -520,7 +518,7 @@ obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
     struct obl_object *temporary;
     obl_uint result;
 
-    if (_storage_of(shape) != OBL_SHAPE) {
+    if (_obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_slotcnamed invoked with a non SHAPE object.");
         return 0;
@@ -538,7 +536,7 @@ obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
 
 obl_storage_type obl_shape_storagetype(const struct obl_object *shape)
 {
-    if (_storage_of(shape) != OBL_SHAPE) {
+    if (_obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_storagetype invoked with a non SHAPE object.");
         return 0;
@@ -556,7 +554,7 @@ obl_storage_type obl_shape_storagetype(const struct obl_object *shape)
 
 obl_int obl_integer_value(const struct obl_object *integer)
 {
-    if (_storage_of(integer) != OBL_INTEGER) {
+    if (_obl_storage_of(integer) != OBL_INTEGER) {
         obl_report_error(integer->database, OBL_WRONG_STORAGE,
                 "obl_integer_value called with a non-INTEGER object.");
         return 0;
@@ -567,7 +565,7 @@ obl_int obl_integer_value(const struct obl_object *integer)
 
 int obl_boolean_value(const struct obl_object *bool)
 {
-    if (_storage_of(bool) != OBL_BOOLEAN) {
+    if (_obl_storage_of(bool) != OBL_BOOLEAN) {
         OBL_WARN(bool->database, "Non-boolean object: assuming truth.");
         return 1;
     }
@@ -581,7 +579,7 @@ size_t obl_string_value(const struct obl_object *string,
     struct obl_string_storage *storage;
     size_t count , bytes;
 
-    if (_storage_of(string) != OBL_STRING) {
+    if (_obl_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
                 "obl_string_value called with a non-STRING object.");
         return 0;
@@ -700,6 +698,16 @@ struct obl_object *_obl_create_stub(struct obl_database *d,
     return result;
 }
 
+obl_storage_type _obl_storage_of(const struct obl_object *o)
+{
+    if (o->shape == NULL) {
+        return OBL_SHAPE;
+    } else {
+        return (obl_storage_type)
+                o->shape->storage.shape_storage->storage_format;
+    }
+}
+
 struct obl_object *_obl_resolve_stub(struct obl_object *stub, int depth)
 {
     return obl_at_address_depth(stub->database,
@@ -717,17 +725,6 @@ int _obl_is_stub(struct obl_object *o)
  * Internal function definitions.
  * ============================================================================
  */
-
-/* Retrieve the internal storage type of an object from its assigned shape. */
-inline obl_storage_type _storage_of(const struct obl_object *o)
-{
-    if (o->shape == NULL) {
-        return OBL_SHAPE;
-    } else {
-        return (obl_storage_type)
-                o->shape->storage.shape_storage->storage_format;
-    }
-}
 
 /*
  * Allocate and perform common initialization for an unpersisted obl_object.

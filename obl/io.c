@@ -40,13 +40,10 @@ struct obl_object *obl_read_integer(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth)
 {
     obl_int value;
-    struct obl_object *o;
 
     value = readable_int(source[offset]);
-    o = obl_create_integer(shape->database, value);
-    o->physical_address = offset;
 
-    return o;
+    return obl_create_integer(shape->database, value);
 }
 
 /* Strings are stored as UTF-16BE with a one-word length prefix. */
@@ -75,6 +72,7 @@ struct obl_object *obl_read_string(struct obl_object *shape,
     }
 
     o = obl_create_string(shape->database, contents, length);
+
     free(contents);
     return o;
 }
@@ -115,8 +113,6 @@ struct obl_object *obl_read_fixed(struct obl_object *shape,
 
     length = readable_uint(source[offset]);
     o = obl_create_fixed(shape->database, length);
-    o->shape = shape;
-    o->physical_address = offset;
 
     for (i = 0; i < length; i++) {
         addr = (obl_logical_address) readable_uint(source[offset + 1 + i]);
@@ -173,5 +169,30 @@ struct obl_object *obl_invalid_storage(struct obl_object *shape,
 struct obl_object *obl_read_object(struct obl_database *d,
         obl_uint *source, obl_physical_address offset, int depth)
 {
-    return NULL;
+    struct obl_object *shape, *result;
+    obl_logical_address addr;
+    int function_index;
+
+    addr = (obl_logical_address) readable_uint(source[offset]);
+    shape = obl_at_address_depth(d, addr, depth - 1);
+
+    if (shape != obl_nil(d) && _obl_storage_of(shape) != OBL_SHAPE) {
+        obl_report_errorf(d, OBL_WRONG_STORAGE,
+                "Corrupt shape header at physical address %ul.",
+                offset);
+        return obl_nil(d);
+    }
+
+    if (shape == obl_nil(d)) {
+        function_index = OBL_SHAPE;
+    } else {
+        function_index = obl_shape_storagetype(shape);
+    }
+
+    result = (obl_read_functions[function_index])(
+            shape, source, offset + 1, depth);
+    result->shape = shape;
+    result->physical_address = offset;
+
+    return result;
 }

@@ -534,6 +534,11 @@ struct obl_object *_obl_create_stub(struct obl_database *d,
  */
 struct obl_object *_obl_resolve_stub(struct obl_object *o, int depth);
 
+/*
+ * Return the storage type specified by +o+'s shape.
+ */
+obl_storage_type _obl_storage_of(const struct obl_object *o);
+
 /* Returns true if +o+ is an object with STUB storage. */
 int _obl_is_stub(struct obl_object *o);
 

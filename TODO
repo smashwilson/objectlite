@@ -37,7 +37,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
 - read/ - write chunks.
 - read/ - write tree pages.
 * read/ - write shape objects.
-- read/ - write arbitrary objects by reading the shape word and delegating to one
+* read/ - write arbitrary objects by reading the shape word and delegating to one
    of the other object-reading functions.
 = proper handling of read depth and stubbing.
 - track a set of all objects read through a database via obl_at_address,
