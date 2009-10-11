@@ -19,7 +19,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
 * de-anonymize structs and enums.  it makes references nicer, but the C community
    frowns upon it, and it makes some things messier.
 = conversion functions from C data types to obl_object types.
-   remaining: chunk; treepage; float; double; char; stub
+   remaining: chunk; treepage; float; double; char
 * obl_at_address should hit fixed space and the cache.
 * relocate fixed space to high addresses instead of low ones.  it'll help future-
    proof obl databases.
@@ -33,11 +33,15 @@ A rough timeline of the tasks to finish before we see release, large and small.
    remaining: integer; float; double; char
 * read/ - write string objects.
 - read/ - write slotted objects.
-- read/ - write fixed objects.
+* read/ - write fixed objects.
 - read/ - write chunks.
 - read/ - write tree pages.
 - read/ - write arbitrary objects by reading the shape word and delegating to one
    of the other object-reading functions.
+- proper handling of read depth and stubbing.
+- track a set of all objects read through a database via obl_at_address,
+   including recursively create objects and unresolved stubs.  deallocate them
+   properly during obl_destroy_database. 
 - implement the address map with tree pages.
 - implement the address allocator.
 - bootstrap new obl_databases by writing the root object.

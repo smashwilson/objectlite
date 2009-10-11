@@ -22,7 +22,7 @@ struct obl_object;
 /* Fixed allocation.  These logical addresses will always resolve to universally
  * accessible, constant objects that do not reside in the database.
  */
-#define OBL_FIXED_SIZE 12
+#define OBL_FIXED_SIZE 13
 
 typedef enum
 {
@@ -47,7 +47,8 @@ typedef enum
 
     /* Virtual Shape objects. */
     OBL_NIL_SHAPE_ADDR,
-    OBL_BOOLEAN_SHAPE_ADDR
+    OBL_BOOLEAN_SHAPE_ADDR,
+    OBL_STUB_SHAPE_ADDR
 } obl_fixed_address;
 
 /*

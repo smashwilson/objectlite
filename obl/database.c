@@ -254,6 +254,8 @@ static int _initialize_fixed_objects(struct obl_database *database)
             obl_create_cshape(database, "Undefined", 0, no_slots, OBL_NIL);
     database->fixed[_index_for_fixed(OBL_BOOLEAN_SHAPE_ADDR)] =
             obl_create_cshape(database, "Boolean", 0, no_slots, OBL_BOOLEAN);
+    database->fixed[_index_for_fixed(OBL_STUB_SHAPE_ADDR)] =
+            obl_create_cshape(database, "OblStub", 0, no_slots, OBL_STUB);
 
     /*
      * Allocate the only instances of the three immutables: nil, true, and

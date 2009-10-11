@@ -155,6 +155,28 @@ void test_create_slotted(void)
     obl_destroy_database(d);
 }
 
+void test_create_stub(void)
+{
+    struct obl_database *d;
+    struct obl_object *o, *real;
+
+    d = obl_create_database("unit.obl");
+
+    o = _obl_create_stub(d, (obl_logical_address) 14);
+    CU_ASSERT_FATAL(o != NULL);
+    CU_ASSERT(obl_shape_storagetype(o->shape) == OBL_STUB);
+    CU_ASSERT(_obl_is_stub(o));
+
+    real = obl_create_integer(d, (obl_int) 42);
+    real->logical_address = (obl_logical_address) 14;
+    obl_cache_insert(d->cache, real);
+
+    CU_ASSERT(_obl_resolve_stub(o, 0) == real);
+
+    obl_destroy_object(real);
+    obl_destroy_database(d);
+}
+
 void test_boolean_objects(void)
 {
     struct obl_database *d;
@@ -196,6 +218,9 @@ CU_pSuite initialize_object_suite(void)
         (CU_add_test(pSuite,
                 "test_create_slotted",
                 test_create_slotted) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_create_stub",
+                test_create_stub) == NULL) ||
         (CU_add_test(pSuite,
                 "test_create_boolean",
                 test_boolean_objects) == NULL)

@@ -32,7 +32,7 @@ void test_read_integer(void)
     d = obl_create_database(FILENAME);
 
     shape = obl_at_address(d, OBL_INTEGER_SHAPE_ADDR);
-    o = obl_read_integer(shape, (obl_uint*) contents, 0);
+    o = obl_read_integer(shape, (obl_uint*) contents, 0, 0);
     CU_ASSERT(obl_integer_value(o) == 0x11223344);
     CU_ASSERT(o->physical_address == (obl_physical_address) 0);
 
@@ -56,9 +56,82 @@ void test_read_string(void)
     d = obl_create_database(FILENAME);
 
     shape = obl_at_address(d, OBL_STRING_SHAPE_ADDR);
-    o = obl_read_string(shape, (obl_uint*) contents, 0);
+    o = obl_read_string(shape, (obl_uint*) contents, 0, 0);
     CU_ASSERT(obl_string_size(o) == 4);
     CU_ASSERT(obl_string_ccmp(o, "abcd") == 0);
+
+    obl_destroy_database(d);
+}
+
+void test_read_fixed(void)
+{
+    /* length obl_uword, that many obl_logical_addresses */
+    char contents[] = {
+            0x00, 0x00, 0x00, 0x04,
+            0x00, 0x00, 0x0A, 0x0B,
+            0x00, 0x00, 0x0B, 0x0C,
+            0x00, 0x00, 0x0C, 0x0D,
+            0x00, 0x00, 0x0D, 0x0E
+    };
+    struct obl_database *d;
+    struct obl_object *shape, *o, *stub, *linked;
+    struct obl_object *one, *two, *three, *four;
+
+    d = obl_create_database(FILENAME);
+    shape = obl_at_address(d, OBL_FIXED_SHAPE_ADDR);
+
+    /*
+     * With depth 0, obl_read_fixed should create STUB objects for all linked
+     * addresses read.  obl_fixed_at() should resolve these stubs, so test
+     * them by direct inspection.
+     */
+    o = obl_read_fixed(shape, (obl_uint*) contents, 0, 0);
+    CU_ASSERT(obl_fixed_size(o) == 4);
+    stub = o->storage.fixed_storage->contents[0];
+    CU_ASSERT(obl_shape_storagetype(stub->shape) == OBL_STUB);
+    CU_ASSERT(stub->storage.stub_storage->value ==
+            (obl_logical_address) 0x0A0B);
+    stub = o->storage.fixed_storage->contents[3];
+    CU_ASSERT(obl_shape_storagetype(stub->shape) == OBL_STUB);
+    CU_ASSERT(stub->storage.stub_storage->value ==
+            (obl_logical_address) 0x0D0E);
+    obl_destroy_object(o);
+
+    /*
+     * With depth 1, obl_read_fixed should populate its members with actual
+     * obl_objects acquired from obl_at_address.  Prepopulate the cache so
+     * that those calls have something to find.
+     */
+    one = obl_create_integer(d, (obl_int) 427);
+    two = obl_create_cstring(d, "foo", (obl_uint) 3);
+    three = obl_create_integer(d, (obl_int) 3442);
+    four = obl_create_cstring(d, "bar", (obl_uint) 3);
+
+    one->logical_address = (obl_logical_address) 0x0A0B;
+    two->logical_address = (obl_logical_address) 0x0B0C;
+    three->logical_address = (obl_logical_address) 0x0C0D;
+    four->logical_address = (obl_logical_address) 0x0D0E;
+
+    obl_cache_insert(d->cache, one);
+    obl_cache_insert(d->cache, two);
+    obl_cache_insert(d->cache, three);
+    obl_cache_insert(d->cache, four);
+
+    o = obl_read_fixed(shape, (obl_uint*) contents, 0, 1);
+    linked = o->storage.fixed_storage->contents[0];
+    CU_ASSERT(linked == one);
+    linked = o->storage.fixed_storage->contents[1];
+    CU_ASSERT(linked == two);
+    linked = o->storage.fixed_storage->contents[2];
+    CU_ASSERT(linked == three);
+    linked = o->storage.fixed_storage->contents[3];
+    CU_ASSERT(linked == four);
+
+    obl_destroy_object(o);
+    obl_destroy_object(one);
+    obl_destroy_object(two);
+    obl_destroy_object(three);
+    obl_destroy_object(four);
 
     obl_destroy_database(d);
 }
@@ -133,6 +206,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_read_string",
                 test_read_string) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_read_fixed",
+                test_read_fixed) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)

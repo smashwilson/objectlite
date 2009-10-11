@@ -42,7 +42,7 @@ obl_object_read_function obl_read_functions[] = {
 
 /* Integers are stored in 32 bits, network byte order. */
 struct obl_object *obl_read_integer(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset)
+        obl_uint *source, obl_physical_address offset, int depth)
 {
     obl_int value;
     struct obl_object *o;
@@ -56,7 +56,7 @@ struct obl_object *obl_read_integer(struct obl_object *shape,
 
 /* Strings are stored as UTF-16BE with a one-word length prefix. */
 struct obl_object *obl_read_string(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset)
+        obl_uint *source, obl_physical_address offset, int depth)
 {
     obl_uint length;
     obl_uint i;
@@ -85,28 +85,55 @@ struct obl_object *obl_read_string(struct obl_object *shape,
 }
 
 struct obl_object *obl_read_slotted(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset)
+        obl_uint *source, obl_physical_address offset, int depth)
 {
     return obl_nil(shape->database);
 }
 
+struct obl_object *obl_read_fixed(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth)
+{
+    obl_uint length;
+    obl_uint i;
+    struct obl_object *o;
+    obl_logical_address addr;
+    struct obl_object *linked;
+
+    length = readable_uint(source[offset]);
+    o = obl_create_fixed(shape->database, length);
+    o->shape = shape;
+    o->physical_address = offset;
+
+    for (i = 0; i < length; i++) {
+        addr = (obl_logical_address) readable_uint(source[offset + 1 + i]);
+        if (depth == 0) {
+            linked = _obl_create_stub(shape->database, addr);
+        } else {
+            linked = obl_at_address(shape->database, addr);
+        }
+        obl_fixed_at_put(o, i, linked);
+    }
+
+    return o;
+}
+
 struct obl_object *obl_read_shape(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset)
+        obl_uint *source, obl_physical_address offset, int depth)
 {
     return obl_nil(shape->database);
 }
 
 struct obl_object *obl_invalid_storage(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset)
+        obl_uint *source, obl_physical_address offset, int depth)
 {
     obl_report_errorf(shape->database, OBL_WRONG_STORAGE,
-            "Attempt to read an object (%u) with an invalid storage type.",
+            "Attempt to read an object (%lu) with an invalid storage type.",
             offset);
     return obl_nil(shape->database);
 }
 
 struct obl_object *obl_read_object(struct obl_database *d,
-        obl_uint *source, obl_physical_address offset)
+        obl_uint *source, obl_physical_address offset, int depth)
 {
     return NULL;
 }

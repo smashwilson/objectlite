@@ -528,4 +528,13 @@ struct obl_object *_obl_create_bool(struct obl_database *d, int truth);
 struct obl_object *_obl_create_stub(struct obl_database *d,
         obl_logical_address address);
 
+/*
+ * Return the actual object a STUB is standing in for.  +depth+ controls
+ * how far into the object graph other object references are resolved.
+ */
+struct obl_object *_obl_resolve_stub(struct obl_object *o, int depth);
+
+/* Returns true if +o+ is an object with STUB storage. */
+int _obl_is_stub(struct obl_object *o);
+
 #endif

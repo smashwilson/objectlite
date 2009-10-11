@@ -25,36 +25,42 @@ struct obl_database;
  */
 typedef struct obl_object *(*obl_object_read_function)(
         struct obl_object *shape, obl_uint *source,
-        obl_physical_address offset);
+        obl_physical_address offset, int depth);
 
 /* Read a single-word obl_integer_object. */
 struct obl_object *obl_read_integer(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset);
+        obl_uint *source, obl_physical_address offset, int depth);
 
 /* Read a length-prefixed UTF-16BE string object. */
 struct obl_object *obl_read_string(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset);
+        obl_uint *source, obl_physical_address offset, int depth);
 
 /*
  * Read a slotted object.  The number of slots expected is determined by the
  * provided shape.
  */
 struct obl_object *obl_read_slotted(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset);
+        obl_uint *source, obl_physical_address offset, int depth);
+
+/*
+ * Read a fixed-length collection.
+ */
+struct obl_object *obl_read_fixed(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth);
 
 /*
  * Read a shape object.  Shapes are themselves a fixed shape (sorry, no turtles
  * all the way down -- yet).
  */
 struct obl_object *obl_read_shape(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset);
+        obl_uint *source, obl_physical_address offset, int depth);
 
 /*
  * Invoked for any storage type that is either not yet defined properly, or
  * isn't supposed to actually be stored in the database.
  */
 struct obl_object *obl_invalid_storage(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset);
+        obl_uint *source, obl_physical_address offset, int depth);
 
 /*
  * Read a shape word from the current position of the file <source>, retrieve
@@ -66,6 +72,6 @@ struct obl_object *obl_invalid_storage(struct obl_object *shape,
  * obl_destroy_object() as defined in "object.h".
  */
 struct obl_object *obl_read_object(struct obl_database *d,
-        obl_uint *source, obl_physical_address offset);
+        obl_uint *source, obl_physical_address offset, int depth);
 
 #endif
