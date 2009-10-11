@@ -226,6 +226,50 @@ void obl_write_integer(struct obl_object *integer, obl_uint *dest)
     dest[integer->physical_address + 1] = writable_int(value);
 }
 
+void obl_write_string(struct obl_object *string, obl_uint *dest)
+{
+    obl_uint length;
+    obl_uint i;
+    UChar *casted_dest;
+    obl_physical_address casted_offset;
+    UChar ch;
+
+    length = obl_string_size(string);
+    dest[string->physical_address + 1] = writable_uint(length);
+
+    casted_dest = (UChar *) dest;
+    casted_offset = (string->physical_address + 2) *
+            (sizeof(obl_uint) / sizeof(UChar));
+
+    for (i = 0; i < length; i++) {
+        ch = string->storage.string_storage->contents[i];
+        casted_dest[casted_offset + i] = writable_UChar(ch);
+    }
+}
+
+void obl_write_fixed(struct obl_object *fixed, obl_uint *dest)
+{
+    obl_uint length;
+    obl_uint i;
+    struct obl_object *linked;
+    obl_logical_address addr;
+
+    length = obl_fixed_size(fixed);
+    dest[fixed->physical_address + 1] = writable_uint(length);
+
+    for (i = 0; i < length; i++) {
+        /* Avoid unnecessarily resolving any stubs. */
+        linked = fixed->storage.fixed_storage->contents[i];
+
+        /*
+         * TODO: Recursively persist +linked+ if it is not already persisted.
+         * For now, assume it is.
+         */
+        dest[fixed->physical_address + 2 + i] = writable_uint(
+                (obl_uint) linked->logical_address);
+    }
+}
+
 /*
  * Invoked for any storage type that is either not defined yet, or isn't
  * supposed to actually be written to the database.

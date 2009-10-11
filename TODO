@@ -31,9 +31,9 @@ A rough timeline of the tasks to finish before we see release, large and small.
 * implement mmap() and munmap() equivalents for MinGW.
 = read/ = write the single-word object formats:
    remaining: rw float; rw double; rw char
-* read/ - write string objects.
+* read/ * write string objects.
 * read/ - write slotted objects.
-* read/ - write fixed objects.
+* read/ * write fixed objects.
 - read/ - write chunks.
 - read/ - write tree pages.
 * read/ - write shape objects.

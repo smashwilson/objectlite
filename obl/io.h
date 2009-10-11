@@ -88,6 +88,16 @@ struct obl_object *obl_read_object(struct obl_database *d,
 void obl_write_integer(struct obl_object *integer, obl_uint *dest);
 
 /*
+ * Write a string object.
+ */
+void obl_write_string(struct obl_object *string, obl_uint *dest);
+
+/*
+ * Write a fixed-length collection.
+ */
+void obl_write_fixed(struct obl_object *fixed, obl_uint *dest);
+
+/*
  * Invoked for any storage type that is either not defined yet, or isn't
  * supposed to actually be written to the database.
  */

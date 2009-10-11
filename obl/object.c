@@ -694,6 +694,7 @@ struct obl_object *_obl_create_stub(struct obl_database *d,
 
     result->shape = obl_at_address(d, OBL_STUB_SHAPE_ADDR);
     result->storage.stub_storage = storage;
+    result->logical_address = address;
 
     return result;
 }

@@ -274,7 +274,72 @@ void test_write_integer(void)
     CU_ASSERT(memcmp(contents, expected, 8) == 0);
 
     obl_destroy_object(o);
+    obl_destroy_database(d);
+}
 
+void test_write_string(void)
+{
+    struct obl_database *d;
+    struct obl_object *o;
+    char contents[20] = { 0 };
+    const char expected[20] = {
+            0x00, 0x00, 0x00, 0x00, /* Space for the shape address. */
+            0x00, 0x00, 0x00, 0x05, /* Length word. */
+            0x00, 0x68, 0x00, 0x65, /* 'h' 'e' */
+            0x00, 0x6C, 0x00, 0x6C, /* 'l' 'l' */
+            0x00, 0x6F, 0x00, 0x00  /* 'o' padding */
+    };
+
+    d = obl_create_database(FILENAME);
+
+    o = obl_create_cstring(d, "hello", 5);
+    o->physical_address = (obl_physical_address) 0;
+    obl_write_string(o, (obl_uint*) contents);
+
+    CU_ASSERT(memcmp(contents, expected, 20) == 0);
+
+    obl_destroy_object(o);
+    obl_destroy_database(d);
+}
+
+void test_write_fixed(void)
+{
+    struct obl_database *d;
+    struct obl_object *o;
+    struct obl_object *one, *two, *three;
+    char contents[20] = { 0 };
+    const char expected[20] = {
+            0x00, 0x00, 0x00, 0x00, /* Space for the shape address. */
+            0x00, 0x00, 0x00, 0x03, /* Length word. */
+            0x00, 0x00, 0x00, 0xAA, /* Object one. */
+            0x00, 0x00, 0x00, 0xBB, /* Object two. */
+            0x00, 0x00, 0x00, 0xCC, /* Object three. */
+    };
+    int i;
+
+    d = obl_create_database(FILENAME);
+
+    one = obl_create_integer(d, (obl_int) 4123);
+    one->logical_address = (obl_logical_address) 0x00AA;
+    two = obl_create_integer(d, (obl_int) 1002);
+    two->logical_address = (obl_logical_address) 0x00BB;
+    three = obl_create_integer(d, (obl_int) 37);
+    three->logical_address = (obl_logical_address) 0x00CC;
+
+    o = obl_create_fixed(d, (obl_uint) 3);
+    o->physical_address = (obl_physical_address) 0;
+    obl_fixed_at_put(o, 0, one);
+    obl_fixed_at_put(o, 1, two);
+    obl_fixed_at_put(o, 2, three);
+
+    obl_write_fixed(o, (obl_uint*) contents);
+
+    CU_ASSERT(memcmp(contents, expected, 20) == 0);
+
+    obl_destroy_object(o);
+    obl_destroy_object(one);
+    obl_destroy_object(two);
+    obl_destroy_object(three);
     obl_destroy_database(d);
 }
 
@@ -363,6 +428,12 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_write_integer",
                 test_write_integer) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_write_string",
+                test_write_string) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_write_fixed",
+                test_write_fixed) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)
