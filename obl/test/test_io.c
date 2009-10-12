@@ -395,6 +395,49 @@ void test_write_shape(void)
     obl_destroy_database(d);
 }
 
+void test_write_slotted(void)
+{
+    struct obl_database *d;
+    struct obl_object *shape, *slotted;
+    struct obl_object *aaa, *bbb, *ccc;
+    char *slot_names[] = { "aaa", "bbb", "ccc" };
+    char contents[16] = { 0 };
+    const char expected[16] = {
+            0x00, 0x00, 0x00, 0x00, /* Space for the shape address. */
+            0x00, 0x00, 0x11, 0xAA, /* Slot "aaa" address. */
+            0x00, 0x00, 0x22, 0xBB, /* Slot "bbb" address. */
+            0x00, 0x00, 0x33, 0xCC  /* Slot "ccc" address. */
+    };
+
+    d = obl_create_database(FILENAME);
+
+    shape = obl_create_cshape(d, "FooClass", 3, slot_names, OBL_SLOTTED);
+    shape->physical_address = (obl_physical_address) 0;
+
+    slotted = obl_create_slotted(shape);
+
+    aaa = obl_create_integer(d, (obl_int) 1);
+    aaa->logical_address = (obl_logical_address) 0x11AA;
+    bbb = obl_create_integer(d, (obl_int) 2);
+    bbb->logical_address = (obl_logical_address) 0x22BB;
+    ccc = obl_create_integer(d, (obl_int) 3);
+    ccc->logical_address = (obl_logical_address) 0x33CC;
+
+    obl_slotted_at_put(slotted, 0, aaa);
+    obl_slotted_at_put(slotted, 1, bbb);
+    obl_slotted_at_put(slotted, 2, ccc);
+
+    obl_write_slotted(slotted, (obl_uint*) contents);
+    CU_ASSERT(memcmp(contents, expected, 16) == 0);
+
+    obl_destroy_object(aaa);
+    obl_destroy_object(bbb);
+    obl_destroy_object(ccc);
+    obl_destroy_object(slotted);
+    obl_destroy_cshape(shape);
+    obl_destroy_database(d);
+}
+
 /*
  * Verify that the (possibly emulated) version of mmap() currently being used
  * via platform.h actually works.
@@ -489,6 +532,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_write_shape",
                 test_write_shape) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_write_slotted",
+                test_write_slotted) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)

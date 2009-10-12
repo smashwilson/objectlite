@@ -93,14 +93,19 @@ void obl_write_integer(struct obl_object *integer, obl_uint *dest);
 void obl_write_string(struct obl_object *string, obl_uint *dest);
 
 /*
- * Write a shape object.
+ * Write a slotted object.
  */
-void obl_write_shape(struct obl_object *string, obl_uint *dest);
+void obl_write_slotted(struct obl_object *slotted, obl_uint *dest);
 
 /*
  * Write a fixed-length collection.
  */
 void obl_write_fixed(struct obl_object *fixed, obl_uint *dest);
+
+/*
+ * Write a shape object.
+ */
+void obl_write_shape(struct obl_object *string, obl_uint *dest);
 
 /*
  * Invoked for any storage type that is either not defined yet, or isn't

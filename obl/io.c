@@ -247,12 +247,32 @@ void obl_write_string(struct obl_object *string, obl_uint *dest)
     }
 }
 
+void obl_write_slotted(struct obl_object *slotted, obl_uint *dest)
+{
+    obl_uint slot_count;
+    obl_uint i;
+    struct obl_object *linked;
+
+    slot_count = obl_shape_slotcount(slotted->shape);
+    for (i = 0; i < slot_count; i++) {
+        /* Avoid unnecessary stub resolution. */
+        linked = slotted->storage.slotted_storage->slots[i];
+
+        /*
+         * TODO: Recursively persist +linked+ if it isn't already persisted.
+         * Depends on the implementation of a generate +obl_write+ function
+         * in database.h, which takes care of address assignment and so on.
+         */
+        dest[slotted->physical_address + 1 + i] = writable_uint(
+                (obl_uint) linked->logical_address);
+    }
+}
+
 void obl_write_fixed(struct obl_object *fixed, obl_uint *dest)
 {
     obl_uint length;
     obl_uint i;
     struct obl_object *linked;
-    obl_logical_address addr;
 
     length = obl_fixed_size(fixed);
     dest[fixed->physical_address + 1] = writable_uint(length);
