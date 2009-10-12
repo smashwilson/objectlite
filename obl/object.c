@@ -718,7 +718,14 @@ struct obl_object *_obl_resolve_stub(struct obl_object *stub, int depth)
 
 int _obl_is_stub(struct obl_object *o)
 {
-    return obl_shape_storagetype(o->shape) == OBL_STUB;
+    struct obl_object *shape;
+
+    shape = o->shape;
+    if (shape == obl_nil(o->database)) {
+        return 0;
+    } else {
+        return obl_shape_storagetype(shape) == OBL_STUB;
+    }
 }
 
 /*

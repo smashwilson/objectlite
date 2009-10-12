@@ -113,4 +113,11 @@ void obl_write_shape(struct obl_object *string, obl_uint *dest);
  */
 void obl_invalid_write(struct obl_object *o, obl_uint *dest);
 
+/*
+ * Write an object +o+ to the memory-mapped file pointed to by +dest+.  +o+ must
+ * already have a physical and logical address assigned to it, although
+ * recursively referenced objects may not.
+ */
+void obl_write_object(struct obl_object *o, obl_uint *dest);
+
 #endif

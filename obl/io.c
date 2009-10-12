@@ -41,16 +41,16 @@ static obl_object_read_function obl_read_functions[] = {
  * location specified by its pre-set physical address.
  */
 static obl_object_write_function obl_write_functions[] = {
-        &obl_invalid_write, /* OBL_SHAPE */
-        &obl_invalid_write, /* OBL_SLOTTED */
-        &obl_invalid_write, /* OBL_FIXED */
+        &obl_write_shape,   /* OBL_SHAPE */
+        &obl_write_slotted, /* OBL_SLOTTED */
+        &obl_write_fixed,   /* OBL_FIXED */
         &obl_invalid_write, /* OBL_CHUNK */
         &obl_invalid_write, /* OBL_TREEPAGE */
-        &obl_invalid_write, /* OBL_INTEGER */
+        &obl_write_integer, /* OBL_INTEGER */
         &obl_invalid_write, /* OBL_FLOAT */
         &obl_invalid_write, /* OBL_DOUBLE */
         &obl_invalid_write, /* OBL_CHAR */
-        &obl_invalid_write, /* OBL_STRING */
+        &obl_write_string,  /* OBL_STRING */
         &obl_invalid_write, /* OBL_BOOLEAN (invalid) */
         &obl_invalid_write, /* OBL_NIL (invalid) */
         &obl_invalid_write  /* OBL_STUB (invalid) */
@@ -316,6 +316,41 @@ void obl_write_shape(struct obl_object *shape, obl_uint *dest)
 void obl_invalid_write(struct obl_object *o, obl_uint *dest)
 {
     obl_report_errorf(o->database, OBL_WRONG_STORAGE,
-            "Attempt to write an object with an invalid storage type (%ul).",
+            "Attempt to write an object with an invalid storage type (%lu).",
             _obl_storage_of(o));
+}
+
+/*
+ * Writes the shape address and delegates to the appropriate write function
+ * for this object's storage type.
+ */
+void obl_write_object(struct obl_object *o, obl_uint *dest)
+{
+    struct obl_object *shape;
+    int function_index;
+
+    if (_obl_is_stub(o->shape)) {
+        shape = _obl_resolve_stub(o->shape, o->database->default_stub_depth);
+        obl_destroy_object(o->shape);
+        o->shape = shape;
+    } else {
+        shape = o->shape;
+    }
+
+    if (shape != obl_nil(o->database) && _obl_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(o->database, OBL_WRONG_STORAGE,
+                "Attempt to write an object with a shape that isn't a shape.");
+        return ;
+    }
+
+    if (shape != obl_nil(o->database)) {
+        function_index = (int) obl_shape_storagetype(shape);
+    } else {
+        function_index = (int) OBL_SHAPE;
+    }
+
+    dest[o->physical_address] = writable_uint(
+            (obl_uint) shape->logical_address);
+
+    (*obl_write_functions[function_index])(o, dest);
 }

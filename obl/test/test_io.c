@@ -246,10 +246,10 @@ void test_read_arbitrary(void)
 {
     char contents[] = {
             /* Physical 0: an integer */
-            0xff, 0xff, 0xff, 0xf6, /* Integer shape addr */
+            0xff, 0xff, 0xff, 0xf6, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x0A, /* Integer value */
             /* Physical 2: a string */
-            0xff, 0xff, 0xff, 0xfa, /* String shape addr */
+            0xff, 0xff, 0xff, 0xfa, /* String shape = OBL_STRING_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x05, /* Length: 5 */
             0x00, 0x68, 0x00, 0x65, /* 'h' 'e' */
             0x00, 0x6C, 0x00, 0x6C, /* 'l' 'l' */
@@ -438,6 +438,41 @@ void test_write_slotted(void)
     obl_destroy_database(d);
 }
 
+void test_write_arbitrary(void)
+{
+    struct obl_database *d;
+    struct obl_object *one, *two;
+    char contents[28] = { 0 };
+    const char expected[28] = {
+            /* Physical 0: the string 'hello' */
+            0xff, 0xff, 0xff, 0xfa, /* String shape = OBL_STRING_SHAPE_ADDR */
+            0x00, 0x00, 0x00, 0x05, /* Length: 5 */
+            0x00, 0x68, 0x00, 0x65, /* 'h' 'e' */
+            0x00, 0x6C, 0x00, 0x6C, /* 'l' 'l' */
+            0x00, 0x6F, 0x00, 0x00, /* 'o' padding byte */
+
+            /* Physical 5: the integer '42' */
+            0xff, 0xff, 0xff, 0xf6, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
+            0x00, 0x00, 0x00, 0x2A  /* Integer value */
+    };
+
+    d = obl_create_database(FILENAME);
+
+    one = obl_create_cstring(d, "hello", 5);
+    one->physical_address = (obl_physical_address) 0;
+    two = obl_create_integer(d, (obl_int) 42);
+    two->physical_address = (obl_physical_address) 5;
+
+    obl_write_object(one, (obl_uint*) contents);
+    obl_write_object(two, (obl_uint*) contents);
+
+    CU_ASSERT(memcmp(contents, expected, 28) == 0);
+
+    obl_destroy_object(one);
+    obl_destroy_object(two);
+    obl_destroy_database(d);
+}
+
 /*
  * Verify that the (possibly emulated) version of mmap() currently being used
  * via platform.h actually works.
@@ -535,6 +570,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_write_slotted",
                 test_write_slotted) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_write_arbitrary",
+                test_write_arbitrary) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)
