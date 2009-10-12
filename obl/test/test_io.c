@@ -21,6 +21,25 @@
 
 #define FILENAME "testing.obl"
 
+/*
+ * A utility function to quickly print whatever bytes lie at +memory+.  It'll
+ * dump each byte in the format [ii:0x00], where "ii" is the byte index and
+ * "0x00" is the hex code for that byte's contents.
+ */
+static void dump_memory(char *memory, int size)
+{
+    int i;
+
+    puts("");
+    for (i = 0; i < size; i++) {
+        printf(" [%02i:0x%02hx]", i, ((unsigned short) memory[i] & 0x00ff));
+        if (i % 4 == 3) { puts(""); }
+    }
+    if (size % 4 != 0) {
+        puts("");
+    }
+}
+
 void test_read_integer(void)
 {
     /* Emulate big-endian (network) byte order storage. */
@@ -243,7 +262,7 @@ void test_read_arbitrary(void)
 
     integer = obl_read_object(d, (obl_uint*) contents, 0, 1);
     CU_ASSERT(integer->shape == obl_at_address(d, OBL_INTEGER_SHAPE_ADDR));
-    CU_ASSERT(obl_integer_value(integer) == (obl_int) 10)
+    CU_ASSERT(obl_integer_value(integer) == (obl_int) 10);
 
     string = obl_read_object(d, (obl_uint*) contents, 2, 1);
     CU_ASSERT(string->shape == obl_at_address(d, OBL_STRING_SHAPE_ADDR));
@@ -343,6 +362,39 @@ void test_write_fixed(void)
     obl_destroy_database(d);
 }
 
+void test_write_shape(void)
+{
+    struct obl_database *d;
+    struct obl_object *shape;
+    char *slot_names[] = { "first", "second" };
+    char contents[20] = { 0 };
+    const char expected[20] = {
+            0x00, 0x00, 0x00, 0x00, /* Space for the shape address. */
+            0x00, 0x00, 0xAA, 0xBB, /* Name address */
+            0x00, 0x00, 0xCC, 0xDD, /* Slot names address */
+            0xff, 0xff, 0xff, 0xf3, /* Current shape = OBL_NIL_ADDR */
+            0x00, 0x00, 0x00, 0x01  /* Storage type = OBL_SLOTTED */
+    };
+    int i;
+
+    d = obl_create_database(FILENAME);
+
+    shape = obl_create_cshape(d, "FooClass", 2, slot_names,
+            OBL_SLOTTED);
+    shape->physical_address = (obl_physical_address) 0;
+
+    shape->storage.shape_storage->name->logical_address =
+            (obl_logical_address) 0xAABB;
+    shape->storage.shape_storage->slot_names->logical_address =
+            (obl_logical_address) 0xCCDD;
+
+    obl_write_shape(shape, (obl_uint*) contents);
+    CU_ASSERT(memcmp(contents, expected, 20) == 0);
+
+    obl_destroy_cshape(shape);
+    obl_destroy_database(d);
+}
+
 /*
  * Verify that the (possibly emulated) version of mmap() currently being used
  * via platform.h actually works.
@@ -434,6 +486,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_write_fixed",
                 test_write_fixed) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_write_shape",
+                test_write_shape) == NULL) ||
         (CU_add_test(pSuite,
                 "test_mmap",
                 test_mmap) == NULL)

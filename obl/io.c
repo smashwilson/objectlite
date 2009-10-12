@@ -270,6 +270,25 @@ void obl_write_fixed(struct obl_object *fixed, obl_uint *dest)
     }
 }
 
+void obl_write_shape(struct obl_object *shape, obl_uint *dest)
+{
+    struct obl_object *name, *slot_names, *current_shape;
+
+    name = shape->storage.shape_storage->name;
+    slot_names = shape->storage.shape_storage->slot_names;
+    current_shape = shape->storage.shape_storage->current_shape;
+
+    dest[shape->physical_address + 1] = writable_uint(
+            (obl_uint) name->logical_address);
+    dest[shape->physical_address + 2] = writable_uint(
+            (obl_uint) slot_names->logical_address);
+    dest[shape->physical_address + 3] = writable_uint(
+            (obl_uint) current_shape->logical_address);
+
+    dest[shape->physical_address + 4] = writable_uint(
+            (obl_uint) obl_shape_storagetype(shape));
+}
+
 /*
  * Invoked for any storage type that is either not defined yet, or isn't
  * supposed to actually be written to the database.
