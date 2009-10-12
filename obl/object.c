@@ -741,8 +741,8 @@ inline struct obl_object *_allocate_object(struct obl_database *d)
     }
 
     result->database = d;
-    result->logical_address = 0;
-    result->physical_address = 0;
+    result->logical_address = OBL_LOGICAL_UNASSIGNED;
+    result->physical_address = OBL_PHYSICAL_UNASSIGNED;
     return result;
 }
 

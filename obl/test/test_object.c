@@ -14,6 +14,7 @@
 #include "unicode/ucnv.h"
 
 #include "database.h"
+#include "object.h"
 #include "log.h"
 
 void test_create_integer(void)
@@ -27,6 +28,8 @@ void test_create_integer(void)
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->database == d);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_INTEGER_SHAPE_ADDR));
+    CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
+    CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(obl_integer_value(o) == (obl_int) 42);
 
     obl_destroy_object(o);
@@ -47,6 +50,8 @@ void test_create_string(void)
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->database == d);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_STRING_SHAPE_ADDR));
+    CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
+    CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(obl_string_size(o) == strlen(string));
 
     buffer = (char *) malloc(sizeof(char) * obl_string_size(o));
@@ -74,6 +79,8 @@ void test_create_fixed(void)
     o = obl_create_fixed(d, length);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->database == d);
+    CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
+    CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(o->shape == obl_at_address(d, OBL_FIXED_SHAPE_ADDR));
     CU_ASSERT(obl_fixed_size(o) == length);
     CU_ASSERT(obl_fixed_at(o, 1) == obl_nil(d));
@@ -108,6 +115,8 @@ void test_create_shape(void)
     o = obl_create_cshape(d, "Foo", 2, slot_names, OBL_SLOTTED);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->database == d);
+    CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
+    CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(o->shape == obl_nil(d));
 
     storage = o->storage.shape_storage;
@@ -137,6 +146,8 @@ void test_create_slotted(void)
 
     shape = obl_create_cshape(d, "FooClass", 2, slot_names, OBL_SLOTTED);
     o = obl_create_slotted(shape);
+    CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
+    CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
 
     CU_ASSERT(obl_database_ok(d));
     CU_ASSERT(obl_slotted_atcnamed(o, "foo") == obl_nil(d));
@@ -164,6 +175,8 @@ void test_create_stub(void)
 
     o = _obl_create_stub(d, (obl_logical_address) 14);
     CU_ASSERT_FATAL(o != NULL);
+    CU_ASSERT(o->logical_address == (obl_logical_address) 14)
+    CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(obl_shape_storagetype(o->shape) == OBL_STUB);
     CU_ASSERT(_obl_is_stub(o));
 

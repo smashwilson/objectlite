@@ -35,6 +35,16 @@ typedef enum
 } obl_storage_type;
 
 /*
+ * The physical address used to denote that an obl_object is not persisted yet.
+ */
+#define OBL_PHYSICAL_UNASSIGNED ((obl_physical_address) 0)
+
+/*
+ * The logical address used to denote that an obl_object is not persisted yet.
+ */
+#define OBL_LOGICAL_UNASSIGNED ((obl_logical_address) 0)
+
+/*
  * Shape
  *
  * "Class" object which specifies how to interpret any object whose header word
