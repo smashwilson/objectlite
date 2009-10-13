@@ -51,7 +51,14 @@ struct obl_database *obl_create_database(const char *filename)
     database->log_config.level = L_DEBUG;
     database->last_error.code = OBL_OK;
     database->last_error.message = NULL;
-    database->default_stub_depth = 4;
+    database->default_stub_depth = DEFAULT_STUB_DEPTH;
+
+    /* Initialize +root+ to OBL_UNASSIGNED until opened. */
+    database->root.address_map = OBL_PHYSICAL_UNASSIGNED;
+    database->root.allocator = OBL_PHYSICAL_UNASSIGNED;
+    database->root.name_map = OBL_PHYSICAL_UNASSIGNED;
+    database->root.shape_map = OBL_PHYSICAL_UNASSIGNED;
+    database->root.dirty = 0;
 
     cache = obl_create_cache(DEFAULT_CACHE_BUCKETS, DEFAULT_CACHE_SIZE);
     if (cache == NULL) {

@@ -25,4 +25,9 @@
  */
 #define DEFAULT_CACHE_BUCKETS 1021
 
+/*
+ * Default depth to automatically follow stubs.
+ */
+#define DEFAULT_STUB_DEPTH 4
+
 #endif

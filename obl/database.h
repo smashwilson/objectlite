@@ -19,7 +19,8 @@ struct obl_cache;
 /* Defined in object.h */
 struct obl_object;
 
-/* Fixed allocation.  These logical addresses will always resolve to universally
+/*
+ * Fixed allocation.  These logical addresses will always resolve to universally
  * accessible, constant objects that do not reside in the database.
  */
 #define OBL_FIXED_SIZE 13
@@ -75,6 +76,49 @@ struct error {
 };
 
 /*
+ * The root object of the database, which always resides at physical address 0
+ * and has no mapping within the logical address space.  Root contains direct
+ * references to the four structures which need to be present for the database
+ * to operate.
+ */
+struct obl_root {
+
+    /*
+     * This physical address must point to the root of the structure of
+     * OBL_TREEPAGE objects that map logical addresses to physical addresses.
+     * See +addressmap.h+.
+     */
+    obl_physical_address address_map;
+
+    /*
+     * This address must point to the saved state of the allocator, an
+     * obl_object that assigns free logical and physical addresses to newly
+     * created objects.  See +allocator.h+.
+     */
+    obl_physical_address allocator;
+
+    /*
+     * The object at this physical address is the root of a dictionary of
+     * OBL_SHAPE objects by OBL_STRING name.
+     */
+    obl_physical_address shape_map;
+
+    /*
+     * The dictionary at this physical address contains user-defined entry
+     * points to structures of persisted data.
+     */
+    obl_physical_address name_map;
+
+    /*
+     * This structure is not an obl_object and cannot be added to a
+     * transaction's write set.  This dirty flag indicates that one of these
+     * addresses has changed and indicates that the root object must be
+     * rewritten.
+     */
+    int dirty;
+};
+
+/*
  * ObjectLite interface layer.
  */
 struct obl_database {
@@ -97,6 +141,9 @@ struct obl_database {
 
     /* Stubbing control. */
     int default_stub_depth;
+
+    /* Root storage.  Initialized during open. */
+    struct obl_root root;
 };
 
 /*

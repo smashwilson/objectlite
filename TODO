@@ -44,6 +44,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
 - implement the address allocator.
 - bootstrap new obl_databases by writing the root object.
 - make the shape of a shape another shape.
+- split object.h into a difference source file for each storage type
 
 # Advanced I/O
 
