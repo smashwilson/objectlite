@@ -51,6 +51,16 @@ typedef obl_address obl_physical_address;
 typedef obl_address obl_logical_address;
 
 /*
+ * The physical address used to denote that an obl_object is not persisted yet.
+ */
+#define OBL_PHYSICAL_UNASSIGNED ((obl_physical_address) 0)
+
+/*
+ * The logical address used to denote that an obl_object is not persisted yet.
+ */
+#define OBL_LOGICAL_UNASSIGNED ((obl_logical_address) 0)
+
+/*
  * Valid ranges for the address types.
  */
 #define OBL_ADDRESS_MAX OBL_UINT_MAX

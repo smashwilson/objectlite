@@ -28,21 +28,11 @@ struct obl_database;
 typedef enum
 {
     OBL_SHAPE,
-    OBL_SLOTTED, OBL_FIXED, OBL_CHUNK, OBL_TREEPAGE,
+    OBL_SLOTTED, OBL_FIXED, OBL_CHUNK, OBL_ADDRTREEPAGE,
     OBL_INTEGER, OBL_FLOAT, OBL_DOUBLE, OBL_CHAR, OBL_STRING, OBL_BOOLEAN,
     OBL_NIL, OBL_STUB,
     OBL_STORAGE_TYPE_MAX = OBL_STUB
 } obl_storage_type;
-
-/*
- * The physical address used to denote that an obl_object is not persisted yet.
- */
-#define OBL_PHYSICAL_UNASSIGNED ((obl_physical_address) 0)
-
-/*
- * The logical address used to denote that an obl_object is not persisted yet.
- */
-#define OBL_LOGICAL_UNASSIGNED ((obl_logical_address) 0)
 
 /*
  * Shape
@@ -128,20 +118,22 @@ struct obl_chunk_storage {
 };
 
 /*
- * Tree Page
+ * Address Tree Page
  *
- * Building block for indices and hashes, include the address map and shape storage.
+ * These structures are used internally to implement the logical to physical
+ * address mapping.  See +addressmap.h+.
  */
-struct obl_treepage_storage {
+struct obl_addrtreepage_storage {
 
-    /* Position of the page within the tree.  Leaves have a depth of 0. */
-    obl_uint depth;
+    /* Position of the page within the tree.  Leaves have a height of 0. */
+    obl_uint height;
 
-    /* Object pointers.  On leaves, these will be tree contents; on branches,
-     * pointers to the next level.
+    /*
+     * At a leaf, this set contains the target physical addresses.  On a branch,
+     * this set maps to the next layer of obl_addrtreepage objects, or
+     * OBL_PHYSICAL_UNASSIGNED if no addresses have been mapped in that range.
      */
-    struct obl_object *contents[CHUNK_SIZE];
-
+    obl_physical_address contents[CHUNK_SIZE];
 };
 
 /*
@@ -300,7 +292,7 @@ struct obl_object
         struct obl_slotted_storage *slotted_storage;
         struct obl_fixed_storage *fixed_storage;
         struct obl_chunk_storage *chunk_storage;
-        struct obl_treepage_storage *treepage_storage;
+        struct obl_addrtreepage_storage *addrtreepage_storage;
 
         struct obl_integer_storage *integer_storage;
         struct obl_float_storage *float_storage;
@@ -347,7 +339,12 @@ struct obl_object *obl_create_cstring(struct obl_database *d,
         const char *c, obl_uint length);
 
 /* Fixed-size collection creation. */
-struct obl_object *obl_create_fixed(struct obl_database *d, obl_uint length);
+struct obl_object *obl_create_fixed(struct obl_database *d,
+        obl_uint length);
+
+/* Address tree page creation. */
+struct obl_object *obl_create_addrtreepage(struct obl_database *d,
+        obl_uint depth);
 
 /* Slotted object creation */
 struct obl_object *obl_create_slotted(struct obl_object *shape);

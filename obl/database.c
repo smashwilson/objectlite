@@ -77,6 +77,8 @@ struct obl_database *obl_create_database(const char *filename)
         return NULL;
     }
 
+    database->content = NULL;
+
     return database;
 }
 
@@ -282,6 +284,9 @@ static int _initialize_fixed_objects(struct obl_database *database)
             obl_create_cshape(database, "Boolean", 0, no_slots, OBL_BOOLEAN);
     database->fixed[_index_for_fixed(OBL_STUB_SHAPE_ADDR)] =
             obl_create_cshape(database, "OblStub", 0, no_slots, OBL_STUB);
+    database->fixed[_index_for_fixed(OBL_ADDRTREEPAGE_SHAPE_ADDR)] =
+            obl_create_cshape(database, "OblAddressTreePage", 0, no_slots,
+                    OBL_ADDRTREEPAGE);
 
     /*
      * Allocate the only instances of the other two of the three immutables:

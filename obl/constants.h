@@ -10,7 +10,9 @@
 #define CONSTANTS_H
 
 /*
- * The number of words to allocate to an object chunk.
+ * The number of words to allocate to an object chunk.  Must be a power of two,
+ * or the address map breaks (among other things).  But who would want to change
+ * it to such a messy number anyway?
  */
 #define CHUNK_SIZE 256
 

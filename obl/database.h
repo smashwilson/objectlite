@@ -23,7 +23,7 @@ struct obl_object;
  * Fixed allocation.  These logical addresses will always resolve to universally
  * accessible, constant objects that do not reside in the database.
  */
-#define OBL_FIXED_SIZE 13
+#define OBL_FIXED_SIZE 14
 
 typedef enum
 {
@@ -31,25 +31,26 @@ typedef enum
     OBL_FIXED_ADDR_MIN = OBL_ADDRESS_MAX - OBL_FIXED_SIZE + 1,
 
     /* Special constants: nil, true, and false. */
-    OBL_NIL_ADDR = OBL_FIXED_ADDR_MIN,
-    OBL_TRUE_ADDR,
-    OBL_FALSE_ADDR,
+    OBL_NIL_ADDR = OBL_FIXED_ADDR_MIN, /* 0xfff2 */
+    OBL_TRUE_ADDR,                     /* 0xfff3 */
+    OBL_FALSE_ADDR,                    /* 0xfff4 */
 
     /* The primitive Shape objects. */
-    OBL_INTEGER_SHAPE_ADDR,
-    OBL_FLOAT_SHAPE_ADDR,
-    OBL_DOUBLE_SHAPE_ADDR,
-    OBL_CHAR_SHAPE_ADDR,
-    OBL_STRING_SHAPE_ADDR,
+    OBL_INTEGER_SHAPE_ADDR,            /* 0xfff5 */
+    OBL_FLOAT_SHAPE_ADDR,              /* 0xfff6 */
+    OBL_DOUBLE_SHAPE_ADDR,             /* 0xfff7 */
+    OBL_CHAR_SHAPE_ADDR,               /* 0xfff8 */
+    OBL_STRING_SHAPE_ADDR,             /* 0xfff9 */
 
     /* Built-in collection Shape objects. */
-    OBL_FIXED_SHAPE_ADDR,
-    OBL_CHUNK_SHAPE_ADDR,
+    OBL_FIXED_SHAPE_ADDR,              /* 0xfffa */
+    OBL_CHUNK_SHAPE_ADDR,              /* 0xfffb */
+    OBL_ADDRTREEPAGE_SHAPE_ADDR,       /* 0xfffc */
 
     /* Virtual Shape objects. */
-    OBL_NIL_SHAPE_ADDR,
-    OBL_BOOLEAN_SHAPE_ADDR,
-    OBL_STUB_SHAPE_ADDR
+    OBL_NIL_SHAPE_ADDR,                /* 0xfffd */
+    OBL_BOOLEAN_SHAPE_ADDR,            /* 0xfffe */
+    OBL_STUB_SHAPE_ADDR                /* 0xffff */
 } obl_fixed_address;
 
 /*
@@ -85,7 +86,7 @@ struct obl_root {
 
     /*
      * This physical address must point to the root of the structure of
-     * OBL_TREEPAGE objects that map logical addresses to physical addresses.
+     * OBL_ADDRTREEPAGE objects that map logical addresses to physical addresses.
      * See +addressmap.h+.
      */
     obl_physical_address address_map;
@@ -144,6 +145,9 @@ struct obl_database {
 
     /* Root storage.  Initialized during open. */
     struct obl_root root;
+
+    /* The memory-mapped contents of the database file. */
+    obl_uint *content;
 };
 
 /*

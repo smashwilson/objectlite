@@ -19,7 +19,7 @@
 #include "object.h"
 #include "platform.h"
 
-#define FILENAME "testing.obl"
+static const char *filename = "testing.obl";
 
 /*
  * A utility function to quickly print whatever bytes lie at +memory+.  It'll
@@ -49,7 +49,7 @@ void test_read_integer(void)
     struct obl_database *d;
     struct obl_object *shape, *o;
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     shape = obl_at_address(d, OBL_INTEGER_SHAPE_ADDR);
     o = obl_read_integer(shape, (obl_uint*) contents, 0, 0);
@@ -65,15 +65,13 @@ void test_read_string(void)
     /* length obl_uword, UTF-16BE */
     char contents[] = {
             0x0, 0x0, 0x0, 0x4,
-            0x0, 'a',
-            0x0, 'b',
-            0x0, 'c',
-            0x0, 'd'
+            0x0, 'a', 0x0, 'b',
+            0x0, 'c', 0x0, 'd'
     };
     struct obl_database *d;
     struct obl_object *shape, *o;
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     shape = obl_at_address(d, OBL_STRING_SHAPE_ADDR);
     o = obl_read_string(shape, (obl_uint*) contents, 0, 0);
@@ -97,7 +95,7 @@ void test_read_fixed(void)
     struct obl_object *shape, *o, *stub, *linked;
     struct obl_object *one, *two, *three, *four;
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
     shape = obl_at_address(d, OBL_FIXED_SHAPE_ADDR);
 
     /*
@@ -165,7 +163,7 @@ void test_read_shape(void)
     char contents[] = {
             0x00, 0x00, 0x00, 0x01,
             0x00, 0x00, 0x00, 0x02,
-            0xff, 0xff, 0xff, 0xf3, /* OBL_NIL_ADDR */
+            0xff, 0xff, 0xff, 0xf2, /* OBL_NIL_ADDR */
             0x00, 0x00, 0x00, 0x01, /* OBL_SLOTTED = format 2 */
     };
     struct obl_database *d;
@@ -173,7 +171,7 @@ void test_read_shape(void)
     struct obl_object *slot_one_name, *slot_two_name;
     struct obl_object *out;
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     name = obl_create_cstring(d, "FooClass", 8);
     name->logical_address = (obl_logical_address) 1;
@@ -217,7 +215,7 @@ void test_read_slotted(void)
     struct obl_object *one, *two;
     struct obl_object *o;
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     shape = obl_create_cshape(d, "FooClass", 2, slot_names, OBL_SLOTTED);
     one = obl_create_integer(d, (obl_int) -17);
@@ -242,14 +240,40 @@ void test_read_slotted(void)
     obl_destroy_database(d);
 }
 
+void test_read_addrtreepage(void)
+{
+    char contents[4 + (CHUNK_SIZE * 4)] = {
+            0x00, 0x00, 0x00, 0x02, /* depth */
+            0x00, 0x00, 0x00, 0x00, /* 0x00 = OBL_PHYSICAL_UNASSIGNED */
+            0x01, 0x02, 0x03, 0x04, /* 0x01 = next tree page */
+            0                       /* 0x02 - 0xFF = OBL_PHYSICAL_UNASSIGNED */
+    };
+    struct obl_database *d;
+    struct obl_object *treepage, *shape;
+
+    d = obl_create_database(filename);
+
+    shape = obl_at_address(d, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    treepage = obl_read_addrtreepage(shape, (obl_uint*) contents, 0, 1);
+
+    CU_ASSERT(treepage->storage.addrtreepage_storage->height == (obl_uint) 2);
+    CU_ASSERT(treepage->storage.addrtreepage_storage->contents[0] ==
+            OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(treepage->storage.addrtreepage_storage->contents[1] ==
+            (obl_physical_address) 0x01020304);
+
+    obl_destroy_object(treepage);
+    obl_destroy_database(d);
+}
+
 void test_read_arbitrary(void)
 {
     char contents[] = {
             /* Physical 0: an integer */
-            0xff, 0xff, 0xff, 0xf6, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xf5, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x0A, /* Integer value */
             /* Physical 2: a string */
-            0xff, 0xff, 0xff, 0xfa, /* String shape = OBL_STRING_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xf9, /* String shape = OBL_STRING_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x05, /* Length: 5 */
             0x00, 0x68, 0x00, 0x65, /* 'h' 'e' */
             0x00, 0x6C, 0x00, 0x6C, /* 'l' 'l' */
@@ -258,7 +282,7 @@ void test_read_arbitrary(void)
     struct obl_database *d;
     struct obl_object *integer, *string;
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     integer = obl_read_object(d, (obl_uint*) contents, 0, 1);
     CU_ASSERT(integer->shape == obl_at_address(d, OBL_INTEGER_SHAPE_ADDR));
@@ -284,7 +308,7 @@ void test_write_integer(void)
             0x12, 0x34, 0x56, 0x78
     };
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     o = obl_create_integer(d, (obl_int) 0x12345678);
     o->physical_address = (obl_physical_address) 0;
@@ -309,7 +333,7 @@ void test_write_string(void)
             0x00, 0x6F, 0x00, 0x00  /* 'o' padding */
     };
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     o = obl_create_cstring(d, "hello", 5);
     o->physical_address = (obl_physical_address) 0;
@@ -336,7 +360,7 @@ void test_write_fixed(void)
     };
     int i;
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     one = obl_create_integer(d, (obl_int) 4123);
     one->logical_address = (obl_logical_address) 0x00AA;
@@ -372,12 +396,12 @@ void test_write_shape(void)
             0x00, 0x00, 0x00, 0x00, /* Space for the shape address. */
             0x00, 0x00, 0xAA, 0xBB, /* Name address */
             0x00, 0x00, 0xCC, 0xDD, /* Slot names address */
-            0xff, 0xff, 0xff, 0xf3, /* Current shape = OBL_NIL_ADDR */
+            0xff, 0xff, 0xff, 0xf2, /* Current shape = OBL_NIL_ADDR */
             0x00, 0x00, 0x00, 0x01  /* Storage type = OBL_SLOTTED */
     };
     int i;
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     shape = obl_create_cshape(d, "FooClass", 2, slot_names,
             OBL_SLOTTED);
@@ -409,7 +433,7 @@ void test_write_slotted(void)
             0x00, 0x00, 0x33, 0xCC  /* Slot "ccc" address. */
     };
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     shape = obl_create_cshape(d, "FooClass", 3, slot_names, OBL_SLOTTED);
     shape->physical_address = (obl_physical_address) 0;
@@ -438,6 +462,32 @@ void test_write_slotted(void)
     obl_destroy_database(d);
 }
 
+void test_write_addrtreepage(void)
+{
+    struct obl_database *d;
+    struct obl_object *treepage;
+    char contents[4 + CHUNK_SIZE * 4] = { 0 };
+    const char expected[4 + CHUNK_SIZE * 4] = {
+            0x00, 0x00, 0x00, 0x00, /* Space for the shape address. */
+            0x00, 0x00, 0x00, 0x04, /* Page height. */
+            0x00, 0x00, 0x00, 0x00, /* 0x00 = OBL_PHYSICAL_UNASSIGNED */
+            0x00, 0xAA, 0x00, 0xBB, /* 0x01 = next treepage address */
+            0                       /* 0x02 - 0xFF = OBL_PHYSICAL_UNASSIGNED */
+    };
+
+    d = obl_create_database(filename);
+
+    treepage = obl_create_addrtreepage(d, (obl_uint) 4);
+    treepage->storage.addrtreepage_storage->contents[1] =
+            (obl_physical_address) 0x00AA00BB;
+
+    obl_write_addrtreepage(treepage, (obl_uint*) contents);
+    CU_ASSERT(memcmp(contents, expected, 4 + CHUNK_SIZE * 4) == 0);
+
+    obl_destroy_object(treepage);
+    obl_destroy_database(d);
+}
+
 void test_write_arbitrary(void)
 {
     struct obl_database *d;
@@ -445,18 +495,18 @@ void test_write_arbitrary(void)
     char contents[28] = { 0 };
     const char expected[28] = {
             /* Physical 0: the string 'hello' */
-            0xff, 0xff, 0xff, 0xfa, /* String shape = OBL_STRING_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xf9, /* String shape = OBL_STRING_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x05, /* Length: 5 */
             0x00, 0x68, 0x00, 0x65, /* 'h' 'e' */
             0x00, 0x6C, 0x00, 0x6C, /* 'l' 'l' */
             0x00, 0x6F, 0x00, 0x00, /* 'o' padding byte */
 
             /* Physical 5: the integer '42' */
-            0xff, 0xff, 0xff, 0xf6, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xf5, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x2A  /* Integer value */
     };
 
-    d = obl_create_database(FILENAME);
+    d = obl_create_database(filename);
 
     one = obl_create_cstring(d, "hello", 5);
     one->physical_address = (obl_physical_address) 0;
@@ -486,13 +536,13 @@ void test_mmap(void)
     char *mapped;
     int i, fd;
 
-    f = fopen(FILENAME, "wb");
+    f = fopen(filename, "wb");
     for (i = 0; i < 10; i++) {
         fputc(contents[i], f);
     }
     fclose(f);
 
-    f = fopen(FILENAME, "r+b");
+    f = fopen(filename, "r+b");
     fd = fileno(f);
 
     mapped = (char*) mmap(0, 10, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
@@ -513,7 +563,7 @@ void test_mmap(void)
     munmap(mapped, 10);
 
     /* Check the written data in the actual file. */
-    f = fopen(FILENAME, "rb");
+    f = fopen(filename, "rb");
     for (i = 0; i < 10; i++) {
         if (i == 2) {
             CU_ASSERT(fgetc(f) == 'z');
@@ -553,6 +603,9 @@ CU_pSuite initialize_io_suite(void)
                 "test_read_slotted",
                 test_read_slotted) == NULL) ||
         (CU_add_test(pSuite,
+                "test_read_addrtreepage",
+                test_read_addrtreepage) == NULL) ||
+        (CU_add_test(pSuite,
                 "test_read_arbitrary",
                 test_read_arbitrary) == NULL) ||
         (CU_add_test(pSuite,
@@ -570,6 +623,9 @@ CU_pSuite initialize_io_suite(void)
         (CU_add_test(pSuite,
                 "test_write_slotted",
                 test_write_slotted) == NULL) ||
+        (CU_add_test(pSuite,
+                "test_write_addrtreepage",
+                test_write_addrtreepage) == NULL) ||
         (CU_add_test(pSuite,
                 "test_write_arbitrary",
                 test_write_arbitrary) == NULL) ||

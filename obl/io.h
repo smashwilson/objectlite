@@ -64,6 +64,14 @@ struct obl_object *obl_read_shape(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
 /*
+ * Read an address tree page.  Address tree pages reference each other by
+ * physical address (so that they can used during the address lookup process)
+ * so tree pages don't respect the +depth+ parameter.
+ */
+struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth);
+
+/*
  * Invoked for any storage type that is either not yet defined properly, or
  * isn't supposed to actually be stored in the database.
  */
@@ -106,6 +114,11 @@ void obl_write_fixed(struct obl_object *fixed, obl_uint *dest);
  * Write a shape object.
  */
 void obl_write_shape(struct obl_object *string, obl_uint *dest);
+
+/*
+ * Write an address map tree page.
+ */
+void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest);
 
 /*
  * Invoked for any storage type that is either not defined yet, or isn't

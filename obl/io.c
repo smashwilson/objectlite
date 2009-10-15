@@ -20,19 +20,19 @@
  * +obl_storage_type+ enumeration.
  */
 static obl_object_read_function obl_read_functions[] = {
-        &obl_read_shape,      /* OBL_SHAPE */
-        &obl_read_slotted,    /* OBL_SLOTTED */
-        &obl_invalid_read, /* OBL_FIXED */
-        &obl_invalid_read, /* OBL_CHUNK */
-        &obl_invalid_read, /* OBL_TREEPAGE */
-        &obl_read_integer,    /* OBL_INTEGER */
-        &obl_invalid_read, /* OBL_FLOAT */
-        &obl_invalid_read, /* OBL_DOUBLE */
-        &obl_invalid_read, /* OBL_CHAR */
-        &obl_read_string,     /* OBL_STRING */
-        &obl_invalid_read, /* OBL_BOOLEAN (invalid) */
-        &obl_invalid_read, /* OBL_NIL (invalid) */
-        &obl_invalid_read  /* OBL_STUB (invalid) */
+        &obl_read_shape,        /* OBL_SHAPE */
+        &obl_read_slotted,      /* OBL_SLOTTED */
+        &obl_invalid_read,      /* OBL_FIXED */
+        &obl_invalid_read,      /* OBL_CHUNK */
+        &obl_read_addrtreepage, /* OBL_ADDRTREEPAGE */
+        &obl_read_integer,      /* OBL_INTEGER */
+        &obl_invalid_read,      /* OBL_FLOAT */
+        &obl_invalid_read,      /* OBL_DOUBLE */
+        &obl_invalid_read,      /* OBL_CHAR */
+        &obl_read_string,       /* OBL_STRING */
+        &obl_invalid_read,      /* OBL_BOOLEAN (invalid) */
+        &obl_invalid_read,      /* OBL_NIL (invalid) */
+        &obl_invalid_read       /* OBL_STUB (invalid) */
 };
 
 /*
@@ -41,19 +41,19 @@ static obl_object_read_function obl_read_functions[] = {
  * location specified by its pre-set physical address.
  */
 static obl_object_write_function obl_write_functions[] = {
-        &obl_write_shape,   /* OBL_SHAPE */
-        &obl_write_slotted, /* OBL_SLOTTED */
-        &obl_write_fixed,   /* OBL_FIXED */
-        &obl_invalid_write, /* OBL_CHUNK */
-        &obl_invalid_write, /* OBL_TREEPAGE */
-        &obl_write_integer, /* OBL_INTEGER */
-        &obl_invalid_write, /* OBL_FLOAT */
-        &obl_invalid_write, /* OBL_DOUBLE */
-        &obl_invalid_write, /* OBL_CHAR */
-        &obl_write_string,  /* OBL_STRING */
-        &obl_invalid_write, /* OBL_BOOLEAN (invalid) */
-        &obl_invalid_write, /* OBL_NIL (invalid) */
-        &obl_invalid_write  /* OBL_STUB (invalid) */
+        &obl_write_shape,        /* OBL_SHAPE */
+        &obl_write_slotted,      /* OBL_SLOTTED */
+        &obl_write_fixed,        /* OBL_FIXED */
+        &obl_invalid_write,      /* OBL_CHUNK */
+        &obl_write_addrtreepage, /* OBL_ADDRTREEPAGE */
+        &obl_write_integer,      /* OBL_INTEGER */
+        &obl_invalid_write,      /* OBL_FLOAT */
+        &obl_invalid_write,      /* OBL_DOUBLE */
+        &obl_invalid_write,      /* OBL_CHAR */
+        &obl_write_string,       /* OBL_STRING */
+        &obl_invalid_write,      /* OBL_BOOLEAN (invalid) */
+        &obl_invalid_write,      /* OBL_NIL (invalid) */
+        &obl_invalid_write       /* OBL_STUB (invalid) */
 };
 
 /* Integers are stored in 32 bits, network byte order. */
@@ -175,6 +175,25 @@ struct obl_object *obl_read_shape(struct obl_object *shape,
     result = obl_create_shape(shape->database,
             name, slot_names, storage_format);
     result->storage.shape_storage->current_shape = current_shape;
+    return result;
+}
+
+struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth)
+{
+    struct obl_object *result;
+    obl_uint height;
+    obl_physical_address addr;
+    int i;
+
+    height = readable_uint(source[offset]);
+    result = obl_create_addrtreepage(shape->database, height);
+
+    for (i = 0; i < CHUNK_SIZE; i++) {
+        addr = (obl_physical_address) readable_uint(source[offset + 1 + i]);
+        result->storage.addrtreepage_storage->contents[i] = addr;
+    }
+
     return result;
 }
 
@@ -307,6 +326,21 @@ void obl_write_shape(struct obl_object *shape, obl_uint *dest)
 
     dest[shape->physical_address + 4] = writable_uint(
             (obl_uint) obl_shape_storagetype(shape));
+}
+
+void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest)
+{
+    int i;
+    obl_physical_address base;
+    obl_physical_address *contents;
+
+    base = treepage->physical_address + 1;
+    dest[base] = writable_uint(treepage->storage.addrtreepage_storage->height);
+
+    contents = treepage->storage.addrtreepage_storage->contents;
+    for (i = 0; i < CHUNK_SIZE; i++) {
+        dest[base + 1 + i] = writable_uint(contents[i]);
+    }
 }
 
 /*
