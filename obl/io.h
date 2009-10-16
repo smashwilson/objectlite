@@ -133,4 +133,28 @@ void obl_invalid_write(struct obl_object *o, obl_uint *dest);
  */
 void obl_write_object(struct obl_object *o, obl_uint *dest);
 
+/*
+ * Private API.  Internal-use functions that do partial reads to efficiently
+ * implement core functionality like address mapping.
+ */
+
+/*
+ * Retrieve the height of an address tree page without reading its full
+ * contents.
+ */
+obl_uint _obl_read_addrtreepage_height(obl_uint *source,
+        obl_physical_address base);
+
+/*
+ * Fetch a single entry from an address tree page without reading the others.
+ */
+obl_uint _obl_read_addrtreepage_at(obl_uint *source,
+        obl_physical_address base, obl_uint index);
+
+/*
+ * Write a single address tree page entry.
+ */
+void _obl_write_addrtreepage_at(obl_uint *dest,
+        obl_physical_address base, obl_uint index, obl_physical_address value);
+
 #endif

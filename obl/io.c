@@ -186,11 +186,11 @@ struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
     obl_physical_address addr;
     int i;
 
-    height = readable_uint(source[offset]);
+    height = _obl_read_addrtreepage_height(source, offset);
     result = obl_create_addrtreepage(shape->database, height);
 
     for (i = 0; i < CHUNK_SIZE; i++) {
-        addr = (obl_physical_address) readable_uint(source[offset + 1 + i]);
+        addr = _obl_read_addrtreepage_at(source, offset, i);
         result->storage.addrtreepage_storage->contents[i] = addr;
     }
 
@@ -334,12 +334,13 @@ void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest)
     obl_physical_address base;
     obl_physical_address *contents;
 
-    base = treepage->physical_address + 1;
-    dest[base] = writable_uint(treepage->storage.addrtreepage_storage->height);
+    base = treepage->physical_address;
+    dest[base + 1] =
+            writable_uint(treepage->storage.addrtreepage_storage->height);
 
     contents = treepage->storage.addrtreepage_storage->contents;
     for (i = 0; i < CHUNK_SIZE; i++) {
-        dest[base + 1 + i] = writable_uint(contents[i]);
+        _obl_write_addrtreepage_at(dest, base, i, contents[i]);
     }
 }
 
@@ -387,4 +388,22 @@ void obl_write_object(struct obl_object *o, obl_uint *dest)
             (obl_uint) shape->logical_address);
 
     (*obl_write_functions[function_index])(o, dest);
+}
+
+obl_uint _obl_read_addrtreepage_height(obl_uint *source,
+        obl_physical_address base)
+{
+    return readable_uint(source[base]);
+}
+
+obl_physical_address _obl_read_addrtreepage_at(obl_uint *source,
+        obl_physical_address base, obl_uint index)
+{
+    return (obl_physical_address) readable_uint(source[base + 1 + index]);
+}
+
+void _obl_write_addrtreepage_at(obl_uint *dest,
+        obl_physical_address base, obl_uint index, obl_physical_address value)
+{
+    dest[base + 2 + index] = writable_uint((obl_uint) value);
 }
