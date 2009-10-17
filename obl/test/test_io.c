@@ -43,8 +43,9 @@ static void dump_memory(char *memory, int size)
 void test_read_integer(void)
 {
     /* Emulate big-endian (network) byte order storage. */
-    char contents[4] = {
-            0x11, 0x22, 0x33, 0x44
+    char contents[8] = {
+            0x00, 0x00, 0x00, 0x00, /* shape word */
+            0x11, 0x22, 0x33, 0x44,
     };
     struct obl_database *d;
     struct obl_object *shape, *o;
@@ -52,7 +53,8 @@ void test_read_integer(void)
     d = obl_create_database(filename);
 
     shape = obl_at_address(d, OBL_INTEGER_SHAPE_ADDR);
-    o = obl_read_integer(shape, (obl_uint*) contents, 0, 0);
+    o = obl_read_integer(shape, (obl_uint*) contents,
+            (obl_physical_address) 0, 0);
     CU_ASSERT(obl_integer_value(o) == 0x11223344);
     CU_ASSERT(o->physical_address == (obl_physical_address) 0);
 
@@ -64,9 +66,10 @@ void test_read_string(void)
 {
     /* length obl_uword, UTF-16BE */
     char contents[] = {
-            0x0, 0x0, 0x0, 0x4,
-            0x0, 'a', 0x0, 'b',
-            0x0, 'c', 0x0, 'd'
+            0x00, 0x00, 0x00, 0x00, /* shape word */
+            0x00, 0x00, 0x00, 0x04, /* length word */
+            0x00,  'a', 0x00,  'b',
+            0x00,  'c', 0x00,  'd',
     };
     struct obl_database *d;
     struct obl_object *shape, *o;
@@ -74,7 +77,8 @@ void test_read_string(void)
     d = obl_create_database(filename);
 
     shape = obl_at_address(d, OBL_STRING_SHAPE_ADDR);
-    o = obl_read_string(shape, (obl_uint*) contents, 0, 0);
+    o = obl_read_string(shape, (obl_uint*) contents,
+            (obl_physical_address) 0, 0);
     CU_ASSERT(obl_string_size(o) == 4);
     CU_ASSERT(obl_string_ccmp(o, "abcd") == 0);
 
@@ -85,7 +89,8 @@ void test_read_fixed(void)
 {
     /* length obl_uword, that many obl_logical_addresses */
     char contents[] = {
-            0x00, 0x00, 0x00, 0x04,
+            0x00, 0x00, 0x00, 0x00, /* shape word */
+            0x00, 0x00, 0x00, 0x04, /* length */
             0x00, 0x00, 0x0A, 0x0B,
             0x00, 0x00, 0x0B, 0x0C,
             0x00, 0x00, 0x0C, 0x0D,
@@ -103,7 +108,8 @@ void test_read_fixed(void)
      * addresses read.  obl_fixed_at() should resolve these stubs, so test
      * them by direct inspection.
      */
-    o = obl_read_fixed(shape, (obl_uint*) contents, 0, 0);
+    o = obl_read_fixed(shape, (obl_uint*) contents,
+            (obl_physical_address) 0, 0);
     CU_ASSERT(obl_fixed_size(o) == 4);
     stub = o->storage.fixed_storage->contents[0];
     CU_ASSERT(obl_shape_storagetype(stub->shape) == OBL_STUB);
@@ -135,7 +141,8 @@ void test_read_fixed(void)
     obl_cache_insert(d->cache, three);
     obl_cache_insert(d->cache, four);
 
-    o = obl_read_fixed(shape, (obl_uint*) contents, 0, 1);
+    o = obl_read_fixed(shape, (obl_uint*) contents,
+            (obl_physical_address) 0, 1);
     linked = o->storage.fixed_storage->contents[0];
     CU_ASSERT(linked == one);
     linked = o->storage.fixed_storage->contents[1];
@@ -161,6 +168,7 @@ void test_read_shape(void)
      * storage format.
      */
     char contents[] = {
+            0x00, 0x00, 0x00, 0x00, /* shape word */
             0x00, 0x00, 0x00, 0x01,
             0x00, 0x00, 0x00, 0x02,
             0xff, 0xff, 0xff, 0xf2, /* OBL_NIL_ADDR */
@@ -186,7 +194,8 @@ void test_read_shape(void)
     obl_cache_insert(d->cache, name);
     obl_cache_insert(d->cache, slot_names);
 
-    out = obl_read_shape(obl_nil(d), (obl_uint*) contents, 0, 2);
+    out = obl_read_shape(obl_nil(d), (obl_uint*) contents,
+            (obl_physical_address) 0, 2);
     CU_ASSERT(obl_shape_storagetype(out) == OBL_SLOTTED);
     CU_ASSERT(out->storage.shape_storage->name == name);
     CU_ASSERT(out->storage.shape_storage->slot_names == slot_names);
@@ -204,6 +213,7 @@ void test_read_shape(void)
 void test_read_slotted(void)
 {
     char contents[] = {
+            0x00, 0x00, 0x00, 0x00, /* Shape word */
             0x00, 0x00, 0x00, 0xAA,
             0x00, 0x00, 0x00, 0xBB
     };
@@ -226,7 +236,7 @@ void test_read_slotted(void)
     obl_cache_insert(d->cache, one);
     obl_cache_insert(d->cache, two);
 
-    o = obl_read_slotted(shape, (obl_uint *) contents, 0, 1);
+    o = obl_read_slotted(shape, (obl_uint *) contents, (obl_physical_address) 0, 1);
     CU_ASSERT(obl_slotted_at(o, 0) == one);
     CU_ASSERT(obl_slotted_at(o, 1) == two);
     CU_ASSERT(obl_slotted_atcnamed(o, "one") == one);
@@ -242,7 +252,8 @@ void test_read_slotted(void)
 
 void test_read_addrtreepage(void)
 {
-    char contents[4 + (CHUNK_SIZE * 4)] = {
+    char contents[8 + (CHUNK_SIZE * 4)] = {
+            0x00, 0x00, 0x00, 0x00, /* shape word */
             0x00, 0x00, 0x00, 0x02, /* depth */
             0x00, 0x00, 0x00, 0x00, /* 0x00 = OBL_PHYSICAL_UNASSIGNED */
             0x01, 0x02, 0x03, 0x04, /* 0x01 = next tree page */

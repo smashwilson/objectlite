@@ -58,18 +58,18 @@ static obl_object_write_function obl_write_functions[] = {
 
 /* Integers are stored in 32 bits, network byte order. */
 struct obl_object *obl_read_integer(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth)
+        obl_uint *source, obl_physical_address base, int depth)
 {
     obl_int value;
 
-    value = readable_int(source[offset]);
+    value = readable_int(source[base + 1]);
 
     return obl_create_integer(shape->database, value);
 }
 
 /* Strings are stored as UTF-16BE with a one-word length prefix. */
 struct obl_object *obl_read_string(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth)
+        obl_uint *source, obl_physical_address base, int depth)
 {
     obl_uint length;
     obl_uint i;
@@ -78,7 +78,7 @@ struct obl_object *obl_read_string(struct obl_object *shape,
     UChar *contents;
     struct obl_object *o;
 
-    length = readable_uint(source[offset]);
+    length = readable_uint(source[base + 1]);
     contents = (UChar*) malloc(length * sizeof(UChar));
     if (contents == NULL) {
         obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
@@ -86,7 +86,7 @@ struct obl_object *obl_read_string(struct obl_object *shape,
     }
 
     casted_source = (UChar *) source;
-    casted_offset = (offset + 1) * (sizeof(obl_uint) / sizeof(UChar));
+    casted_offset = (base + 2) * (sizeof(obl_uint) / sizeof(UChar));
     for (i = 0; i < length; i++) {
         contents[i] = readable_UChar(
                 casted_source[casted_offset + i]);
@@ -99,7 +99,7 @@ struct obl_object *obl_read_string(struct obl_object *shape,
 }
 
 struct obl_object *obl_read_slotted(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth)
+        obl_uint *source, obl_physical_address base, int depth)
 {
     struct obl_object *result;
     obl_uint slot_count;
@@ -111,7 +111,7 @@ struct obl_object *obl_read_slotted(struct obl_object *shape,
 
     slot_count = obl_shape_slotcount(shape);
     for (i = 0; i < slot_count; i++) {
-        addr = (obl_logical_address) readable_uint(source[offset + i]);
+        addr = (obl_logical_address) readable_uint(source[base + 1 + i]);
         if (depth <= 0) {
             linked = _obl_create_stub(shape->database, addr);
         } else {
@@ -124,7 +124,7 @@ struct obl_object *obl_read_slotted(struct obl_object *shape,
 }
 
 struct obl_object *obl_read_fixed(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth)
+        obl_uint *source, obl_physical_address base, int depth)
 {
     obl_uint length;
     obl_uint i;
@@ -132,11 +132,11 @@ struct obl_object *obl_read_fixed(struct obl_object *shape,
     obl_logical_address addr;
     struct obl_object *linked;
 
-    length = readable_uint(source[offset]);
+    length = readable_uint(source[base + 1]);
     o = obl_create_fixed(shape->database, length);
 
     for (i = 0; i < length; i++) {
-        addr = (obl_logical_address) readable_uint(source[offset + 1 + i]);
+        addr = (obl_logical_address) readable_uint(source[base + 2 + i]);
         if (depth <= 0) {
             linked = _obl_create_stub(shape->database, addr);
         } else {
@@ -149,27 +149,27 @@ struct obl_object *obl_read_fixed(struct obl_object *shape,
 }
 
 struct obl_object *obl_read_shape(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth)
+        obl_uint *source, obl_physical_address base, int depth)
 {
     struct obl_object *result;
     obl_logical_address addr;
     struct obl_object *name, *slot_names, *current_shape;
     obl_uint storage_format;
 
-    addr = (obl_logical_address) readable_uint(source[offset]);
+    addr = (obl_logical_address) readable_uint(source[base + 1]);
     name = obl_at_address_depth(shape->database, addr, depth - 1);
 
-    addr = (obl_logical_address) readable_uint(source[offset + 1]);
+    addr = (obl_logical_address) readable_uint(source[base + 2]);
     slot_names = obl_at_address_depth(shape->database, addr, depth - 1);
 
-    addr = (obl_logical_address) readable_uint(source[offset + 2]);
+    addr = (obl_logical_address) readable_uint(source[base + 3]);
     current_shape = obl_at_address_depth(shape->database, addr, depth - 1);
 
-    storage_format = readable_uint(source[offset + 3]);
+    storage_format = readable_uint(source[base + 4]);
     if (storage_format > OBL_STORAGE_TYPE_MAX) {
         obl_report_errorf(shape->database, OBL_WRONG_STORAGE,
                 "Shape at physical address %ul has invalid storage format.",
-                (unsigned long) offset);
+                (unsigned long) base);
     }
 
     result = obl_create_shape(shape->database,
@@ -179,18 +179,18 @@ struct obl_object *obl_read_shape(struct obl_object *shape,
 }
 
 struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth)
+        obl_uint *source, obl_physical_address base, int depth)
 {
     struct obl_object *result;
     obl_uint height;
     obl_physical_address addr;
     int i;
 
-    height = _obl_read_addrtreepage_height(source, offset);
+    height = readable_uint(source[base + 1]);
     result = obl_create_addrtreepage(shape->database, height);
 
     for (i = 0; i < CHUNK_SIZE; i++) {
-        addr = _obl_read_addrtreepage_at(source, offset, i);
+        addr = (obl_physical_address) readable_uint(source[base + 2 + i]);
         result->storage.addrtreepage_storage->contents[i] = addr;
     }
 
@@ -198,28 +198,28 @@ struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
 }
 
 struct obl_object *obl_invalid_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth)
+        obl_uint *source, obl_physical_address base, int depth)
 {
     obl_report_errorf(shape->database, OBL_WRONG_STORAGE,
-            "Attempt to read an object (%lu) with an invalid storage type.",
-            offset);
+            "Attempt to read an object (0x%04lx) with an invalid storage type.",
+            base);
     return obl_nil(shape->database);
 }
 
 struct obl_object *obl_read_object(struct obl_database *d,
-        obl_uint *source, obl_physical_address offset, int depth)
+        obl_uint *source, obl_physical_address base, int depth)
 {
     struct obl_object *shape, *result;
     obl_logical_address addr;
     int function_index;
 
-    addr = (obl_logical_address) readable_uint(source[offset]);
+    addr = (obl_logical_address) readable_uint(source[base]);
     shape = obl_at_address_depth(d, addr, depth - 1);
 
     if (shape != obl_nil(d) && _obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_errorf(d, OBL_WRONG_STORAGE,
                 "Corrupt shape header at physical address %ul.",
-                offset);
+                base);
         return obl_nil(d);
     }
 
@@ -230,9 +230,9 @@ struct obl_object *obl_read_object(struct obl_database *d,
     }
 
     result = (obl_read_functions[function_index])(
-            shape, source, offset + 1, depth);
+            shape, source, base, depth);
     result->shape = shape;
-    result->physical_address = offset;
+    result->physical_address = base;
 
     return result;
 }
@@ -340,7 +340,7 @@ void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest)
 
     contents = treepage->storage.addrtreepage_storage->contents;
     for (i = 0; i < CHUNK_SIZE; i++) {
-        _obl_write_addrtreepage_at(dest, base, i, contents[i]);
+        dest[base + 2 + i] = writable_uint((obl_uint) contents[i]);
     }
 }
 
@@ -388,22 +388,4 @@ void obl_write_object(struct obl_object *o, obl_uint *dest)
             (obl_uint) shape->logical_address);
 
     (*obl_write_functions[function_index])(o, dest);
-}
-
-obl_uint _obl_read_addrtreepage_height(obl_uint *source,
-        obl_physical_address base)
-{
-    return readable_uint(source[base]);
-}
-
-obl_physical_address _obl_read_addrtreepage_at(obl_uint *source,
-        obl_physical_address base, obl_uint index)
-{
-    return (obl_physical_address) readable_uint(source[base + 1 + index]);
-}
-
-void _obl_write_addrtreepage_at(obl_uint *dest,
-        obl_physical_address base, obl_uint index, obl_physical_address value)
-{
-    dest[base + 2 + index] = writable_uint((obl_uint) value);
 }
