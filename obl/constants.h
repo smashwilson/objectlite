@@ -17,6 +17,12 @@
 #define CHUNK_SIZE 256
 
 /*
+ * We *could* calculate this on the fly off of CHUNK_SIZE.  It's a lot easier
+ * to do it manually once, and record the result here.
+ */
+#define CHUNK_SIZE_LOG2 9
+
+/*
  * Default maximum size of the cache.
  */
 #define DEFAULT_CACHE_SIZE 1024

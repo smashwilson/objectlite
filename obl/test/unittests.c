@@ -19,6 +19,7 @@ CU_pSuite initialize_io_suite(void);
 CU_pSuite initialize_cache_suite(void);
 CU_pSuite initialize_database_suite(void);
 CU_pSuite initialize_object_suite(void);
+CU_pSuite initialize_addressmap_suite(void);
 
 /*
  * Initialize the CUnit testing suite, allowing each testing module to
@@ -34,7 +35,8 @@ int main()
             (initialize_io_suite() == NULL) ||
             (initialize_cache_suite() == NULL) ||
             (initialize_database_suite() == NULL) ||
-            (initialize_object_suite() == NULL)
+            (initialize_object_suite() == NULL) ||
+            (initialize_addressmap_suite() == NULL)
     ) {
         CU_cleanup_registry();
         return CU_get_error();
