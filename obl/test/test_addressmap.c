@@ -12,6 +12,7 @@
 
 #include "object.h"
 #include "database.h"
+#include "unitutilities.h"
 
 const static char *filename = "addrmap.obl";
 
@@ -33,10 +34,10 @@ void test_map_leaf(void)
     d->content = (obl_uint*) contents;
     d->root.address_map_addr = (obl_physical_address) 1;
 
-    result = obl_address_for(d, (obl_logical_address) 1);
+    result = obl_address_lookup(d, (obl_logical_address) 1);
     CU_ASSERT(result == (obl_physical_address) 0x1A2B);
 
-    result = obl_address_for(d, (obl_logical_address) 0x400);
+    result = obl_address_lookup(d, (obl_logical_address) 0x400);
     CU_ASSERT(result == OBL_PHYSICAL_UNASSIGNED);
 
     obl_destroy_database(d);
@@ -75,16 +76,83 @@ void test_map_branch(void)
     d->content = (obl_uint*) contents;
     d->root.address_map_addr = (obl_physical_address) 6;
 
-    result = obl_address_for(d, (obl_logical_address) 0x00000201);
+    result = obl_address_lookup(d, (obl_logical_address) 0x00000201);
     CU_ASSERT(result == (obl_physical_address) 0x00AABBCC);
 
     /* lookup not found in leaf */
-    result = obl_address_for(d, (obl_logical_address) 0x0000020A);
+    result = obl_address_lookup(d, (obl_logical_address) 0x0000020A);
     CU_ASSERT(result == OBL_LOGICAL_UNASSIGNED);
 
     /* lookup not found in branch */
-    result = obl_address_for(d, (obl_logical_address) 0x00000301);
+    result = obl_address_lookup(d, (obl_logical_address) 0x00000301);
     CU_ASSERT(result == OBL_LOGICAL_UNASSIGNED);
+
+    obl_destroy_database(d);
+}
+
+#define AL_SIZE ((1 + CHUNK_SIZE) * sizeof(obl_uint))
+void test_assign_leaf(void)
+{
+    struct obl_database *d;
+    char content[AL_SIZE] = {
+            0xff, 0xff, 0xff, 0xfb, /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
+            0x00, 0x00, 0x00, 0x00, /* depth */
+            0x00, 0x00, 0x00, 0x00, /* 0x00 */
+            0
+    };
+    char expected[AL_SIZE] = {
+            0xff, 0xff, 0xff, 0xfb, /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
+            0x00, 0x00, 0x00, 0x00, /* depth */
+            0x00, 0x00, 0x00, 0x00, /* 0x00 */
+            0x00, 0x00, 0xAA, 0xBB, /* 0x01 */
+            0
+    };
+
+    d = obl_create_database(filename);
+    d->content = (obl_uint*) content;
+    d->root.address_map_addr = (obl_physical_address) 0;
+
+    obl_address_assign(d,
+            (obl_logical_address) 0x01,
+            (obl_physical_address) 0x0000AABB);
+
+    CU_ASSERT(memcmp(content, expected, AL_SIZE) == 0);
+
+    obl_destroy_database(d);
+}
+
+#define AB_SIZE (1 + (2 * (1 + CHUNK_SIZE)))
+void test_assign_branch(void)
+{
+    struct obl_database *d;
+    obl_uint content[AB_SIZE] = { 0x00 };
+    obl_uint expected[AB_SIZE] = { 0x00 };
+    int i;
+
+    /* leaf @ physical 1 */
+    content[1] = writable_uint(OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    content[2] = writable_uint((obl_uint) 0);
+
+    /* branch [root] @ physical CHUNK_SIZE + 2 */
+    content[CHUNK_SIZE + 2] =
+            writable_uint(OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    content[CHUNK_SIZE + 3] = writable_uint((obl_uint) 1);
+    content[CHUNK_SIZE + 4 + 6] = writable_uint((obl_uint) 1);
+
+    memcpy(expected, content, AB_SIZE);
+
+    /* Assign in leaf @ physical 1, index 0x0A */
+    expected[13] = writable_uint((obl_uint) 0x00AA00BB);
+
+    d = obl_create_database(filename);
+    d->root.address_map_addr = (obl_physical_address) (CHUNK_SIZE + 2);
+    d->content = content;
+
+    obl_address_assign(d,
+            (obl_logical_address) 0x0000060A,
+            (obl_physical_address) 0x00AA00BB);
+
+    CU_ASSERT(memcmp(content, expected, AB_SIZE) == 0);
 
     obl_destroy_database(d);
 }
@@ -102,16 +170,10 @@ CU_pSuite initialize_addressmap_suite(void)
         return NULL;
     }
 
-    if (
-        (CU_add_test(pSuite,
-                "test_map_leaf",
-                test_map_leaf) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_map_branch",
-                test_map_branch) == NULL)
-    ) {
-        return NULL;
-    }
+    ADD_TEST(test_map_leaf);
+    ADD_TEST(test_map_branch);
+    ADD_TEST(test_assign_leaf);
+    ADD_TEST(test_assign_branch);
 
     return pSuite;
 }

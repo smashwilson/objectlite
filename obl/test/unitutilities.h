@@ -23,6 +23,6 @@
  * Print the contents of +memory+ in hexadecimal, char by char.  Useful to pop
  * in when a memcmp() is failing.
  */
-void dump_memory(char *memory, int size);
+void dump_memory(char *memory, int size, const char *filename);
 
 #endif /* UNITUTILITIES_H */

@@ -8,16 +8,32 @@
 
 #include "unitutilities.h"
 
-void dump_memory(char *memory, int size)
+#include <stdio.h>
+
+void dump_memory(char *memory, int size, const char *filename)
 {
     int i;
+    FILE *outf;
 
-    puts("");
+    if (filename != NULL) {
+        outf = fopen(filename, "w");
+    } else {
+        outf = stderr;
+    }
+
+    fputc('\n', outf);
     for (i = 0; i < size; i++) {
-        printf(" [%02i:0x%02hx]", i, ((unsigned short) memory[i] & 0x00ff));
-        if (i % 4 == 3) { puts(""); }
+        if (i % 4 == 0) {
+            fprintf(outf, "%4d", i / 4);
+        }
+        fprintf(outf, " [%4i:0x%02hx]", i, ((unsigned short) memory[i] & 0x00ff));
+        if (i % 4 == 3) {
+            fputc('\n', outf);
+        }
     }
     if (size % 4 != 0) {
-        puts("");
+        fputc('\n', outf);
     }
+
+    fclose(outf);
 }

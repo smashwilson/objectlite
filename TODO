@@ -33,7 +33,8 @@ A rough timeline of the tasks to finish before we see release, large and small.
    of the other object-reading functions.
 = proper handling of read depth and stubbing.
 = implement the address map with tree pages.
-= implement the address allocator.
+* implement the address allocator.
+- obl_address_at should use the address mapper and read functions.
 - bootstrap new obl_databases by writing the root object.
 - make the shape of a shape another shape.
 - split object.h into a difference source file for each storage type
