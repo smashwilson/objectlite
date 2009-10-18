@@ -44,6 +44,13 @@ static inline obl_uint _treepage_index(obl_logical_address logical,
         obl_uint height);
 
 /*
+ * Allocate a new address tree page with the desired +height+.  Initialize all
+ * entries as OBL_PHYSICAL_UNASSIGNED.
+ */
+static obl_physical_address _create_treepage(struct obl_database *d,
+        obl_uint height);
+
+/*
  * A few #defines useful for the bit logic that don't really belong in
  * constants.h.
  */
@@ -90,9 +97,24 @@ void obl_address_assign(struct obl_database *d,
 
     height = readable_uint(d->content[base + 1]);
     if (height < required_height) {
-        /* TODO allocate required_height - height new tree pages. */
-        /* TODO update the address map pointer to the new tree root. */
-        return ;
+        obl_uint h;
+        obl_physical_address previous;
+
+        previous = base;
+        for (h = height + 1; h <= required_height; h++) {
+            obl_physical_address new_page;
+
+            new_page = _create_treepage(d, h);
+
+            /* At index 0x00, write the address of the lower page. */
+            d->content[new_page + 2] = writable_uint((obl_uint) previous);
+
+            previous = new_page;
+        }
+
+        base = previous;
+        d->root.address_map_addr = previous;
+        d->root.dirty = 1;
     }
 
     _assign_in(d, base, logical, physical);
@@ -144,6 +166,12 @@ static void _assign_in(struct obl_database *d,
         obl_uint next_page;
 
         next_page = readable_uint(d->content[pagebase + 2 + index]);
+        if (next_page == OBL_PHYSICAL_UNASSIGNED) {
+            next_page = _create_treepage(d, height - 1);
+            d->content[pagebase + 2 + index] = writable_uint(
+                    (obl_uint) next_page);
+        }
+
         _assign_in(d, (obl_physical_address) next_page, key, value);
     }
 }
@@ -170,4 +198,24 @@ static inline obl_uint _treepage_index(obl_logical_address logical,
 
     shift = PAGE_SHIFT * height;
     return (obl_uint) (logical & ((CHUNK_SIZE - 1) << shift)) >> shift;
+}
+
+static obl_physical_address _create_treepage(struct obl_database *d,
+        obl_uint height)
+{
+    obl_physical_address base;
+    obl_uint i;
+
+    base = obl_allocate_physical(d, CHUNK_SIZE + 2);
+    if (base == OBL_PHYSICAL_UNASSIGNED) {
+        return base;
+    }
+
+    d->content[base] = writable_uint((obl_uint) OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    d->content[base + 1] = writable_uint((obl_uint) height);
+    for (i = 0; i < CHUNK_SIZE; i++) {
+        d->content[base + 2 + i] = writable_uint(OBL_PHYSICAL_UNASSIGNED);
+    }
+
+    return base;
 }
