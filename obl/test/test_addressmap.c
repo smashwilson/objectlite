@@ -246,8 +246,6 @@ void test_create_branch(void)
             (obl_logical_address) 0x0000010F,
             (obl_physical_address) 0xADBCCBDA);
 
-    dump_memory((char*) content, CB_SIZE * 4, "createbranch-c.txt");
-    dump_memory((char*) expected, CB_SIZE * 4, "createbranch-e.txt");
     CU_ASSERT(memcmp(content, expected, CB_SIZE * 4) == 0);
     CU_ASSERT(d->root.address_map_addr == (obl_physical_address) branch);
     CU_ASSERT(d->root.dirty);
