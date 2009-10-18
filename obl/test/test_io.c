@@ -18,27 +18,9 @@
 #include "io.h"
 #include "object.h"
 #include "platform.h"
+#include "unitutilities.h"
 
 static const char *filename = "testing.obl";
-
-/*
- * A utility function to quickly print whatever bytes lie at +memory+.  It'll
- * dump each byte in the format [ii:0x00], where "ii" is the byte index and
- * "0x00" is the hex code for that byte's contents.
- */
-static void dump_memory(char *memory, int size)
-{
-    int i;
-
-    puts("");
-    for (i = 0; i < size; i++) {
-        printf(" [%02i:0x%02hx]", i, ((unsigned short) memory[i] & 0x00ff));
-        if (i % 4 == 3) { puts(""); }
-    }
-    if (size % 4 != 0) {
-        puts("");
-    }
-}
 
 void test_read_integer(void)
 {
@@ -597,55 +579,21 @@ CU_pSuite initialize_io_suite(void)
         return NULL;
     }
 
-    if (
-        (CU_add_test(pSuite,
-                "test_read_integer",
-                test_read_integer) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_read_string",
-                test_read_string) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_read_fixed",
-                test_read_fixed) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_read_shape",
-                test_read_shape) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_read_slotted",
-                test_read_slotted) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_read_addrtreepage",
-                test_read_addrtreepage) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_read_arbitrary",
-                test_read_arbitrary) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_write_integer",
-                test_write_integer) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_write_string",
-                test_write_string) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_write_fixed",
-                test_write_fixed) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_write_shape",
-                test_write_shape) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_write_slotted",
-                test_write_slotted) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_write_addrtreepage",
-                test_write_addrtreepage) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_write_arbitrary",
-                test_write_arbitrary) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_mmap",
-                test_mmap) == NULL)
-    ) {
-        return NULL;
-    }
+    ADD_TEST(test_read_integer);
+    ADD_TEST(test_read_string);
+    ADD_TEST(test_read_fixed);
+    ADD_TEST(test_read_shape);
+    ADD_TEST(test_read_slotted);
+    ADD_TEST(test_read_addrtreepage);
+    ADD_TEST(test_read_arbitrary);
+    ADD_TEST(test_write_integer);
+    ADD_TEST(test_write_string);
+    ADD_TEST(test_write_fixed);
+    ADD_TEST(test_write_shape);
+    ADD_TEST(test_write_slotted);
+    ADD_TEST(test_write_addrtreepage);
+    ADD_TEST(test_write_arbitrary);
+    ADD_TEST(test_mmap);
 
     return pSuite;
 }
