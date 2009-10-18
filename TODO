@@ -14,17 +14,9 @@ A rough timeline of the tasks to finish before we see release, large and small.
    live).
 * the rest of the obl_object internal format structs.
 * manual creation functions for obl_shape objects.
-* consistent handling of obl_object type errors.
-* disentangle header includes.  use extern definitions whereever possible.
-* de-anonymize structs and enums.  it makes references nicer, but the C community
-   frowns upon it, and it makes some things messier.
 = conversion functions from C data types to obl_object types.
    remaining: chunk; float; double; char
 * obl_at_address should hit fixed space and the cache.
-* relocate fixed space to high addresses instead of low ones.  it'll help future-
-   proof obl databases.
-* take out all direct references to int32_t and uint32_t types; replace them with
-   obl_word and obl_uword types in platform.h.
 
 # Primitive I/O
 
@@ -40,17 +32,19 @@ A rough timeline of the tasks to finish before we see release, large and small.
 * read/ * write arbitrary objects by reading the shape word and delegating to one
    of the other object-reading functions.
 = proper handling of read depth and stubbing.
-- implement the address map with tree pages.
-- implement the address allocator.
+= implement the address map with tree pages.
+= implement the address allocator.
 - bootstrap new obl_databases by writing the root object.
 - make the shape of a shape another shape.
 - split object.h into a difference source file for each storage type
 - write accessors and mutators for storage structs
 - give obl_database an indirect reference to the database file to hide things
    like remappings.
+- doxygen it up.
 
 # Advanced I/O
 
+- use a heap-based physical address allocator.
 - write the transaction mechanism.
 - manage a read set and a write set instead of the LRU cache.
 

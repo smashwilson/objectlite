@@ -37,7 +37,7 @@ obl_physical_address obl_address_for(struct obl_database *d,
     obl_uint storageaddr, height;
     obl_uint mask;
 
-    base = d->root.address_map;
+    base = d->root.address_map_addr;
     storageaddr = readable_uint(d->content[base]);
 
     if (storageaddr != (obl_uint) OBL_ADDRTREEPAGE_SHAPE_ADDR) {

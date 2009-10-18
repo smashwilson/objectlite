@@ -31,7 +31,8 @@ static char *error_messages[] = {
         "EVERYTHING IS FINE",
         "Unable to allocate an object", "Unable to read file",
         "Unable to open file", "Error during Unicode conversion",
-        "Incorrect object storage type", "Bad argument length"
+        "Incorrect object storage type", "Bad argument length",
+        "Missing a critical system object"
 };
 
 /* External functions definitions. */
@@ -54,10 +55,10 @@ struct obl_database *obl_create_database(const char *filename)
     database->default_stub_depth = DEFAULT_STUB_DEPTH;
 
     /* Initialize +root+ to OBL_UNASSIGNED until opened. */
-    database->root.address_map = OBL_PHYSICAL_UNASSIGNED;
-    database->root.allocator = OBL_PHYSICAL_UNASSIGNED;
-    database->root.name_map = OBL_PHYSICAL_UNASSIGNED;
-    database->root.shape_map = OBL_PHYSICAL_UNASSIGNED;
+    database->root.address_map_addr = OBL_PHYSICAL_UNASSIGNED;
+    database->root.allocator_addr = OBL_PHYSICAL_UNASSIGNED;
+    database->root.name_map_addr = OBL_PHYSICAL_UNASSIGNED;
+    database->root.shape_map_addr = OBL_PHYSICAL_UNASSIGNED;
     database->root.dirty = 0;
 
     cache = obl_create_cache(DEFAULT_CACHE_BUCKETS, DEFAULT_CACHE_SIZE);
@@ -105,7 +106,7 @@ struct obl_object *obl_at_address_depth(struct obl_database *database,
         return o;
     }
 
-    return NULL;
+    return obl_nil(database);
 }
 
 struct obl_object *obl_nil(struct obl_database *database)
@@ -221,6 +222,9 @@ static int _initialize_fixed_objects(struct obl_database *database)
     int i;
     obl_logical_address addr;
     char *no_slots[0];
+    char *allocator_slots[2] = {
+            "next_logical", "next_physical"
+    };
     struct obl_object *fixed_shape, *string_shape, *undefined_shape;
     struct obl_object *nil;
 
@@ -287,6 +291,9 @@ static int _initialize_fixed_objects(struct obl_database *database)
     database->fixed[_index_for_fixed(OBL_ADDRTREEPAGE_SHAPE_ADDR)] =
             obl_create_cshape(database, "OblAddressTreePage", 0, no_slots,
                     OBL_ADDRTREEPAGE);
+    database->fixed[_index_for_fixed(OBL_ALLOCATOR_SHAPE_ADDR)] =
+            obl_create_cshape(database, "OblAllocator", 2, allocator_slots,
+                    OBL_SLOTTED);
 
     /*
      * Allocate the only instances of the other two of the three immutables:

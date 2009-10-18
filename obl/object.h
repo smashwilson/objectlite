@@ -369,6 +369,10 @@ struct obl_object *obl_create_cshape(struct obl_database *d,
  * ============================================================================
  */
 
+/* INTEGER objects */
+
+void obl_integer_set(struct obl_object *integer, int value);
+
 /* FIXED objects */
 
 /*

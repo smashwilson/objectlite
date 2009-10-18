@@ -333,6 +333,18 @@ struct obl_object *obl_create_cshape(struct obl_database *d,
  * ============================================================================
  */
 
+void obl_integer_set(struct obl_object *integer, int value)
+{
+    if (_obl_storage_of(integer) != OBL_INTEGER) {
+        obl_report_error(integer->database, OBL_WRONG_STORAGE,
+                "obl_integer_set requires an object with INTEGER storage.");
+        return ;
+    }
+
+    /* TODO bounds checking, i guess? */
+    integer->storage.integer_storage->value = (obl_int) value;
+}
+
 obl_uint obl_fixed_size(const struct obl_object *fixed)
 {
     if (_obl_storage_of(fixed) != OBL_FIXED) {

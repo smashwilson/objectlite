@@ -171,7 +171,7 @@ void test_read_shape(void)
             0x00, 0x00, 0x00, 0x00, /* shape word */
             0x00, 0x00, 0x00, 0x01,
             0x00, 0x00, 0x00, 0x02,
-            0xff, 0xff, 0xff, 0xf2, /* OBL_NIL_ADDR */
+            0xff, 0xff, 0xff, 0xf1, /* OBL_NIL_ADDR */
             0x00, 0x00, 0x00, 0x01, /* OBL_SLOTTED = format 2 */
     };
     struct obl_database *d;
@@ -281,10 +281,10 @@ void test_read_arbitrary(void)
 {
     char contents[] = {
             /* Physical 0: an integer */
-            0xff, 0xff, 0xff, 0xf5, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xf4, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x0A, /* Integer value */
             /* Physical 2: a string */
-            0xff, 0xff, 0xff, 0xf9, /* String shape = OBL_STRING_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xf8, /* String shape = OBL_STRING_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x05, /* Length: 5 */
             0x00, 0x68, 0x00, 0x65, /* 'h' 'e' */
             0x00, 0x6C, 0x00, 0x6C, /* 'l' 'l' */
@@ -407,7 +407,7 @@ void test_write_shape(void)
             0x00, 0x00, 0x00, 0x00, /* Space for the shape address. */
             0x00, 0x00, 0xAA, 0xBB, /* Name address */
             0x00, 0x00, 0xCC, 0xDD, /* Slot names address */
-            0xff, 0xff, 0xff, 0xf2, /* Current shape = OBL_NIL_ADDR */
+            0xff, 0xff, 0xff, 0xf1, /* Current shape = OBL_NIL_ADDR */
             0x00, 0x00, 0x00, 0x01  /* Storage type = OBL_SLOTTED */
     };
     int i;
@@ -506,14 +506,14 @@ void test_write_arbitrary(void)
     char contents[28] = { 0 };
     const char expected[28] = {
             /* Physical 0: the string 'hello' */
-            0xff, 0xff, 0xff, 0xf9, /* String shape = OBL_STRING_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xf8, /* String shape = OBL_STRING_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x05, /* Length: 5 */
             0x00, 0x68, 0x00, 0x65, /* 'h' 'e' */
             0x00, 0x6C, 0x00, 0x6C, /* 'l' 'l' */
             0x00, 0x6F, 0x00, 0x00, /* 'o' padding byte */
 
             /* Physical 5: the integer '42' */
-            0xff, 0xff, 0xff, 0xf5, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xf4, /* Integer shape = OBL_INTEGER_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x2A  /* Integer value */
     };
 

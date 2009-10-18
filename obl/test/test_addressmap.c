@@ -23,7 +23,7 @@ void test_map_leaf(void)
     const char contents[] = {
             0x00, 0x00, 0x00, 0x00, /* padding word */
             /* Physical address 1 */
-            0xff, 0xff, 0xff, 0xfc, /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xfb, /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x00, /* height = 0 */
             0x00, 0x00, 0x00, 0x00, /* 0x00 */
             0x00, 0x00, 0x1A, 0x2B, /* 0x01 */
@@ -31,7 +31,7 @@ void test_map_leaf(void)
 
     d = obl_create_database(filename);
     d->content = (obl_uint*) contents;
-    d->root.address_map = (obl_physical_address) 1;
+    d->root.address_map_addr = (obl_physical_address) 1;
 
     result = obl_address_for(d, (obl_logical_address) 1);
     CU_ASSERT(result == (obl_physical_address) 0x1A2B);
@@ -50,13 +50,13 @@ void test_map_branch(void)
     const char contents[] = {
             0x00, 0x00, 0x00, 0x00,  /* A padding word */
             /* Physical address 1 */
-            0xff, 0xff, 0xff, 0xfc,  /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xfb,  /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x00,  /* height = 0 */
             0x00, 0x00, 0x00, 0x00,  /* 0x00 = OBL_PHYSICAL_UNASSIGNED */
             0x00, 0xAA, 0xBB, 0xCC,  /* 0x01 = physical 0x00AABBCC */
             0x00, 0x00, 0x00, 0x00,  /* ... */
             /* Physical address 6 */
-            0xff, 0xff, 0xff, 0xfc,  /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
+            0xff, 0xff, 0xff, 0xfb,  /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
             0x00, 0x00, 0x00, 0x01,  /* height = 1 */
             0x00, 0x00, 0x00, 0x00,  /* 0x00 */
             0x00, 0x00, 0x00, 0x00,  /* 0x01 */
@@ -73,7 +73,7 @@ void test_map_branch(void)
 
     d = obl_create_database(filename);
     d->content = (obl_uint*) contents;
-    d->root.address_map = (obl_physical_address) 6;
+    d->root.address_map_addr = (obl_physical_address) 6;
 
     result = obl_address_for(d, (obl_logical_address) 0x00000201);
     CU_ASSERT(result == (obl_physical_address) 0x00AABBCC);

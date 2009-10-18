@@ -23,7 +23,7 @@ struct obl_object;
  * Fixed allocation.  These logical addresses will always resolve to universally
  * accessible, constant objects that do not reside in the database.
  */
-#define OBL_FIXED_SIZE 14
+#define OBL_FIXED_SIZE 15
 
 typedef enum
 {
@@ -31,21 +31,22 @@ typedef enum
     OBL_FIXED_ADDR_MIN = OBL_ADDRESS_MAX - OBL_FIXED_SIZE + 1,
 
     /* Special constants: nil, true, and false. */
-    OBL_NIL_ADDR = OBL_FIXED_ADDR_MIN, /* 0xfff2 */
-    OBL_TRUE_ADDR,                     /* 0xfff3 */
-    OBL_FALSE_ADDR,                    /* 0xfff4 */
+    OBL_NIL_ADDR = OBL_FIXED_ADDR_MIN, /* 0xfff1 */
+    OBL_TRUE_ADDR,                     /* 0xfff2 */
+    OBL_FALSE_ADDR,                    /* 0xfff3 */
 
     /* The primitive Shape objects. */
-    OBL_INTEGER_SHAPE_ADDR,            /* 0xfff5 */
-    OBL_FLOAT_SHAPE_ADDR,              /* 0xfff6 */
-    OBL_DOUBLE_SHAPE_ADDR,             /* 0xfff7 */
-    OBL_CHAR_SHAPE_ADDR,               /* 0xfff8 */
-    OBL_STRING_SHAPE_ADDR,             /* 0xfff9 */
+    OBL_INTEGER_SHAPE_ADDR,            /* 0xfff4 */
+    OBL_FLOAT_SHAPE_ADDR,              /* 0xfff5 */
+    OBL_DOUBLE_SHAPE_ADDR,             /* 0xfff6 */
+    OBL_CHAR_SHAPE_ADDR,               /* 0xfff7 */
+    OBL_STRING_SHAPE_ADDR,             /* 0xfff8 */
 
     /* Built-in collection Shape objects. */
-    OBL_FIXED_SHAPE_ADDR,              /* 0xfffa */
-    OBL_CHUNK_SHAPE_ADDR,              /* 0xfffb */
-    OBL_ADDRTREEPAGE_SHAPE_ADDR,       /* 0xfffc */
+    OBL_FIXED_SHAPE_ADDR,              /* 0xfff9 */
+    OBL_CHUNK_SHAPE_ADDR,              /* 0xfffa */
+    OBL_ADDRTREEPAGE_SHAPE_ADDR,       /* 0xfffb */
+    OBL_ALLOCATOR_SHAPE_ADDR,          /* 0xfffc */
 
     /* Virtual Shape objects. */
     OBL_NIL_SHAPE_ADDR,                /* 0xfffd */
@@ -65,7 +66,8 @@ typedef enum
     OBL_UNABLE_TO_OPEN_FILE,
     OBL_CONVERSION_ERROR,
     OBL_WRONG_STORAGE,
-    OBL_ARGUMENT_SIZE
+    OBL_ARGUMENT_SIZE,
+    OBL_MISSING_SYSTEM_OBJECT
 } error_code;
 
 /*
@@ -89,26 +91,26 @@ struct obl_root {
      * OBL_ADDRTREEPAGE objects that map logical addresses to physical addresses.
      * See +addressmap.h+.
      */
-    obl_physical_address address_map;
+    obl_physical_address address_map_addr;
 
     /*
      * This address must point to the saved state of the allocator, an
      * obl_object that assigns free logical and physical addresses to newly
      * created objects.  See +allocator.h+.
      */
-    obl_physical_address allocator;
+    obl_logical_address allocator_addr;
 
     /*
      * The object at this physical address is the root of a dictionary of
      * OBL_SHAPE objects by OBL_STRING name.
      */
-    obl_physical_address shape_map;
+    obl_logical_address shape_map_addr;
 
     /*
      * The dictionary at this physical address contains user-defined entry
      * points to structures of persisted data.
      */
-    obl_physical_address name_map;
+    obl_logical_address name_map_addr;
 
     /*
      * This structure is not an obl_object and cannot be added to a
