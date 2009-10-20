@@ -333,6 +333,41 @@ struct obl_object *obl_create_cshape(struct obl_database *d,
  * ============================================================================
  */
 
+obl_uint obl_object_wordsize(struct obl_object *o)
+{
+    switch(_obl_storage_of(o)) {
+    case OBL_SHAPE:
+        return 5;
+    case OBL_SLOTTED:
+        return 1 + obl_shape_slotcount(o->shape);
+    case OBL_FIXED:
+        return 1 + obl_fixed_size(o);
+    case OBL_CHUNK:
+        return 2 + CHUNK_SIZE;
+    case OBL_ADDRTREEPAGE:
+        return 2 + CHUNK_SIZE;
+    case OBL_INTEGER:
+        return 2;
+    case OBL_FLOAT:
+        return 1 + ceil((double) 32 / sizeof(obl_uint));
+    case OBL_DOUBLE:
+        return 1 + ceil((double) 64 / sizeof(obl_uint));
+    case OBL_CHAR:
+        return 1 + ceil((double) sizeof(obl_uint) / sizeof(UChar32));
+    case OBL_STRING:
+        return 1 + obl_string_size(o) *
+            ceil((double) sizeof(obl_uint) / sizeof(UChar));
+    case OBL_BOOLEAN:
+        return 2;
+    case OBL_NIL:
+        return 2;
+    default:
+        obl_report_error(o->database, OBL_WRONG_STORAGE,
+                "obl_object_wordsize called with an object of unknown storage.");
+        return 0;
+    }
+}
+
 void obl_integer_set(struct obl_object *integer, int value)
 {
     if (_obl_storage_of(integer) != OBL_INTEGER) {

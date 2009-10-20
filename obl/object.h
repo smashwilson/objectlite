@@ -369,6 +369,12 @@ struct obl_object *obl_create_cshape(struct obl_database *d,
  * ============================================================================
  */
 
+/*
+ * Return the (non-recursive) storage size of this object, in units of
+ * +sizeof(obl_uint)+.  Includes the shape word.
+ */
+obl_uint obl_object_wordsize(struct obl_object *o);
+
 /* INTEGER objects */
 
 void obl_integer_set(struct obl_object *integer, int value);
