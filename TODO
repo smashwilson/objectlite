@@ -32,11 +32,12 @@ A rough timeline of the tasks to finish before we see release, large and small.
 * read/ * write arbitrary objects by reading the shape word and delegating to one
    of the other object-reading functions.
 = proper handling of read depth and stubbing.
-= implement the address map with tree pages.
+* implement the address map with tree pages.
 * implement the address allocator.
 - obl_address_at should use the address mapper and read functions.
-- bootstrap new obl_databases by writing the root object.
+* bootstrap new obl_databases by writing the root object.
 - make the shape of a shape another shape.
+- printstrings for objects.
 - split object.h into a difference source file for each storage type
 - write accessors and mutators for storage structs
 - give obl_database an indirect reference to the database file to hide things

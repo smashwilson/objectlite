@@ -38,4 +38,10 @@
  */
 #define DEFAULT_STUB_DEPTH 4
 
+/*
+ * Extend the database file by this many +obl_int+ units each time an
+ * allocation is attempted after the end.
+ */
+#define DEFAULT_GROWTH_SIZE 1024
+
 #endif

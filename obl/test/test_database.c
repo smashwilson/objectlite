@@ -13,18 +13,23 @@
 #include "constants.h"
 #include "database.h"
 #include "object.h"
+#include "unitutilities.h"
+
+#include <stdio.h>
+
+const char *filename = "database.obl";
 
 void test_initialize_database(void)
 {
     struct obl_database *database;
     struct obl_cache *cache;
 
-    database = obl_create_database("foo.obl");
+    database = obl_create_database(filename);
     CU_ASSERT_FATAL(database != NULL);
     CU_ASSERT(obl_database_ok(database));
 
     if (database->filename != NULL) {
-        CU_ASSERT(strcmp(database->filename, "foo.obl") == 0);
+        CU_ASSERT(strcmp(database->filename, filename) == 0);
     }
 
     if (database->cache != NULL) {
@@ -51,7 +56,7 @@ void test_report_error(void)
 {
     struct obl_database *database;
 
-    database = obl_create_database("foo.obl");
+    database = obl_create_database(filename);
     CU_ASSERT_FATAL(database != NULL);
     CU_ASSERT(obl_database_ok(database));
 
@@ -85,7 +90,7 @@ void test_allocate_fixed_space(void)
     struct obl_database *d;
     struct obl_object *o;
 
-    d = obl_create_database("foo.obl");
+    d = obl_create_database(filename);
     CU_ASSERT_FATAL(d != NULL);
 
     o = obl_at_address(d, OBL_NIL_ADDR);
@@ -115,7 +120,7 @@ void test_at_address(void)
     struct obl_object *in;
     struct obl_object *out;
 
-    d = obl_create_database("foo.obl");
+    d = obl_create_database(filename);
 
     /* obl_at_address should defer to fixed space when appropriate. */
     out = obl_at_address(d, OBL_TRUE_ADDR);
@@ -133,6 +138,31 @@ void test_at_address(void)
     obl_destroy_database(d);
 }
 
+void test_open_database(void)
+{
+    struct obl_database *d;
+
+    remove(filename);
+
+    d = obl_create_database(filename);
+    d->log_config.level = L_NONE;
+    CU_ASSERT(!obl_is_open(d));
+
+    obl_open_database(d, 0);
+    CU_ASSERT(!obl_is_open(d));
+
+    obl_open_database(d, 1);
+
+    CU_ASSERT(obl_is_open(d));
+    CU_ASSERT(d->content_size == DEFAULT_GROWTH_SIZE);
+    CU_ASSERT(d->content != NULL);
+
+    obl_close_database(d);
+    CU_ASSERT(!obl_is_open(d));
+
+    obl_destroy_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -146,22 +176,11 @@ CU_pSuite initialize_database_suite(void)
         return NULL;
     }
 
-    if (
-        (CU_add_test(pSuite,
-                "test_initialize_database",
-                test_initialize_database) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_report_error",
-                test_report_error) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_allocate_fixed_space",
-                test_allocate_fixed_space) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_at_address",
-                test_at_address) == NULL)
-    ) {
-        return NULL;
-    }
+    ADD_TEST(test_initialize_database);
+    ADD_TEST(test_report_error);
+    ADD_TEST(test_allocate_fixed_space);
+    ADD_TEST(test_at_address);
+    ADD_TEST(test_open_database);
 
     return pSuite;
 }

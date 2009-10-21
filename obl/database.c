@@ -9,13 +9,22 @@
 
 #include "database.h"
 
+#include "addressmap.h"
 #include "cache.h"
 #include "constants.h"
+#include "io.h"
 #include "log.h"
 #include "object.h"
+#include "platform.h"
 
-#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 /* Internal function prototypes. */
 
@@ -24,6 +33,12 @@ static inline int _is_fixed_address(const obl_logical_address addr);
 static int _initialize_fixed_objects(struct obl_database *database);
 
 static inline int _index_for_fixed(obl_logical_address addr);
+
+static void _grow_database(struct obl_database *d);
+
+static void _bootstrap_database(struct obl_database *d);
+
+static void _write_root(struct obl_database *d);
 
 /* Error codes: one for each error_code in error.h. */
 
@@ -53,6 +68,7 @@ struct obl_database *obl_create_database(const char *filename)
     database->last_error.code = OBL_OK;
     database->last_error.message = NULL;
     database->default_stub_depth = DEFAULT_STUB_DEPTH;
+    database->growth_size = (obl_uint) DEFAULT_GROWTH_SIZE;
 
     /* Initialize +root+ to OBL_UNASSIGNED until opened. */
     database->root.address_map_addr = OBL_PHYSICAL_UNASSIGNED;
@@ -79,8 +95,57 @@ struct obl_database *obl_create_database(const char *filename)
     }
 
     database->content = NULL;
+    database->content_size = (obl_uint) 0;
 
     return database;
+}
+
+int obl_open_database(struct obl_database *d, int allow_creation)
+{
+    int fd, flags;
+    struct stat buffer;
+
+    flags = O_RDWR;
+    if (allow_creation) {
+        flags |= O_CREAT;
+    }
+
+    fd = open(d->filename, flags, S_IRUSR | S_IWUSR);
+    if (fd < 0) {
+        /* Unable to open the database file. */
+        obl_report_errorf(d, OBL_UNABLE_TO_OPEN_FILE,
+                "Unable to open file <%s>: %s",
+                d->filename,
+                strerror(errno));
+        return 1;
+    }
+
+    if( fstat(fd, &buffer) ) {
+        /* Unable to stat database file. */
+        close(fd);
+        obl_report_errorf(d, OBL_UNABLE_TO_OPEN_FILE,
+                "Unable to stat file <%s>: %s",
+                d->filename,
+                strerror(errno));
+        return 1;
+    }
+
+    d->content_size = (obl_uint) (buffer.st_size / sizeof(obl_uint));
+    d->content = (obl_uint*) mmap(NULL, d->content_size,
+            PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+    close(fd);
+
+    if (d->content_size < DEFAULT_GROWTH_SIZE) {
+        _grow_database(d);
+        _bootstrap_database(d);
+    }
+
+    return 0;
+}
+
+int obl_is_open(struct obl_database *d)
+{
+    return d->content != NULL && d->content_size > 0;
 }
 
 struct obl_object *obl_at_address(struct obl_database *database,
@@ -122,6 +187,19 @@ struct obl_object *obl_true(struct obl_database *database)
 struct obl_object *obl_false(struct obl_database *database)
 {
     return obl_at_address(database, OBL_FALSE_ADDR);
+}
+
+void obl_close_database(struct obl_database *database)
+{
+    if (!obl_is_open(database)) {
+        OBL_WARN(database, "Database already closed.");
+        return ;
+    }
+
+    munmap(database->content, database->content_size * sizeof(obl_uint));
+
+    database->content = (obl_uint*) 0;
+    database->content_size = (obl_uint) 0;
 }
 
 void obl_destroy_database(struct obl_database *database)
@@ -317,4 +395,110 @@ static int _initialize_fixed_objects(struct obl_database *database)
 static int _index_for_fixed(obl_logical_address addr)
 {
     return addr - OBL_FIXED_ADDR_MIN;
+}
+
+static void _grow_database(struct obl_database *d)
+{
+    FILE *fd;
+
+    if (obl_is_open(d)) {
+        obl_close_database(d);
+    }
+
+    fd = fopen(d->filename, "rb+");
+    fseek(fd, (d->growth_size * sizeof(obl_int)) - 1, SEEK_END);
+    fputc('\0', fd);
+    fclose(fd);
+
+    obl_open_database(d, 0);
+}
+
+static void _bootstrap_database(struct obl_database *d)
+{
+    /* obl\0 in hex. */
+    const obl_uint magic = 0x6F626C00;
+    struct obl_object *treepage, *allocator;
+    struct obl_object *next_physical, *next_logical;
+    obl_logical_address current_logical;
+    obl_physical_address current_physical;
+
+    /* Write the "magic word" at address 0. */
+    d->content[0] = writable_uint(magic);
+
+    /* Logical 0 is OBL_LOGICAL_UNASSIGNED. */
+    current_logical = (obl_logical_address) 1;
+
+    /*
+     * Physical 0 is the magic word (and OBL_PHYSICAL_UNASSIGNED).
+     * 1 - 4 are occupied by root.  Allocation begins at 5.
+     */
+    current_physical = (obl_physical_address) 5;
+
+    /* First: the allocator. */
+    allocator = obl_create_slotted(obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
+    allocator->logical_address = current_logical;
+    allocator->physical_address = current_physical;
+    current_logical++;
+    current_physical += obl_object_wordsize(allocator);
+
+    /* Next, its physical and logical word containers. */
+    next_physical = obl_create_integer(d, (obl_int) 0);
+    next_physical->logical_address = current_logical;
+    next_physical->physical_address = current_physical;
+    obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
+    current_logical++;
+    current_physical += obl_object_wordsize(next_physical);
+
+    next_logical = obl_create_integer(d, (obl_int) 0);
+    next_logical->logical_address = current_logical;
+    next_logical->physical_address = current_physical;
+    obl_slotted_atcnamed_put(allocator, "next_logical", next_logical);
+    current_logical++;
+    current_physical += obl_object_wordsize(next_logical);
+
+    /*
+     * The first leaf of the address map.  Address map pages are not assigned
+     * logical addresses.
+     */
+    treepage = obl_create_addrtreepage(d, 0);
+    treepage->physical_address = current_physical;
+    current_physical += obl_object_wordsize(treepage);
+
+    /* Place assigned addresses within the root and the allocator's state. */
+    d->root.address_map_addr = treepage->physical_address;
+    d->root.allocator_addr = allocator->logical_address;
+    d->root.name_map_addr = OBL_LOGICAL_UNASSIGNED;
+    d->root.shape_map_addr = OBL_LOGICAL_UNASSIGNED;
+    obl_integer_set(next_physical, (int) current_physical);
+    obl_integer_set(next_logical, (int) current_logical);
+
+    /* Write everything so far. */
+    _write_root(d);
+    obl_write_object(allocator, d->content);
+    obl_write_object(next_physical, d->content);
+    obl_write_object(next_logical, d->content);
+    obl_write_object(treepage, d->content);
+
+    /* Write the address assignments into the address map. */
+    obl_address_assign(d,
+            allocator->logical_address, allocator->physical_address);
+    obl_address_assign(d,
+            next_physical->logical_address, next_physical->physical_address);
+    obl_address_assign(d,
+            next_logical->logical_address, next_logical->physical_address);
+
+    /* Cache temporary objects. */
+    obl_cache_insert(d->cache, allocator);
+    obl_cache_insert(d->cache, next_physical);
+    obl_cache_insert(d->cache, next_logical);
+}
+
+static void _write_root(struct obl_database *d)
+{
+    d->content[1] = writable_uint((obl_uint) d->root.address_map_addr);
+    d->content[2] = writable_uint((obl_uint) d->root.allocator_addr);
+    d->content[3] = writable_uint((obl_uint) d->root.shape_map_addr);
+    d->content[4] = writable_uint((obl_uint) d->root.name_map_addr);
+
+    d->root.dirty = 0;
 }

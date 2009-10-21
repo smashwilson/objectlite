@@ -145,11 +145,23 @@ struct obl_database {
     /* Stubbing control. */
     int default_stub_depth;
 
+    /*
+     * Grow the database file by this many obl_uint units each time growth
+     * is triggered.
+     */
+    obl_uint growth_size;
+
     /* Root storage.  Initialized during open. */
     struct obl_root root;
 
     /* The memory-mapped contents of the database file. */
     obl_uint *content;
+
+    /*
+     * If opened, contains the mapped extent of +content+ in sizeof(obl_uint)
+     * units.
+     */
+    obl_uint content_size;
 };
 
 /*
@@ -158,6 +170,19 @@ struct obl_database {
  * destroyed by +obl_destroy_database()+.
  */
 struct obl_database *obl_create_database(const char *filename);
+
+/*
+ * Open the database file using the existing settings within +d+.  If
+ * +allow_creation+ is 1, bootstrap the database if it does not already exist.
+ * Returns 0 on a successful open.  Logs a warning and returns 1 on an
+ * unsuccessful open.
+ */
+int obl_open_database(struct obl_database *d, int allow_creation);
+
+/*
+ * Return 1 if +d+ has been opened successfully, or 0 if it has not.
+ */
+int obl_is_open(struct obl_database *d);
 
 /*
  * The most basic query: return an object that lives at a known logical address.
@@ -186,6 +211,11 @@ struct obl_object *obl_true(struct obl_database *database);
  * Return the single object representing falsehood.
  */
 struct obl_object *obl_false(struct obl_database *database);
+
+/*
+ * Close the opened database file.
+ */
+void obl_close_database(struct obl_database *database);
 
 /*
  * Deallocate all of the resources associated with an ObjectLite database.
