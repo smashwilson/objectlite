@@ -104,6 +104,14 @@ typedef obl_address obl_logical_address;
 #define writable_UChar32(ch) htonl(ch)
 #define readable_UChar32(ch) ((UChar32) ntohl(ch))
 
+/* obl_logical_address should always be the same width as an obl_uint. */
+#define writable_logical(in) writable_uint((obl_uint) (in))
+#define readable_logical(in) ((obl_logical_address) readable_uint(in))
+
+/* obl_physical_address should always be the same width as an obl_uint. */
+#define writable_physical(in) writable_uint((obl_uint) (in))
+#define readable_physical(in) ((obl_physical_address) writable_uint(in))
+
 /*
  * Memory mapping and unmapping functions: native on POSIX systems, emulated
  * on WIN32.
