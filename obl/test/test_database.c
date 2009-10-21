@@ -163,6 +163,45 @@ void test_open_database(void)
     obl_destroy_database(d);
 }
 
+void test_database_io(void)
+{
+    struct obl_database *d;
+    struct obl_object *o;
+    obl_logical_address addr;
+
+    remove(filename);
+
+    /* Write an object into the database. */
+    d = obl_create_database(filename);
+    obl_open_database(d, 1);
+
+    o = obl_create_integer(d, (obl_int) 42);
+    CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED);
+
+    _obl_write(o);
+    CU_ASSERT(o->physical_address != OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(o->logical_address != OBL_LOGICAL_UNASSIGNED);
+    addr = o->logical_address;
+
+    obl_destroy_object(o);
+    obl_close_database(d);
+    obl_destroy_database(d);
+
+    /* Read the object back from the database, clean cache and everything. */
+    d = obl_create_database(filename);
+    obl_open_database(d, 0);
+
+    o = obl_at_address(d, addr);
+    CU_ASSERT(obl_integer_value(o) == (obl_int) 42);
+
+    if (o != obl_nil(d)) {
+        obl_destroy_object(o);
+    }
+    obl_close_database(d);
+    obl_destroy_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -181,6 +220,7 @@ CU_pSuite initialize_database_suite(void)
     ADD_TEST(test_allocate_fixed_space);
     ADD_TEST(test_at_address);
     ADD_TEST(test_open_database);
+    ADD_TEST(test_database_io);
 
     return pSuite;
 }

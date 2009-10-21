@@ -67,7 +67,8 @@ typedef enum
     OBL_CONVERSION_ERROR,
     OBL_WRONG_STORAGE,
     OBL_ARGUMENT_SIZE,
-    OBL_MISSING_SYSTEM_OBJECT
+    OBL_MISSING_SYSTEM_OBJECT,
+    OBL_DATABASE_NOT_OPEN
 } error_code;
 
 /*
@@ -246,5 +247,16 @@ void obl_report_error(struct obl_database *database, error_code code,
  */
 void obl_report_errorf(struct obl_database *database, error_code code,
         const char *format, ...);
+
+/*
+ * Allocate any necessary addresses, grow the database file if necessary, then
+ * serialize the object +o+ to the file using the functionality provided by
+ * +io.h+.
+ *
+ * This function performs primitive I/O and should only be called by internal
+ * ObjectLite functions while a transaction is active and the database is
+ * properly locked.
+ */
+void _obl_write(struct obl_object *o);
 
 #endif

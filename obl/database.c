@@ -10,6 +10,7 @@
 #include "database.h"
 
 #include "addressmap.h"
+#include "allocator.h"
 #include "cache.h"
 #include "constants.h"
 #include "io.h"
@@ -38,6 +39,8 @@ static void _grow_database(struct obl_database *d);
 
 static void _bootstrap_database(struct obl_database *d);
 
+static void _read_root(struct obl_database *d);
+
 static void _write_root(struct obl_database *d);
 
 /* Error codes: one for each error_code in error.h. */
@@ -47,8 +50,15 @@ static char *error_messages[] = {
         "Unable to allocate an object", "Unable to read file",
         "Unable to open file", "Error during Unicode conversion",
         "Incorrect object storage type", "Bad argument length",
-        "Missing a critical system object"
+        "Missing a critical system object", "Database must be open"
 };
+
+/* Addresses of the elements in obl_root. */
+
+#define ADDRMAP_ADDR 1
+#define ALLOCATOR_ADDR 2
+#define NAMEMAP_ADDR 3
+#define SHAPEMAP_ADDR 4
 
 /* External functions definitions. */
 
@@ -135,10 +145,12 @@ int obl_open_database(struct obl_database *d, int allow_creation)
             PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
     close(fd);
 
-    if (d->content_size < DEFAULT_GROWTH_SIZE) {
+    if (d->content_size < d->growth_size) {
         _grow_database(d);
         _bootstrap_database(d);
     }
+
+    _read_root(d);
 
     return 0;
 }
@@ -159,6 +171,7 @@ struct obl_object *obl_at_address_depth(struct obl_database *database,
         const obl_logical_address address, int depth)
 {
     struct obl_object *o;
+    obl_physical_address addr;
 
     /* Check for fixed addresses first. */
     if (_is_fixed_address(address)) {
@@ -171,7 +184,13 @@ struct obl_object *obl_at_address_depth(struct obl_database *database,
         return o;
     }
 
-    return obl_nil(database);
+    /* Look up the physical address. */
+    addr = obl_address_lookup(database, address);
+    if (addr == OBL_PHYSICAL_UNASSIGNED) {
+        return obl_nil(database);
+    }
+
+    return obl_read_object(database, database->content, addr, depth);
 }
 
 struct obl_object *obl_nil(struct obl_database *database)
@@ -286,6 +305,37 @@ void obl_report_errorf(struct obl_database *database, error_code code,
     obl_report_error(database, code, buffer);
 
     free(buffer);
+}
+
+void _obl_write(struct obl_object *o)
+{
+    struct obl_database *d;
+
+    d = o->database;
+    if (!obl_is_open(d)) {
+        obl_report_error(d, OBL_DATABASE_NOT_OPEN, NULL);
+        return ;
+    }
+
+    if (o->logical_address == OBL_LOGICAL_UNASSIGNED) {
+        o->logical_address = obl_allocate_logical(d);
+    }
+
+    if (o->physical_address == OBL_PHYSICAL_UNASSIGNED) {
+        obl_uint size, extent;
+
+        size = obl_object_wordsize(o);
+        o->physical_address = obl_allocate_physical(d, size);
+
+        extent = (obl_uint) (o->physical_address) + size;
+        if (extent >= d->content_size) {
+            _grow_database(d);
+        }
+
+        obl_address_assign(d, o->logical_address, o->physical_address);
+    }
+
+    obl_write_object(o, d->content);
 }
 
 /* Internal function implementations. */
@@ -493,12 +543,22 @@ static void _bootstrap_database(struct obl_database *d)
     obl_cache_insert(d->cache, next_logical);
 }
 
+static void _read_root(struct obl_database *d)
+{
+    d->root.address_map_addr = readable_physical(d->content[ADDRMAP_ADDR]);
+    d->root.allocator_addr = readable_logical(d->content[ALLOCATOR_ADDR]);
+    d->root.name_map_addr = readable_logical(d->content[NAMEMAP_ADDR]);
+    d->root.shape_map_addr = readable_logical(d->content[SHAPEMAP_ADDR]);
+
+    d->root.dirty = 0;
+}
+
 static void _write_root(struct obl_database *d)
 {
-    d->content[1] = writable_uint((obl_uint) d->root.address_map_addr);
-    d->content[2] = writable_uint((obl_uint) d->root.allocator_addr);
-    d->content[3] = writable_uint((obl_uint) d->root.shape_map_addr);
-    d->content[4] = writable_uint((obl_uint) d->root.name_map_addr);
+    d->content[ADDRMAP_ADDR] = writable_physical(d->root.address_map_addr);
+    d->content[ALLOCATOR_ADDR] = writable_logical(d->root.allocator_addr);
+    d->content[NAMEMAP_ADDR] = writable_logical(d->root.shape_map_addr);
+    d->content[SHAPEMAP_ADDR] = writable_logical(d->root.name_map_addr);
 
     d->root.dirty = 0;
 }
