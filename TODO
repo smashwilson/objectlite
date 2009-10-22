@@ -45,7 +45,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
    with an open configuration struct?
 - give obl_database an indirect reference to the database file to hide things
    like remappings.
-= doxygen it up.
+* doxygen it up.
 
 # Advanced I/O
 

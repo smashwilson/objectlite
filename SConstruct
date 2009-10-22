@@ -31,9 +31,14 @@ obltest = Program(
     Glob('obl/test/*.c'),
     LIBS = ['objectlite', 'cunit', 'ws2_32', 'icuuc'])
 
+# Documentation with doxygen. ##################################################
+
+doctask = Command('doc/html/index.html', obllib, 'doxygen Doxyfile')
+
 # Alias directives for common configurations. ##################################
 Alias('lib', obllib)
 Alias('test', obltest)
+Alias('docs', doctask)
 
 # Additional -c clean rules. ###################################################
 
@@ -42,3 +47,4 @@ for scratch in Glob('*~') + Glob('*/*~') + Glob('*/*/*~'):
 
 Clean('.', Glob('*.log'))
 Clean('.', Glob('*.obl'))
+Clean('.', Glob('doc/**'))
