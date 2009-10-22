@@ -110,7 +110,7 @@ obl_uint obl_shape_slotcount(const struct obl_object *shape);
  * \param name An object with obl_string_storage.
  * \return The zero-based index of a slot with the given name.  Returns -1 if
  *      no slot has that name.  Reports an error if shape is not a valid
- *      shape, or if name is not a valid string.
+ *      shape.
  */
 obl_uint obl_shape_slotnamed(const struct obl_object *shape,
         const struct obl_object *name);
