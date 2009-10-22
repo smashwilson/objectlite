@@ -83,7 +83,7 @@ obl_uint obl_object_wordsize(struct obl_object *o)
 
 struct obl_object *obl_object_shape(struct obl_object *o)
 {
-    return o->shape;
+    return _obl_resolve_stub(o->shape);
 }
 
 void obl_print_object(struct obl_object *o, int depth, int indent)
@@ -101,11 +101,13 @@ void obl_destroy_object(struct obl_object *o)
 
 enum obl_storage_type obl_storage_of(const struct obl_object *o)
 {
-    if (o->shape == obl_nil(o->database)) {
+    struct obl_object *shape;
+
+    shape = obl_object_shape(o);
+    if (shape == obl_nil(o->database)) {
         return OBL_SHAPE;
     } else {
-        return (enum obl_storage_type)
-                o->shape->storage.shape_storage->storage_format;
+        return obl_shape_storagetype(shape);
     }
 }
 

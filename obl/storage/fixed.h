@@ -29,10 +29,10 @@ struct obl_database;
  */
 struct obl_fixed_storage {
 
-    /* The size of the collection. */
+    /** The size of the collection. */
     obl_uint length;
 
-    /* Collection payload. */
+    /** Collection payload. */
     struct obl_object **contents;
 
 };

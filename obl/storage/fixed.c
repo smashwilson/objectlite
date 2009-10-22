@@ -69,7 +69,7 @@ struct obl_object *obl_fixed_at(const struct obl_object *fixed,
         return NULL;
     }
 
-    return fixed->storage.fixed_storage->contents[index];
+    return _obl_resolve_stub(fixed->storage.fixed_storage->contents[index]);
 }
 
 void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,

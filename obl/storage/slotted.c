@@ -67,7 +67,7 @@ struct obl_object *obl_slotted_at(const struct obl_object *slotted,
         return obl_nil(slotted->database);
     }
 
-    return slotted->storage.slotted_storage->slots[index];
+    return _obl_resolve_stub(slotted->storage.slotted_storage->slots[index]);
 }
 
 struct obl_object *obl_slotted_atnamed(const struct obl_object *slotted,

@@ -39,11 +39,15 @@ struct obl_object *_obl_create_stub(struct obl_database *d,
     return result;
 }
 
-struct obl_object *_obl_resolve_stub(struct obl_object *stub, int depth)
+struct obl_object *_obl_resolve_stub(struct obl_object *stub)
 {
-    return obl_at_address_depth(stub->database,
-            stub->storage.stub_storage->value,
-            depth);
+    if (_obl_is_stub(stub)) {
+        return obl_at_address_depth(stub->database,
+                stub->storage.stub_storage->value,
+                stub->database->default_stub_depth);
+    } else {
+        return stub;
+    }
 }
 
 int _obl_is_stub(struct obl_object *o)

@@ -98,7 +98,7 @@ struct obl_object *obl_shape_name(struct obl_object *shape)
         return obl_nil(shape->database);
     }
 
-    return shape->storage.shape_storage->name;
+    return _obl_resolve_stub(shape->storage.shape_storage->name);
 }
 
 struct obl_object *obl_shape_slotnames(struct obl_object *shape)
@@ -109,7 +109,7 @@ struct obl_object *obl_shape_slotnames(struct obl_object *shape)
         return obl_nil(shape->database);
     }
 
-    return shape->storage.shape_storage->slot_names;
+    return _obl_resolve_stub(shape->storage.shape_storage->slot_names);
 }
 
 obl_uint obl_shape_slotcount(const struct obl_object *shape)
@@ -120,7 +120,7 @@ obl_uint obl_shape_slotcount(const struct obl_object *shape)
         return 0;
     }
 
-    return obl_fixed_size(shape->storage.shape_storage->slot_names);
+    return obl_fixed_size(obl_shape_slotnames(shape));
 }
 
 obl_uint obl_shape_slotnamed(const struct obl_object *shape,
@@ -135,7 +135,7 @@ obl_uint obl_shape_slotnamed(const struct obl_object *shape,
         return 0;
     }
 
-    slots = shape->storage.shape_storage->slot_names;
+    slots = obl_shape_slotnames(shape);
     for (i = 0; i < obl_fixed_size(slots); i++) {
         if (obl_string_cmp(obl_fixed_at(slots, i), name) == 0) {
             return i;
@@ -175,7 +175,7 @@ struct obl_object *obl_shape_currentshape(struct obl_object *shape)
         return obl_nil(shape->database);
     }
 
-    return shape->storage.shape_storage->current_shape;
+    return _obl_resolve_stub(shape->storage.shape_storage->current_shape);
 }
 
 enum obl_storage_type obl_shape_storagetype(const struct obl_object *shape)
