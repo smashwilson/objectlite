@@ -179,6 +179,58 @@ size_t obl_string_value(struct obl_object *string,
     return count;
 }
 
+/* Strings are stored as UTF-16BE with a one-word length prefix. */
+struct obl_object *obl_read_string(struct obl_object *shape,
+        obl_uint *source, obl_physical_address base, int depth)
+{
+    obl_uint length;
+    obl_uint i;
+    UChar *casted_source;
+    int casted_offset;
+    UChar *contents;
+    struct obl_object *o;
+
+    length = readable_uint(source[base + 1]);
+    contents = (UChar*) malloc(length * sizeof(UChar));
+    if (contents == NULL) {
+        obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
+        return obl_nil(shape->database);
+    }
+
+    casted_source = (UChar *) source;
+    casted_offset = (base + 2) * (sizeof(obl_uint) / sizeof(UChar));
+    for (i = 0; i < length; i++) {
+        contents[i] = readable_UChar(
+                casted_source[casted_offset + i]);
+    }
+
+    o = obl_create_string(shape->database, contents, length);
+
+    free(contents);
+    return o;
+}
+
+void obl_write_string(struct obl_object *string, obl_uint *dest)
+{
+    obl_uint length;
+    obl_uint i;
+    UChar *casted_dest;
+    obl_physical_address casted_offset;
+    UChar ch;
+
+    length = obl_string_size(string);
+    dest[string->physical_address + 1] = writable_uint(length);
+
+    casted_dest = (UChar *) dest;
+    casted_offset = (string->physical_address + 2) *
+            (sizeof(obl_uint) / sizeof(UChar));
+
+    for (i = 0; i < length; i++) {
+        ch = string->storage.string_storage->contents[i];
+        casted_dest[casted_offset + i] = writable_UChar(ch);
+    }
+}
+
 void obl_print_string(struct obl_object *string, int depth, int indent)
 {
     int in;

@@ -137,6 +137,18 @@ enum obl_storage_type obl_shape_storagetype(struct obl_object *shape);
  */
 void obl_destroy_cshape(struct obl_object *o);
 
+/*
+ * Read a shape object.  Shapes are themselves a fixed shape (sorry, no turtles
+ * all the way down -- yet).
+ */
+struct obl_object *obl_read_shape(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth);
+
+/*
+ * Write a shape object.
+ */
+void obl_write_shape(struct obl_object *string, obl_uint *dest);
+
 /**
  * Output a shape nicely to stdout.
  *

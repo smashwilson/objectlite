@@ -16,7 +16,6 @@
 
 #include "storage/object.h"
 #include "database.h"
-#include "io.h"
 #include "platform.h"
 #include "unitutilities.h"
 

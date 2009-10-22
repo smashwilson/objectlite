@@ -127,6 +127,47 @@ void obl_slotted_atcnamed_put(struct obl_object *slotted,
     obl_slotted_at_put(slotted, obl_shape_slotcnamed(slotted->shape, slotname), value);
 }
 
+struct obl_object *obl_read_slotted(struct obl_object *shape,
+        obl_uint *source, obl_physical_address base, int depth)
+{
+    struct obl_object *result;
+    obl_uint slot_count;
+    obl_uint i;
+    obl_logical_address addr;
+    struct obl_object *linked;
+
+    result = obl_create_slotted(shape);
+
+    slot_count = obl_shape_slotcount(shape);
+    for (i = 0; i < slot_count; i++) {
+        addr = (obl_logical_address) readable_uint(source[base + 1 + i]);
+        if (depth <= 0) {
+            linked = _obl_create_stub(shape->database, addr);
+        } else {
+            linked = obl_at_address_depth(shape->database, addr, depth - 1);
+        }
+        obl_slotted_at_put(result, i, linked);
+    }
+
+    return result;
+}
+
+void obl_write_slotted(struct obl_object *slotted, obl_uint *dest)
+{
+    obl_uint slot_count;
+    obl_uint i;
+    struct obl_object *linked;
+
+    slot_count = obl_shape_slotcount(slotted->shape);
+    for (i = 0; i < slot_count; i++) {
+        /* Avoid unnecessary stub resolution. */
+        linked = slotted->storage.slotted_storage->slots[i];
+
+        dest[slotted->physical_address + 1 + i] = writable_uint(
+                (obl_uint) linked->logical_address);
+    }
+}
+
 void obl_print_slotted(struct obl_object *slotted, int depth, int indent)
 {
     int in, slot_i;

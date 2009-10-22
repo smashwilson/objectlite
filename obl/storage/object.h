@@ -132,6 +132,24 @@ void obl_destroy_object(struct obl_object *o);
 enum obl_storage_type obl_storage_of(struct obl_object *o);
 
 /**
+ * Read a shape word from the current position of the file <source>, retrieve
+ * the shape object, then invoke the appropriate struct obl_object_read_function from
+ * the <obl_read_functions> table to read the rest of the object.  Return the
+ * populated struct obl_object structure.
+ *
+ * The created object lives on the heap and must be destroyed with a call to
+ * obl_destroy_object() as defined in object.h.
+ */
+struct obl_object *obl_read_object(struct obl_database *d,
+        obl_uint *source, obl_physical_address offset, int depth);
+
+/**
+ * Write an object to the memory-mapped file provided.  The object must
+ * already have a physical and logical address assigned to it.
+ */
+void obl_write_object(struct obl_object *o, obl_uint *dest);
+
+/**
  * Allocate a new obl_object from the heap, without specified storage.  For
  * internal use only.
  *

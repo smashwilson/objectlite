@@ -209,6 +209,55 @@ void obl_destroy_cshape(struct obl_object *shape)
     obl_destroy_object(storage->slot_names);
 }
 
+struct obl_object *obl_read_shape(struct obl_object *shape,
+        obl_uint *source, obl_physical_address base, int depth)
+{
+    struct obl_object *result;
+    obl_logical_address addr;
+    struct obl_object *name, *slot_names, *current_shape;
+    obl_uint storage_format;
+
+    addr = (obl_logical_address) readable_uint(source[base + 1]);
+    name = obl_at_address_depth(shape->database, addr, depth - 1);
+
+    addr = (obl_logical_address) readable_uint(source[base + 2]);
+    slot_names = obl_at_address_depth(shape->database, addr, depth - 1);
+
+    addr = (obl_logical_address) readable_uint(source[base + 3]);
+    current_shape = obl_at_address_depth(shape->database, addr, depth - 1);
+
+    storage_format = readable_uint(source[base + 4]);
+    if (storage_format > OBL_STORAGE_TYPE_MAX) {
+        obl_report_errorf(shape->database, OBL_WRONG_STORAGE,
+                "Shape at physical address %ul has invalid storage format.",
+                (unsigned long) base);
+    }
+
+    result = obl_create_shape(shape->database,
+            name, slot_names, storage_format);
+    result->storage.shape_storage->current_shape = current_shape;
+    return result;
+}
+
+void obl_write_shape(struct obl_object *shape, obl_uint *dest)
+{
+    struct obl_object *name, *slot_names, *current_shape;
+
+    name = shape->storage.shape_storage->name;
+    slot_names = shape->storage.shape_storage->slot_names;
+    current_shape = shape->storage.shape_storage->current_shape;
+
+    dest[shape->physical_address + 1] = writable_uint(
+            (obl_uint) name->logical_address);
+    dest[shape->physical_address + 2] = writable_uint(
+            (obl_uint) slot_names->logical_address);
+    dest[shape->physical_address + 3] = writable_uint(
+            (obl_uint) current_shape->logical_address);
+
+    dest[shape->physical_address + 4] = writable_uint(
+            (obl_uint) obl_shape_storagetype(shape));
+}
+
 void obl_print_shape(struct obl_object *shape, int depth, int indent)
 {
     int in;

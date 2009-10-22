@@ -52,6 +52,19 @@ struct obl_object *obl_create_addrtreepage(struct obl_database *d,
         obl_uint depth);
 
 /**
+ * Read an address tree page.  Address tree pages reference each other by
+ * physical address (so that they can used during the address lookup process)
+ * so tree pages don't respect the +depth+ parameter.
+ */
+struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth);
+
+/**
+ * Write an address map tree page.
+ */
+void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest);
+
+/**
  * Output the contents of an address tree page.  This will usually be an
  * ungodly wall of text.
  *

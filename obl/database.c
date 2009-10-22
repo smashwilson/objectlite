@@ -14,7 +14,6 @@
 #include "allocator.h"
 #include "cache.h"
 #include "constants.h"
-#include "io.h"
 #include "log.h"
 #include "platform.h"
 

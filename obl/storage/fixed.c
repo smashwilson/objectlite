@@ -101,6 +101,49 @@ void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
     fixed->storage.fixed_storage->contents[index] = value;
 }
 
+struct obl_object *obl_read_fixed(struct obl_object *shape,
+        obl_uint *source, obl_physical_address base, int depth)
+{
+    obl_uint length;
+    obl_uint i;
+    struct obl_object *o;
+    obl_logical_address addr;
+    struct obl_object *linked;
+
+    length = readable_uint(source[base + 1]);
+    o = obl_create_fixed(shape->database, length);
+
+    for (i = 0; i < length; i++) {
+        addr = (obl_logical_address) readable_uint(source[base + 2 + i]);
+        if (depth <= 0) {
+            linked = _obl_create_stub(shape->database, addr);
+        } else {
+            linked = obl_at_address_depth(shape->database, addr, depth - 1);
+        }
+        obl_fixed_at_put(o, i, linked);
+    }
+
+    return o;
+}
+
+void obl_write_fixed(struct obl_object *fixed, obl_uint *dest)
+{
+    obl_uint length;
+    obl_uint i;
+    struct obl_object *linked;
+
+    length = obl_fixed_size(fixed);
+    dest[fixed->physical_address + 1] = writable_uint(length);
+
+    for (i = 0; i < length; i++) {
+        /* Avoid unnecessarily resolving any stubs. */
+        linked = fixed->storage.fixed_storage->contents[i];
+
+        dest[fixed->physical_address + 2 + i] = writable_uint(
+                (obl_uint) linked->logical_address);
+    }
+}
+
 void obl_print_fixed(struct obl_object *fixed, int depth, int indent)
 {
     int ind, i;

@@ -99,6 +99,18 @@ void obl_slotted_atcnamed_put(struct obl_object *slotted,
         const char *slotname, struct obl_object *value);
 
 /**
+ * Read a slotted object.  The number of slots expected is determined by the
+ * provided shape.
+ */
+struct obl_object *obl_read_slotted(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth);
+
+/**
+ * Write a slotted object.
+ */
+void obl_write_slotted(struct obl_object *slotted, obl_uint *dest);
+
+/**
  * Output a slotted object nicely to stdout.
  *
  * \param slotted A slotted object.

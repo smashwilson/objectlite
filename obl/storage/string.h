@@ -99,6 +99,17 @@ size_t obl_string_value(struct obl_object *o,
         UChar *buffer, size_t buffer_size);
 
 /**
+ * Read a length-prefixed UTF-16BE string object.
+ */
+struct obl_object *obl_read_string(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth);
+
+/*
+ * Write a string object.
+ */
+void obl_write_string(struct obl_object *string, obl_uint *dest);
+
+/**
  * Output a string to stdout.
  *
  * \param string A string object.

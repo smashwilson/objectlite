@@ -54,6 +54,17 @@ void obl_integer_set(struct obl_object *integer, obl_int value);
 obl_int obl_integer_value(struct obl_object *o);
 
 /**
+ *  Read a single-word obl_integer_object.
+ */
+struct obl_object *obl_read_integer(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth);
+
+/**
+ * Write an integer object.
+ */
+void obl_write_integer(struct obl_object *integer, obl_uint *dest);
+
+/**
  * Output an integer to stdout.
  *
  * \param integer An object with integer storage.

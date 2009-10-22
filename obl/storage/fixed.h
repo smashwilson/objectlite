@@ -82,6 +82,17 @@ void obl_fixed_at_put(struct obl_object *fixed, obl_uint index,
         struct obl_object *value);
 
 /**
+ * Read a fixed-length collection.
+ */
+struct obl_object *obl_read_fixed(struct obl_object *shape,
+        obl_uint *source, obl_physical_address offset, int depth);
+
+/**
+ * Write a fixed-length collection.
+ */
+void obl_write_fixed(struct obl_object *fixed, obl_uint *dest);
+
+/**
  * Output the contents of a fixed collection to stdout.
  *
  * \param fixed An object with fixed storage.

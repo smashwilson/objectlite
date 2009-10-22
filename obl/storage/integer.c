@@ -57,6 +57,25 @@ void obl_integer_set(struct obl_object *integer, obl_int value)
     integer->storage.integer_storage->value = value;
 }
 
+/* Integers are stored in 32 bits, network byte order. */
+struct obl_object *obl_read_integer(struct obl_object *shape,
+        obl_uint *source, obl_physical_address base, int depth)
+{
+    obl_int value;
+
+    value = readable_int(source[base + 1]);
+
+    return obl_create_integer(shape->database, value);
+}
+
+void obl_write_integer(struct obl_object *integer, obl_uint *dest)
+{
+    obl_int value;
+
+    value = obl_integer_value(integer);
+    dest[integer->physical_address + 1] = writable_int(value);
+}
+
 void obl_print_integer(struct obl_object *integer, int depth, int indent)
 {
     int in;

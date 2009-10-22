@@ -42,6 +42,41 @@ struct obl_object *obl_create_addrtreepage(struct obl_database *d,
     return result;
 }
 
+struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
+        obl_uint *source, obl_physical_address base, int depth)
+{
+    struct obl_object *result;
+    obl_uint height;
+    obl_physical_address addr;
+    int i;
+
+    height = readable_uint(source[base + 1]);
+    result = obl_create_addrtreepage(shape->database, height);
+
+    for (i = 0; i < CHUNK_SIZE; i++) {
+        addr = (obl_physical_address) readable_uint(source[base + 2 + i]);
+        result->storage.addrtreepage_storage->contents[i] = addr;
+    }
+
+    return result;
+}
+
+void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest)
+{
+    int i;
+    obl_physical_address base;
+    obl_physical_address *contents;
+
+    base = treepage->physical_address;
+    dest[base + 1] =
+            writable_uint(treepage->storage.addrtreepage_storage->height);
+
+    contents = treepage->storage.addrtreepage_storage->contents;
+    for (i = 0; i < CHUNK_SIZE; i++) {
+        dest[base + 2 + i] = writable_uint((obl_uint) contents[i]);
+    }
+}
+
 void obl_print_addrtreepage(struct obl_object *addrtreepage,
         int depth, int indent)
 {
