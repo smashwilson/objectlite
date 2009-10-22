@@ -36,15 +36,16 @@ A rough timeline of the tasks to finish before we see release, large and small.
 * implement the address allocator.
 * obl_address_at should use the address mapper and read functions.
 * bootstrap new obl_databases by writing the root object.
+- bounds-checking within storage/ functions.
 - make the shape of a shape another shape.
 - printstrings for objects.
-- split object.h into a difference source file for each storage type
+* split object.h into a difference source file for each storage type
 - write accessors and mutators for storage structs
 - combine "create"/"open" and "destroy"/"close" operations.  possibly create
    with an open configuration struct?
 - give obl_database an indirect reference to the database file to hide things
    like remappings.
-- doxygen it up.
+= doxygen it up.
 
 # Advanced I/O
 

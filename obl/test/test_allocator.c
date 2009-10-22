@@ -11,7 +11,7 @@
 #include "allocator.h"
 
 #include "database.h"
-#include "object.h"
+#include "storage/object.h"
 #include "platform.h"
 
 static const char *filename = "allocator.obl";

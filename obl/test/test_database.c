@@ -9,10 +9,10 @@
 
 #include "CUnit/Headers/Basic.h"
 
+#include "storage/object.h"
 #include "cache.h"
 #include "constants.h"
 #include "database.h"
-#include "object.h"
 #include "unitutilities.h"
 
 #include <stdio.h>

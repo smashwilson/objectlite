@@ -11,7 +11,7 @@
 
 #include "database.h"
 #include "io.h"
-#include "object.h"
+#include "storage/object.h"
 
 obl_logical_address obl_allocate_logical(struct obl_database *d)
 {

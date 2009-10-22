@@ -13,10 +13,10 @@
 
 #include "addressmap.h"
 
+#include "storage/object.h"
 #include "allocator.h"
 #include "constants.h"
 #include "database.h"
-#include "object.h"
 
 /* Prototypes for internal functions */
 

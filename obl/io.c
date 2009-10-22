@@ -8,15 +8,15 @@
 
 #include "io.h"
 
+#include "storage/object.h"
 #include "database.h"
-#include "object.h"
 #include "platform.h"
 
 #include <stdlib.h>
 
-/*
+/**
  * The array of object-reading functions: one for each internal state
- * specified in "object.h" and at the same index as its index in the
+ * specified in object.h and at the same index as its index in the
  * +obl_storage_type+ enumeration.
  */
 static obl_object_read_function obl_read_functions[] = {

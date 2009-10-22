@@ -6,7 +6,7 @@
  * Unit tests for struct obl_object creation, access, and manipulation API.
  */
 
-#include "object.h"
+#include "storage/object.h"
 
 #include <string.h>
 
@@ -14,8 +14,8 @@
 #include "unicode/ucnv.h"
 
 #include "database.h"
-#include "object.h"
 #include "log.h"
+#include "unitutilities.h"
 
 void test_create_integer(void)
 {
@@ -215,31 +215,12 @@ CU_pSuite initialize_object_suite(void)
         return NULL;
     }
 
-    if (
-        (CU_add_test(pSuite,
-                "test_create_integer",
-                test_create_integer) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_create_string",
-                test_create_string) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_create_fixed",
-                test_create_fixed) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_create_shape",
-                test_create_shape) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_create_slotted",
-                test_create_slotted) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_create_stub",
-                test_create_stub) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_create_boolean",
-                test_boolean_objects) == NULL)
-    ) {
-        return NULL;
-    }
+    ADD_TEST(test_create_integer);
+    ADD_TEST(test_create_string);
+    ADD_TEST(test_create_fixed);
+    ADD_TEST(test_create_shape);
+    ADD_TEST(test_create_slotted);
+    ADD_TEST(test_boolean_objects);
 
     return pSuite;
 }

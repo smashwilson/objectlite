@@ -19,3 +19,6 @@
 # Ignore ObjectLite databases and log files.
 *.obl
 *.log
+
+# Documentation.
+doc/**

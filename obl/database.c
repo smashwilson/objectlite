@@ -9,13 +9,13 @@
 
 #include "database.h"
 
+#include "storage/object.h"
 #include "addressmap.h"
 #include "allocator.h"
 #include "cache.h"
 #include "constants.h"
 #include "io.h"
 #include "log.h"
-#include "object.h"
 #include "platform.h"
 
 #include <sys/types.h>

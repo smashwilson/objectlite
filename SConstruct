@@ -23,7 +23,7 @@ env.Append(CCFLAGS = '-g');
 # libobjectlite: The core library. #############################################
 obllib = StaticLibrary(
     'obl/objectlite',
-    Glob('obl/*.c'))
+    Glob('obl/*.c') + Glob('obl/storage/*.c'))
 
 # unittests: Unit testing suite for libobjectlite. #############################
 obltest = Program(

@@ -14,9 +14,9 @@
 
 #include "CUnit/Headers/Basic.h"
 
+#include "storage/object.h"
 #include "database.h"
 #include "io.h"
-#include "object.h"
 #include "platform.h"
 #include "unitutilities.h"
 

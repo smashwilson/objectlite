@@ -10,7 +10,7 @@
 
 #include "addressmap.h"
 
-#include "object.h"
+#include "storage/object.h"
 #include "database.h"
 #include "unitutilities.h"
 

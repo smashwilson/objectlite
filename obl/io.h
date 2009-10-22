@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2009 Ashley J. Wilson, Roger E. Ostrander
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
@@ -85,7 +85,7 @@ struct obl_object *obl_invalid_read(struct obl_object *shape,
  * populated struct obl_object structure.
  *
  * The created object lives on the heap and must be destroyed with a call to
- * obl_destroy_object() as defined in "object.h".
+ * obl_destroy_object() as defined in object.h.
  */
 struct obl_object *obl_read_object(struct obl_database *d,
         obl_uint *source, obl_physical_address offset, int depth);

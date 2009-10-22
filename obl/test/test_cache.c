@@ -8,8 +8,8 @@
 
 #include "CUnit/Headers/Basic.h"
 
+#include "storage/object.h"
 #include "cache.h"
-#include "object.h"
 #include "database.h"
 
 /* A macro to make cache cleanup less repetitive. */

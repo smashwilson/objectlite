@@ -10,9 +10,9 @@
 
 #include "cache.h"
 
+#include "storage/object.h"
 #include "log.h"
 #include "database.h"
-#include "object.h"
 
 /*
  * Internal functions prototypes.
