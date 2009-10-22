@@ -113,7 +113,7 @@ void obl_destroy_object(struct obl_object *o);
  * \return The storage type of the object o, as acquired from its current
  *      shape.
  */
-enum obl_storage_type _obl_storage_of(const struct obl_object *o);
+enum obl_storage_type obl_storage_of(const struct obl_object *o);
 
 /**
  * Allocate a new obl_object from the heap, without specified storage.  For

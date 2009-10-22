@@ -37,7 +37,7 @@ struct obl_object *obl_create_integer(struct obl_database *d, obl_int i)
 
 obl_int obl_integer_value(const struct obl_object *integer)
 {
-    if (_obl_storage_of(integer) != OBL_INTEGER) {
+    if (obl_storage_of(integer) != OBL_INTEGER) {
         obl_report_error(integer->database, OBL_WRONG_STORAGE,
                 "obl_integer_value called with a non-INTEGER object.");
         return 0;
@@ -48,7 +48,7 @@ obl_int obl_integer_value(const struct obl_object *integer)
 
 void obl_integer_set(struct obl_object *integer, obl_int value)
 {
-    if (_obl_storage_of(integer) != OBL_INTEGER) {
+    if (obl_storage_of(integer) != OBL_INTEGER) {
         obl_report_error(integer->database, OBL_WRONG_STORAGE,
                 "obl_integer_set requires an object with INTEGER storage.");
         return ;

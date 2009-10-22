@@ -18,7 +18,7 @@
 
 obl_uint obl_object_wordsize(struct obl_object *o)
 {
-    switch(_obl_storage_of(o)) {
+    switch(obl_storage_of(o)) {
     case OBL_SHAPE:
         return 5;
     case OBL_SLOTTED:
@@ -59,7 +59,7 @@ void obl_destroy_object(struct obl_object *o)
     free(o);
 }
 
-enum obl_storage_type _obl_storage_of(const struct obl_object *o)
+enum obl_storage_type obl_storage_of(const struct obl_object *o)
 {
     if (o->shape == obl_nil(o->database)) {
         return OBL_SHAPE;

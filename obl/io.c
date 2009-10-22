@@ -216,7 +216,7 @@ struct obl_object *obl_read_object(struct obl_database *d,
     addr = (obl_logical_address) readable_uint(source[base]);
     shape = obl_at_address_depth(d, addr, depth - 1);
 
-    if (shape != obl_nil(d) && _obl_storage_of(shape) != OBL_SHAPE) {
+    if (shape != obl_nil(d) && obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_errorf(d, OBL_WRONG_STORAGE,
                 "Corrupt shape header at physical address %ul.",
                 base);
@@ -352,7 +352,7 @@ void obl_invalid_write(struct obl_object *o, obl_uint *dest)
 {
     obl_report_errorf(o->database, OBL_WRONG_STORAGE,
             "Attempt to write an object with an invalid storage type (%lu).",
-            _obl_storage_of(o));
+            obl_storage_of(o));
 }
 
 /*
@@ -372,7 +372,7 @@ void obl_write_object(struct obl_object *o, obl_uint *dest)
         shape = o->shape;
     }
 
-    if (shape != obl_nil(o->database) && _obl_storage_of(shape) != OBL_SHAPE) {
+    if (shape != obl_nil(o->database) && obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(o->database, OBL_WRONG_STORAGE,
                 "Attempt to write an object with a shape that isn't a shape.");
         return ;

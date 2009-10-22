@@ -19,7 +19,7 @@ struct obl_object *obl_create_slotted(struct obl_object *shape)
     struct obl_object **slots;
     obl_uint i;
 
-    if (_obl_storage_of(shape) != OBL_SHAPE) {
+    if (obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_create_slotted requires a SHAPE object.");
         return NULL;
@@ -61,7 +61,7 @@ struct obl_object *obl_create_slotted(struct obl_object *shape)
 struct obl_object *obl_slotted_at(const struct obl_object *slotted,
         const obl_uint index)
 {
-    if (_obl_storage_of(slotted) != OBL_SLOTTED) {
+    if (obl_storage_of(slotted) != OBL_SLOTTED) {
         obl_report_error(slotted->database, OBL_WRONG_STORAGE,
                 "obl_slotted_at requires a SLOTTED object.");
         return obl_nil(slotted->database);
@@ -87,7 +87,7 @@ struct obl_object *obl_slotted_atcnamed(const struct obl_object *slotted,
 void obl_slotted_at_put(struct obl_object *slotted,
         const obl_uint index, struct obl_object *value)
 {
-    if (_obl_storage_of(slotted) != OBL_SLOTTED) {
+    if (obl_storage_of(slotted) != OBL_SLOTTED) {
         obl_report_error(slotted->database, OBL_WRONG_STORAGE,
                 "obl_slotted_at_put requires a SLOTTED object.");
         return ;

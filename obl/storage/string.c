@@ -71,7 +71,7 @@ struct obl_object *obl_create_cstring(struct obl_database *d,
 
 obl_uint obl_string_size(const struct obl_object *string)
 {
-    if (_obl_storage_of(string) != OBL_STRING) {
+    if (obl_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
                 "obl_string_size requires an object with STRING storage.");
         return 0;
@@ -88,7 +88,7 @@ size_t obl_string_chars(const struct obl_object *string,
     obl_uint converted_length;
     UErrorCode status = U_ZERO_ERROR;
 
-    if (_obl_storage_of(string) != OBL_STRING) {
+    if (obl_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
                 "obl_string_chars requires an object with STRING storage.");
         return 0;
@@ -122,7 +122,7 @@ int obl_string_cmp(const struct obl_object *string_a,
 {
     obl_uint length;
 
-    if (_obl_storage_of(string_a) != OBL_STRING || _obl_storage_of(string_b) != OBL_STRING) {
+    if (obl_storage_of(string_a) != OBL_STRING || obl_storage_of(string_b) != OBL_STRING) {
         return -1;
     }
 
@@ -142,7 +142,7 @@ int obl_string_ccmp(const struct obl_object *string, const char *match)
     struct obl_object *temp;
     int result;
 
-    if (_obl_storage_of(string) != OBL_STRING) {
+    if (obl_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
                 "obl_string_ccmp requires a STRING object.");
         return -1;
@@ -165,7 +165,7 @@ size_t obl_string_value(const struct obl_object *string,
     struct obl_string_storage *storage;
     size_t count , bytes;
 
-    if (_obl_storage_of(string) != OBL_STRING) {
+    if (obl_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
                 "obl_string_value called with a non-STRING object.");
         return 0;

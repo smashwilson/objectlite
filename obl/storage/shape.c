@@ -92,7 +92,7 @@ struct obl_object *obl_create_cshape(struct obl_database *d,
 
 obl_uint obl_shape_slotcount(const struct obl_object *shape)
 {
-    if (_obl_storage_of(shape) != OBL_SHAPE) {
+    if (obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_slotcount invoked with a non SHAPE object.");
         return 0;
@@ -107,7 +107,7 @@ obl_uint obl_shape_slotnamed(const struct obl_object *shape,
     struct obl_object *slots;
     obl_uint i;
 
-    if (_obl_storage_of(shape) != OBL_SHAPE) {
+    if (obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_slotnamed invoked with a non SHAPE object.");
         return 0;
@@ -129,7 +129,7 @@ obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
     struct obl_object *temporary;
     obl_uint result;
 
-    if (_obl_storage_of(shape) != OBL_SHAPE) {
+    if (obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_slotcnamed invoked with a non SHAPE object.");
         return 0;
@@ -147,7 +147,7 @@ obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
 
 enum obl_storage_type obl_shape_storagetype(const struct obl_object *shape)
 {
-    if (_obl_storage_of(shape) != OBL_SHAPE) {
+    if (obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_storagetype invoked with a non SHAPE object.");
         return 0;

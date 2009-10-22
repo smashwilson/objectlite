@@ -51,7 +51,7 @@ struct obl_object *obl_create_fixed(struct obl_database *d, obl_uint length)
 
 obl_uint obl_fixed_size(const struct obl_object *fixed)
 {
-    if (_obl_storage_of(fixed) != OBL_FIXED) {
+    if (obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
                 "obl_fixed_size requires an object with FIXED storage.");
         return 0;
@@ -63,7 +63,7 @@ obl_uint obl_fixed_size(const struct obl_object *fixed)
 struct obl_object *obl_fixed_at(const struct obl_object *fixed,
         const obl_uint index)
 {
-    if (_obl_storage_of(fixed) != OBL_FIXED) {
+    if (obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
                         "obl_fixed_at requires an object with FIXED storage.");
         return NULL;
@@ -75,7 +75,7 @@ struct obl_object *obl_fixed_at(const struct obl_object *fixed,
 void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
         struct obl_object *value)
 {
-    if (_obl_storage_of(fixed) != OBL_FIXED) {
+    if (obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
                         "obl_fixed_at requires an object with FIXED storage.");
         return ;
