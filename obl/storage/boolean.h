@@ -55,4 +55,13 @@ struct obl_object *_obl_create_bool(struct obl_database *d, int truth);
  */
 int obl_boolean_value(const struct obl_object *o);
 
+/**
+ * Output a boolean object to stdout.
+ *
+ * \param boolean The boolean object.
+ * \param depth Unused.
+ * \param indent The level of indentation.
+ */
+void obl_print_boolean(struct obl_object *boolean, int depth, int indent);
+
 #endif /* BOOLEAN_H */

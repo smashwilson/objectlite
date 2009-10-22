@@ -82,4 +82,13 @@ struct obl_object *obl_fixed_at(const struct obl_object *fixed,
 void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
         struct obl_object *value);
 
+/**
+ * Output the contents of a fixed collection to stdout.
+ *
+ * \param fixed An object with fixed storage.
+ * \param depth Used to control object graph recursion.
+ * \param indent The level of output indentation.
+ */
+void obl_print_fixed(struct obl_object *fixed, int depth, int indent);
+
 #endif /* FIXED_H */

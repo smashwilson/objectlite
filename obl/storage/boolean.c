@@ -50,3 +50,11 @@ int obl_boolean_value(const struct obl_object *bool)
 
     return (int) (bool->storage.boolean_storage->value);
 }
+
+void obl_print_boolean(struct obl_object *boolean, int depth, int indent)
+{
+    int in;
+
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    printf(obl_boolean_value(boolean) ? "true" : "false");
+}

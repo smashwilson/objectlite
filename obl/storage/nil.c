@@ -25,3 +25,11 @@ struct obl_object *_obl_create_nil(struct obl_database *d)
 
     return result;
 }
+
+void obl_print_nil(struct obl_object *nil, int depth, int indent)
+{
+    int in;
+
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    puts("nil");
+}

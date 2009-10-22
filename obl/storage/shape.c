@@ -90,6 +90,28 @@ struct obl_object *obl_create_cshape(struct obl_database *d,
     return result;
 }
 
+struct obl_object *obl_shape_name(struct obl_object *shape)
+{
+    if (obl_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+                "obl_shape_name invoked with a non SHAPE object.");
+        return obl_nil(shape->database);
+    }
+
+    return shape->storage.shape_storage->name;
+}
+
+struct obl_object *obl_shape_slotnames(struct obl_object *shape)
+{
+    if (obl_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+                "obl_shape_slotnames invoked with a non SHAPE object.");
+        return obl_nil(shape->database);
+    }
+
+    return shape->storage.shape_storage->slot_names;
+}
+
 obl_uint obl_shape_slotcount(const struct obl_object *shape)
 {
     if (obl_storage_of(shape) != OBL_SHAPE) {
@@ -145,6 +167,17 @@ obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
     return result;
 }
 
+struct obl_object *obl_shape_currentshape(struct obl_object *shape)
+{
+    if (obl_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+                "obl_shape_currentshape invoked with a non SHAPE object.");
+        return obl_nil(shape->database);
+    }
+
+    return shape->storage.shape_storage->current_shape;
+}
+
 enum obl_storage_type obl_shape_storagetype(const struct obl_object *shape)
 {
     if (obl_storage_of(shape) != OBL_SHAPE) {
@@ -171,4 +204,36 @@ void obl_destroy_cshape(struct obl_object *shape)
         obl_destroy_object(obl_fixed_at(storage->slot_names, i));
     }
     obl_destroy_object(storage->slot_names);
+}
+
+void obl_print_shape(struct obl_object *shape, int depth, int indent)
+{
+    int in;
+    struct obl_object *name, *slots, *current_shape;
+
+    name = obl_shape_name(shape);
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    if (depth == 0) {
+        printf("<shape:");
+        obl_print_object(name, 0, 0);
+        printf(">");
+        return ;
+    }
+
+    puts("Shape");
+
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    printf("Name: ");
+    obl_print_object(name, 0, 0);
+    printf("\n");
+
+    slots = obl_shape_slotnames(shape);
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    puts("Slots:");
+    obl_print_object(slots, depth - 1, indent + 2);
+
+    current_shape = obl_shape_currentshape(shape);
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    puts("Current Shape:");
+    obl_print_object(current_shape, depth - 1, indent + 2);
 }

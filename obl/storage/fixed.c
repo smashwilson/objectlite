@@ -83,3 +83,21 @@ void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
 
     fixed->storage.fixed_storage->contents[index] = value;
 }
+
+void obl_print_fixed(struct obl_object *fixed, int depth, int indent)
+{
+    int ind, i;
+
+    for (ind = 0; ind < indent; ind++) { putchar(' '); }
+    if (depth == 0) {
+        printf("<fixed collection: %d elements>\n",
+                obl_fixed_size(fixed));
+        return ;
+    }
+    puts("Fixed Collection");
+
+    for (i = 0; i < obl_fixed_size(fixed); i++) {
+        obl_print_object(obl_fixed_at(fixed, i), depth - 1, indent + 2);
+        printf("\n");
+    }
+}

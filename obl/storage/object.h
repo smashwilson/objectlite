@@ -99,6 +99,22 @@ struct obl_object
 obl_uint obl_object_wordsize(struct obl_object *o);
 
 /**
+ * Access the current shape of an object.
+ */
+struct obl_object *obl_object_shape(struct obl_object *o);
+
+/**
+ * Output the contents of an arbitrary object to stdout in a storage-defined
+ * way.
+ *
+ * \param o The object to output.
+ * \param depth How far to recurse into the object graph.  Notice that no
+ *      cycle detection is done during the printing process.
+ * \param indent The base indentation level.
+ */
+void obl_print_object(struct obl_object *o, int depth, int indent);
+
+/**
  * Orderly obl_object deallocation.  Frees both the object itself and its
  * internal storage.
  *

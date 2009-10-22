@@ -37,4 +37,13 @@ struct obl_nil_storage {
  */
 struct obl_object *_obl_create_nil(struct obl_database *d);
 
+/**
+ * Output nil to stdout.
+ *
+ * \param nil The nil object.
+ * \param depth Ignored.
+ * \param indent The level of output indentation.
+ */
+void obl_print_nil(struct obl_object *nil, int depth, int indent);
+
 #endif /* NIL_H */

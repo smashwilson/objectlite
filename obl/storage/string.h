@@ -99,6 +99,15 @@ size_t obl_string_value(const struct obl_object *o,
         UChar *buffer, size_t buffer_size);
 
 /**
+ * Output a string to stdout.
+ *
+ * \param string A string object.
+ * \param depth Ignored.
+ * \param indent The level of output indentation.
+ */
+void obl_print_string(struct obl_object *string, int depth, int indent);
+
+/**
  * Allocate the common internal structure of a string object.  For internal
  * use only.
  *

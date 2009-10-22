@@ -20,3 +20,8 @@ struct obl_object *obl_create_uchar(struct obl_database *d, UChar32 uc)
 {
     return NULL;
 }
+
+void obl_print_char(struct obl_object *c, int depth)
+{
+    /* */
+}

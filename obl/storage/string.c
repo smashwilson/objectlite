@@ -180,7 +180,20 @@ size_t obl_string_value(const struct obl_object *string,
     return count;
 }
 
-/* Allocate and perform common initialization for STRING objects. */
+void obl_print_string(struct obl_object *string, int depth, int indent)
+{
+    int in;
+    char *buffer;
+    size_t buffer_size, converted_size;
+
+    buffer_size = obl_string_size(string);
+    buffer = (char*) malloc(sizeof(char) * buffer_size);
+    converted_size = obl_string_chars(string, buffer, buffer_size);
+
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    printf("%.*s", converted_size, buffer);
+}
+
 struct obl_object *_allocate_string(struct obl_database *d,
         UChar *uc, obl_uint length)
 {

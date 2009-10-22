@@ -85,6 +85,16 @@ struct obl_object *obl_create_cshape(struct obl_database *d,
         enum obl_storage_type type);
 
 /**
+ * Return the name object of a shape.
+ */
+struct obl_object *obl_shape_name(struct obl_object *shape);
+
+/**
+ * Return the fixed collection of a shape's slot names.
+ */
+struct obl_object *obl_shape_slotnames(struct obl_object *shape);
+
+/**
  * Return the number of slots present in the shape.
  *
  * \param shape The shape object to query.
@@ -112,6 +122,11 @@ obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
         const char *name);
 
 /**
+ * Return the current migration destination of a shape.
+ */
+struct obl_object *obl_shape_currentshape(struct obl_object *shape);
+
+/**
  * Accessor for the storage type of a shape.
  */
 enum obl_storage_type obl_shape_storagetype(const struct obl_object *shape);
@@ -121,5 +136,14 @@ enum obl_storage_type obl_shape_storagetype(const struct obl_object *shape);
  * parallel obl_create_cshape().
  */
 void obl_destroy_cshape(struct obl_object *o);
+
+/**
+ * Output a shape nicely to stdout.
+ *
+ * \param shape A shape object.
+ * \param depth Used to control object graph recursion.
+ * \param indent The level of output indentation.
+ */
+void obl_print_shape(struct obl_object *shape, int depth, int indent);
 
 #endif /* SHAPE_H */

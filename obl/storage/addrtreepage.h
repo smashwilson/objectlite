@@ -51,4 +51,17 @@ struct obl_addrtreepage_storage {
 struct obl_object *obl_create_addrtreepage(struct obl_database *d,
         obl_uint depth);
 
+/**
+ * Output the contents of an address tree page.  This will usually be an
+ * ungodly wall of text.
+ *
+ * \param addrtreepage The address tree page to output.
+ * \param depth How much farther to recurse into the object structure.  If
+ *      depth is zero, output an abbreviated (single-line) representation of
+ *      this object.
+ * \param indent Level of indentation.
+ */
+void obl_print_addrtreepage(struct obl_object *addrtreepage,
+        int depth, int indent);
+
 #endif /* ADDRTREEPAGE_H */

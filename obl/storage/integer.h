@@ -53,4 +53,13 @@ void obl_integer_set(struct obl_object *integer, obl_int value);
  */
 obl_int obl_integer_value(const struct obl_object *o);
 
+/**
+ * Output an integer to stdout.
+ *
+ * \param integer An object with integer storage.
+ * \param depth Unused.
+ * \param indent The level of output indentation.
+ */
+void obl_print_integer(struct obl_object *integer, int depth, int indent);
+
 #endif /* INTEGER_H */

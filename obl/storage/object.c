@@ -16,6 +16,36 @@
 
 #include "unicode/ucnv.h"
 
+/* Static function prototypes. */
+
+static void print_invalid_object(struct obl_object *o,
+        int depth, int indent);
+
+/* Function types. */
+
+typedef struct obl_object *(*obl_object_print_function)(
+        struct obl_object *o, int depth, int indent);
+
+/* Function maps. */
+
+static obl_object_print_function print_functions[OBL_STORAGE_TYPE_MAX] = {
+        &obl_print_shape,
+        &obl_print_slotted,
+        &obl_print_fixed,
+        &print_invalid_object, /* OBL_CHUNK */
+        &obl_print_addrtreepage,
+        &obl_print_integer,
+        &print_invalid_object, /* OBL_FLOAT */
+        &print_invalid_object, /* OBL_DOUBLE */
+        &print_invalid_object, /* OBL_CHAR */
+        &obl_print_string,
+        &obl_print_boolean,
+        &obl_print_nil,
+        &print_invalid_object /* OBL_STUB */
+};
+
+/* Implementation. */
+
 obl_uint obl_object_wordsize(struct obl_object *o)
 {
     switch(obl_storage_of(o)) {
@@ -51,6 +81,16 @@ obl_uint obl_object_wordsize(struct obl_object *o)
     }
 }
 
+struct obl_object *obl_object_shape(struct obl_object *o)
+{
+    return o->shape;
+}
+
+void obl_print_object(struct obl_object *o, int depth, int indent)
+{
+    (print_functions[(int) obl_storage_of(o)])(o, depth, indent);
+}
+
 void obl_destroy_object(struct obl_object *o)
 {
     if (o->storage.any_storage != NULL ) {
@@ -83,4 +123,16 @@ struct obl_object *_obl_allocate_object(struct obl_database *d)
     result->logical_address = OBL_LOGICAL_UNASSIGNED;
     result->physical_address = OBL_PHYSICAL_UNASSIGNED;
     return result;
+}
+
+/* Static function implementations. */
+
+static void print_invalid_object(struct obl_object *o,
+        int depth, int indent)
+{
+    int in;
+
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    printf("<INVALID: logical 0x%08lx physical 0x%08lx>",
+            o->logical_address, o->physical_address);
 }

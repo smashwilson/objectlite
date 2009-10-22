@@ -56,3 +56,11 @@ void obl_integer_set(struct obl_object *integer, obl_int value)
 
     integer->storage.integer_storage->value = value;
 }
+
+void obl_print_integer(struct obl_object *integer, int depth, int indent)
+{
+    int in;
+
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    printf("%d", obl_integer_value(integer));
+}

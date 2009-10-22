@@ -53,4 +53,14 @@ struct obl_object *obl_create_char(struct obl_database *d, char c);
  */
 struct obl_object *obl_create_uchar(struct obl_database *d, UChar32 uc);
 
+/**
+ * Print a character object to stdout.
+ *
+ * TODO Stub
+ *
+ * \param c An object with character storage.
+ * \param depth Determines the level of indentation.
+ */
+void obl_print_char(struct obl_object *c, int depth);
+
 #endif /* CHAR_H */

@@ -98,4 +98,13 @@ void obl_slotted_atnamed_put(struct obl_object *slotted,
 void obl_slotted_atcnamed_put(struct obl_object *slotted,
         const char *slotname, struct obl_object *value);
 
+/**
+ * Output a slotted object nicely to stdout.
+ *
+ * \param slotted A slotted object.
+ * \param depth Used to control object graph recursion.
+ * \param indent The level of output indentation.
+ */
+void obl_print_slotted(struct obl_object *slotted, int depth, int indent);
+
 #endif /* SLOTTED_H */

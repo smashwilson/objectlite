@@ -107,3 +107,39 @@ void obl_slotted_atcnamed_put(struct obl_object *slotted,
 {
     obl_slotted_at_put(slotted, obl_shape_slotcnamed(slotted->shape, slotname), value);
 }
+
+void obl_print_slotted(struct obl_object *slotted, int depth, int indent)
+{
+    int in, slot_i;
+    struct obl_object *shape, *slotnames, *slotname, *slot;
+
+    shape = obl_object_shape(slotted);
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    if (depth == 0) {
+        struct obl_object *name;
+
+        name = obl_shape_name(shape);
+        printf("<slotted:");
+        obl_print_object(name, 0, 0);
+        printf(">");
+        return ;
+    }
+    puts("Slotted Object");
+
+    for (in = 0; in < indent; in++) { putchar(' '); }
+    printf("Shape: ");
+    obl_print_object(shape, 0, 0);
+    printf("\n");
+
+    slotnames = obl_shape_slotnames(shape);
+    for (slot_i = 0; slot_i < obl_shape_slotcount(shape); slot_i++) {
+        slotname = obl_fixed_at(slotnames, slot_i);
+        slot = obl_slotted_at(slotted, slot_i);
+
+        for (in = 0; in < indent; in++) { putchar(' '); }
+        obl_print_object(slotname, 0, 0);
+        printf(":\n");
+        obl_print_object(slot, depth - 1, indent + 2);
+        printf("\n");
+    }
+}
