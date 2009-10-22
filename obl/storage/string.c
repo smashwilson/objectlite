@@ -69,7 +69,7 @@ struct obl_object *obl_create_cstring(struct obl_database *d,
     return _allocate_string(d, output_string, (obl_uint) converted_length);
 }
 
-obl_uint obl_string_size(const struct obl_object *string)
+obl_uint obl_string_size(struct obl_object *string)
 {
     if (obl_storage_of(string) != OBL_STRING) {
         obl_report_error(string->database, OBL_WRONG_STORAGE,
@@ -80,7 +80,7 @@ obl_uint obl_string_size(const struct obl_object *string)
     return string->storage.string_storage->length;
 }
 
-size_t obl_string_chars(const struct obl_object *string,
+size_t obl_string_chars(struct obl_object *string,
         char *buffer, size_t buffer_size)
 {
     struct obl_string_storage *storage;
@@ -117,8 +117,7 @@ size_t obl_string_chars(const struct obl_object *string,
     return converted_length;
 }
 
-int obl_string_cmp(const struct obl_object *string_a,
-        const struct obl_object *string_b)
+int obl_string_cmp(struct obl_object *string_a, struct obl_object *string_b)
 {
     obl_uint length;
 
@@ -137,7 +136,7 @@ int obl_string_cmp(const struct obl_object *string_a,
             length * sizeof(UChar));
 }
 
-int obl_string_ccmp(const struct obl_object *string, const char *match)
+int obl_string_ccmp(struct obl_object *string, const char *match)
 {
     struct obl_object *temp;
     int result;
@@ -159,7 +158,7 @@ int obl_string_ccmp(const struct obl_object *string, const char *match)
     return result;
 }
 
-size_t obl_string_value(const struct obl_object *string,
+size_t obl_string_value(struct obl_object *string,
         UChar *buffer, size_t buffer_size)
 {
     struct obl_string_storage *storage;

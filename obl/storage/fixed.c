@@ -11,6 +11,8 @@
 #include "storage/object.h"
 #include "database.h"
 
+#include <stdio.h>
+
 struct obl_object *obl_create_fixed(struct obl_database *d, obl_uint length)
 {
     struct obl_object *result;
@@ -49,7 +51,7 @@ struct obl_object *obl_create_fixed(struct obl_database *d, obl_uint length)
     return result;
 }
 
-obl_uint obl_fixed_size(const struct obl_object *fixed)
+obl_uint obl_fixed_size(struct obl_object *fixed)
 {
     if (obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
@@ -60,13 +62,20 @@ obl_uint obl_fixed_size(const struct obl_object *fixed)
     return fixed->storage.fixed_storage->length;
 }
 
-struct obl_object *obl_fixed_at(const struct obl_object *fixed,
-        const obl_uint index)
+struct obl_object *obl_fixed_at(struct obl_object *fixed, obl_uint index)
 {
     if (obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
                         "obl_fixed_at requires an object with FIXED storage.");
-        return NULL;
+        return obl_nil(fixed->database);
+    }
+
+    if (index >= obl_fixed_size(fixed)) {
+        obl_report_errorf(fixed->database, OBL_INVALID_INDEX,
+                "obl_fixed_at called with an invalid index (%d, valid 0..%d)",
+                index,
+                obl_fixed_size(fixed) - 1);
+        return obl_nil(fixed->database);
     }
 
     return _obl_resolve_stub(fixed->storage.fixed_storage->contents[index]);
@@ -78,6 +87,14 @@ void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
     if (obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(fixed->database, OBL_WRONG_STORAGE,
                         "obl_fixed_at requires an object with FIXED storage.");
+        return ;
+    }
+
+    if (index >= obl_fixed_size(fixed)) {
+        obl_report_errorf(fixed->database, OBL_INVALID_INDEX,
+                "obl_fixed_at_put called with an invalid index (%d, valid 0..%d)",
+                index,
+                obl_fixed_size(fixed) - 1);
         return ;
     }
 

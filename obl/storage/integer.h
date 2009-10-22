@@ -51,7 +51,7 @@ void obl_integer_set(struct obl_object *integer, obl_int value);
  *
  * \param o An object with integer storage.
  */
-obl_int obl_integer_value(const struct obl_object *o);
+obl_int obl_integer_value(struct obl_object *o);
 
 /**
  * Output an integer to stdout.

@@ -57,7 +57,7 @@ struct obl_object *obl_create_cstring(struct obl_database *d,
  * that this is *not* the number of characters in the string if it contains
  * certain letters, accents, or other extended marks.
  */
-obl_uint obl_string_size(const struct obl_object *string);
+obl_uint obl_string_size(struct obl_object *string);
 
 /**
  * Convert an object's obl_string_storage into C native US-ASCII characters.
@@ -72,21 +72,21 @@ obl_uint obl_string_size(const struct obl_object *string);
  *
  * \sa obl_string_value
  */
-size_t obl_string_chars(const struct obl_object *string,
+size_t obl_string_chars(struct obl_object *string,
         char *buffer, size_t buffer_size);
 
 /**
  * Return zero if the contents of string_a exactly match those of string_b, or
  * nonzero if either is not a STRING or have different contents.
  */
-int obl_string_cmp(const struct obl_object *string_a,
-        const struct obl_object *string_b);
+int obl_string_cmp(struct obl_object *string_a,
+        struct obl_object *string_b);
 
 /**
  * Return zero if the contents of string exactly match the NULL-terminated C
  * string match, nonzero otherwise.
  */
-int obl_string_ccmp(const struct obl_object *string, const char *match);
+int obl_string_ccmp(struct obl_object *string, const char *match);
 
 /**
  * Acquire at most buffer_size code points contained within an
@@ -95,7 +95,7 @@ int obl_string_ccmp(const struct obl_object *string, const char *match);
  *
  * \sa obl_string_chars
  */
-size_t obl_string_value(const struct obl_object *o,
+size_t obl_string_value(struct obl_object *o,
         UChar *buffer, size_t buffer_size);
 
 /**

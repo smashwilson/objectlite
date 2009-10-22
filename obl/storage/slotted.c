@@ -58,26 +58,35 @@ struct obl_object *obl_create_slotted(struct obl_object *shape)
     return result;
 }
 
-struct obl_object *obl_slotted_at(const struct obl_object *slotted,
-        const obl_uint index)
+struct obl_object *obl_slotted_at(struct obl_object *slotted, obl_uint index)
 {
+    obl_uint maximum;
+
     if (obl_storage_of(slotted) != OBL_SLOTTED) {
         obl_report_error(slotted->database, OBL_WRONG_STORAGE,
                 "obl_slotted_at requires a SLOTTED object.");
         return obl_nil(slotted->database);
     }
 
+    maximum = obl_shape_slotcount(obl_object_shape(slotted));
+    if (index >= maximum) {
+        obl_report_errorf(slotted->database, OBL_INVALID_INDEX,
+                "obl_slotted_at called with an invalid index (%d, valid 0..%d)",
+                index, maximum - 1);
+        return obl_nil(slotted->database);
+    }
+
     return _obl_resolve_stub(slotted->storage.slotted_storage->slots[index]);
 }
 
-struct obl_object *obl_slotted_atnamed(const struct obl_object *slotted,
-        const struct obl_object *slotname)
+struct obl_object *obl_slotted_atnamed(struct obl_object *slotted,
+        struct obl_object *slotname)
 {
     return obl_slotted_at(slotted,
             obl_shape_slotnamed(slotted->shape, slotname));
 }
 
-struct obl_object *obl_slotted_atcnamed(const struct obl_object *slotted,
+struct obl_object *obl_slotted_atcnamed(struct obl_object *slotted,
         const char *slotname)
 {
     return obl_slotted_at(slotted,
@@ -85,11 +94,21 @@ struct obl_object *obl_slotted_atcnamed(const struct obl_object *slotted,
 }
 
 void obl_slotted_at_put(struct obl_object *slotted,
-        const obl_uint index, struct obl_object *value)
+        obl_uint index, struct obl_object *value)
 {
+    obl_uint maximum;
+
     if (obl_storage_of(slotted) != OBL_SLOTTED) {
         obl_report_error(slotted->database, OBL_WRONG_STORAGE,
                 "obl_slotted_at_put requires a SLOTTED object.");
+        return ;
+    }
+
+    maximum = obl_shape_slotcount(obl_object_shape(slotted));
+    if (index >= maximum) {
+        obl_report_errorf(slotted->database, OBL_INVALID_INDEX,
+                "obl_slotted_at_put called with an invalid index (%d, valid 0..%d)",
+                index, maximum - 1);
         return ;
     }
 
@@ -97,7 +116,7 @@ void obl_slotted_at_put(struct obl_object *slotted,
 }
 
 void obl_slotted_atnamed_put(struct obl_object *slotted,
-        const struct obl_object *slotname, struct obl_object *value)
+        struct obl_object *slotname, struct obl_object *value)
 {
     obl_slotted_at_put(slotted, obl_shape_slotnamed(slotted->shape, slotname), value);
 }

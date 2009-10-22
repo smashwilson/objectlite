@@ -101,24 +101,24 @@ struct obl_object *obl_shape_slotnames(struct obl_object *shape);
  * \return The number of slots contained within shape.  Reports an error and
  *      returns 0 if shape is not actually a shape.
  */
-obl_uint obl_shape_slotcount(const struct obl_object *shape);
+obl_uint obl_shape_slotcount(struct obl_object *shape);
 
 /**
  * Return the index of a slot with a given name.
  *
  * \param shape The shape object.
  * \param name An object with obl_string_storage.
- * \return The zero-based index of a slot with the given name.  Returns -1 if
- *      no slot has that name.  Reports an error if shape is not a valid
- *      shape.
+ * \return The zero-based index of a slot with the given name.  Returns
+ *      OBL_SENTINEL if no slot has that name.  Reports an error if shape is
+ *      not a valid shape.
  */
-obl_uint obl_shape_slotnamed(const struct obl_object *shape,
-        const struct obl_object *name);
+obl_uint obl_shape_slotnamed(struct obl_object *shape,
+        struct obl_object *name);
 
 /**
  * Convenience wrapper for obl_shape_slotnamed() that accepts a C string.
  */
-obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
+obl_uint obl_shape_slotcnamed(struct obl_object *shape,
         const char *name);
 
 /**
@@ -129,7 +129,7 @@ struct obl_object *obl_shape_currentshape(struct obl_object *shape);
 /**
  * Accessor for the storage type of a shape.
  */
-enum obl_storage_type obl_shape_storagetype(const struct obl_object *shape);
+enum obl_storage_type obl_shape_storagetype(struct obl_object *shape);
 
 /**
  * Destroy full shape objects, including slot names and shape name.  Created to

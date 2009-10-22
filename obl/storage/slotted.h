@@ -52,8 +52,8 @@ struct obl_object *obl_create_slotted(struct obl_object *shape);
  *      an error and returns obl_nil() if slotted is not actually a slotted
  *      object, or if index is out of the legal range.
  */
-struct obl_object *obl_slotted_at(const struct obl_object *slotted,
-        const obl_uint index);
+struct obl_object *obl_slotted_at(struct obl_object *slotted,
+        obl_uint index);
 
 /**
  * Return the contents of a slot by name.
@@ -65,8 +65,8 @@ struct obl_object *obl_slotted_at(const struct obl_object *slotted,
  *      an error and returns obl_nil() if slotted is not actually a slotted
  *      object, or if its shape contains no slot with that name.
  */
-struct obl_object *obl_slotted_atnamed(const struct obl_object *slotted,
-        const struct obl_object *slotname);
+struct obl_object *obl_slotted_atnamed(struct obl_object *slotted,
+        struct obl_object *slotname);
 
 /**
  * Return the contents of a slot by name, specified by C string.
@@ -74,21 +74,21 @@ struct obl_object *obl_slotted_atnamed(const struct obl_object *slotted,
  * \sa obl_slotted_atnamed
  * \sa obl_create_string
  */
-struct obl_object *obl_slotted_atcnamed(const struct obl_object *slotted,
+struct obl_object *obl_slotted_atcnamed(struct obl_object *slotted,
         const char *slotname);
 
 /**
  * Set the value of a slot by index.  Reports an error if index is out of
  * bounds.
  */
-void obl_slotted_at_put(struct obl_object *slotted, const obl_uint index,
+void obl_slotted_at_put(struct obl_object *slotted, obl_uint index,
         struct obl_object *value);
 
 /**
  * Set the value of a slot by name.
  */
 void obl_slotted_atnamed_put(struct obl_object *slotted,
-        const struct obl_object *slotname, struct obl_object *value);
+        struct obl_object *slotname, struct obl_object *value);
 
 /**
  * Set the value of a slot by name, specified as a C string.

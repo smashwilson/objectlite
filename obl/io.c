@@ -19,7 +19,7 @@
  * specified in object.h and at the same index as its index in the
  * +obl_storage_type+ enumeration.
  */
-static obl_object_read_function obl_read_functions[] = {
+static obl_object_read_function obl_read_functions[OBL_STORAGE_TYPE_MAX + 1] = {
         &obl_read_shape,        /* OBL_SHAPE */
         &obl_read_slotted,      /* OBL_SLOTTED */
         &obl_invalid_read,      /* OBL_FIXED */
@@ -214,7 +214,7 @@ struct obl_object *obl_read_object(struct obl_database *d,
     int function_index;
 
     addr = (obl_logical_address) readable_uint(source[base]);
-    shape = obl_at_address_depth(d, addr, depth - 1);
+    shape = obl_at_address_depth(d, addr, 1);
 
     if (shape != obl_nil(d) && obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_errorf(d, OBL_WRONG_STORAGE,
@@ -364,13 +364,7 @@ void obl_write_object(struct obl_object *o, obl_uint *dest)
     struct obl_object *shape;
     int function_index;
 
-    if (_obl_is_stub(o->shape)) {
-        shape = _obl_resolve_stub(o->shape, o->database->default_stub_depth);
-        obl_destroy_object(o->shape);
-        o->shape = shape;
-    } else {
-        shape = o->shape;
-    }
+    shape = obl_object_shape(o);
 
     if (shape != obl_nil(o->database) && obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(o->database, OBL_WRONG_STORAGE,

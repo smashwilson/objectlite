@@ -53,7 +53,7 @@ struct obl_object *_obl_create_bool(struct obl_database *d, int truth);
  * \return 1 if o is true, 0 if it is false.  Reports an error and returns true
  *      if o is not a boolean.
  */
-int obl_boolean_value(const struct obl_object *o);
+int obl_boolean_value(struct obl_object *o);
 
 /**
  * Output a boolean object to stdout.

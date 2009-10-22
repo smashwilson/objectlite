@@ -10,6 +10,9 @@
 
 #include "storage/object.h"
 #include "database.h"
+#include "platform.h"
+
+#include <stdio.h>
 
 struct obl_object *obl_create_shape(struct obl_database *d,
         struct obl_object *name, struct obl_object *slot_names,
@@ -112,19 +115,19 @@ struct obl_object *obl_shape_slotnames(struct obl_object *shape)
     return _obl_resolve_stub(shape->storage.shape_storage->slot_names);
 }
 
-obl_uint obl_shape_slotcount(const struct obl_object *shape)
+obl_uint obl_shape_slotcount(struct obl_object *shape)
 {
     if (obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_slotcount invoked with a non SHAPE object.");
-        return 0;
+        return OBL_SENTINEL;
     }
 
     return obl_fixed_size(obl_shape_slotnames(shape));
 }
 
-obl_uint obl_shape_slotnamed(const struct obl_object *shape,
-        const struct obl_object *name)
+obl_uint obl_shape_slotnamed(struct obl_object *shape,
+        struct obl_object *name)
 {
     struct obl_object *slots;
     obl_uint i;
@@ -132,7 +135,7 @@ obl_uint obl_shape_slotnamed(const struct obl_object *shape,
     if (obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_slotnamed invoked with a non SHAPE object.");
-        return 0;
+        return OBL_SENTINEL;
     }
 
     slots = obl_shape_slotnames(shape);
@@ -142,10 +145,10 @@ obl_uint obl_shape_slotnamed(const struct obl_object *shape,
         }
     }
 
-    return -1;
+    return OBL_SENTINEL;
 }
 
-obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
+obl_uint obl_shape_slotcnamed(struct obl_object *shape,
         const char *name)
 {
     struct obl_object *temporary;
@@ -154,12 +157,12 @@ obl_uint obl_shape_slotcnamed(const struct obl_object *shape,
     if (obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,
                 "obl_shape_slotcnamed invoked with a non SHAPE object.");
-        return 0;
+        return OBL_SENTINEL;
     }
 
     temporary = obl_create_cstring(shape->database, name, strlen(name));
     if (temporary == NULL) {
-        return -1;
+        return OBL_SENTINEL;
     }
     result = obl_shape_slotnamed(shape, temporary);
     obl_destroy_object(temporary);
@@ -178,7 +181,7 @@ struct obl_object *obl_shape_currentshape(struct obl_object *shape)
     return _obl_resolve_stub(shape->storage.shape_storage->current_shape);
 }
 
-enum obl_storage_type obl_shape_storagetype(const struct obl_object *shape)
+enum obl_storage_type obl_shape_storagetype(struct obl_object *shape)
 {
     if (obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_error(shape->database, OBL_WRONG_STORAGE,

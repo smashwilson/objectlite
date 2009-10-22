@@ -55,7 +55,7 @@ struct obl_object *obl_create_fixed(struct obl_database *d,
  * \return The number of elements contained within fixed.  Produces an error and
  *      returns 0 if fixed does not have fixed storage.
  */
-obl_uint obl_fixed_size(const struct obl_object *fixed);
+obl_uint obl_fixed_size(struct obl_object *fixed);
 
 /**
  * Access an individual element of a fixed-size collection.
@@ -66,8 +66,7 @@ obl_uint obl_fixed_size(const struct obl_object *fixed);
  *      if index is out of valid access bounds for this collection, or if
  *      fixed does not actually have fixed storage.
  */
-struct obl_object *obl_fixed_at(const struct obl_object *fixed,
-        const obl_uint index);
+struct obl_object *obl_fixed_at(struct obl_object *fixed, obl_uint index);
 
 /**
  * Set an element of a fixed-size collection.
@@ -79,7 +78,7 @@ struct obl_object *obl_fixed_at(const struct obl_object *fixed,
  *      if index is out of valid access bounds for this collection, or if
  *      fixed does not actually have fixed storage.
  */
-void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
+void obl_fixed_at_put(struct obl_object *fixed, obl_uint index,
         struct obl_object *value);
 
 /**

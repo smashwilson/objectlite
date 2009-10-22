@@ -17,7 +17,7 @@
 #include "log.h"
 #include "unitutilities.h"
 
-void test_create_integer(void)
+void test_integer_object(void)
 {
     struct obl_database *d;
     struct obl_object *o;
@@ -36,7 +36,7 @@ void test_create_integer(void)
     obl_destroy_database(d);
 }
 
-void test_create_string(void)
+void test_string_object(void)
 {
     char *string = "NULL-terminated C string.";
     struct obl_database *d;
@@ -66,7 +66,7 @@ void test_create_string(void)
     obl_destroy_database(d);
 }
 
-void test_create_fixed(void)
+void test_fixed_object(void)
 {
     const size_t length = 3;
     struct obl_object *items[length];
@@ -96,6 +96,12 @@ void test_create_fixed(void)
     CU_ASSERT(obl_fixed_at(o, 1) == items[1]);
     CU_ASSERT(obl_integer_value(obl_fixed_at(o, 2)) == 102);
 
+    d->log_config.level = L_NONE;
+    CU_ASSERT(obl_database_ok(d));
+    CU_ASSERT(obl_fixed_at(o, 3) == obl_nil(d));
+    CU_ASSERT(!obl_database_ok(d));
+    obl_clear_error(d);
+
     for (i = 0; i < length; i++) {
         obl_destroy_object(items[i]);
     }
@@ -103,7 +109,7 @@ void test_create_fixed(void)
     obl_destroy_database(d);
 }
 
-void test_create_shape(void)
+void test_shape_object(void)
 {
     char *slot_names[] = { "one", "two" };
     struct obl_database *d;
@@ -128,13 +134,14 @@ void test_create_shape(void)
     CU_ASSERT(obl_shape_slotcount(o) == 2);
     CU_ASSERT(obl_shape_slotcnamed(o, "one") == 0);
     CU_ASSERT(obl_shape_slotcnamed(o, "two") == 1);
+    CU_ASSERT(obl_shape_slotcnamed(o, "flabargh") == OBL_SENTINEL);
     CU_ASSERT(obl_shape_storagetype(o) == OBL_SLOTTED);
 
     obl_destroy_cshape(o);
     obl_destroy_database(d);
 }
 
-void test_create_slotted(void)
+void test_slotted_object(void)
 {
     char *slot_names[] = { "foo" , "bar" };
     struct obl_database *d;
@@ -160,13 +167,19 @@ void test_create_slotted(void)
     CU_ASSERT(obl_slotted_atcnamed(o, "bar") == obl_nil(d));
     CU_ASSERT(obl_slotted_at(o, 1) == obl_nil(d));
 
+    d->log_config.level = L_NONE;
+    CU_ASSERT(obl_database_ok(d));
+    CU_ASSERT(obl_slotted_at(o, 7) == obl_nil(d));
+    CU_ASSERT(!obl_database_ok(d));
+    obl_clear_error(d);
+
     obl_destroy_cshape(shape);
     obl_destroy_object(o);
     obl_destroy_object(value);
     obl_destroy_database(d);
 }
 
-void test_create_stub(void)
+void test_stub_object(void)
 {
     struct obl_database *d;
     struct obl_object *o, *real;
@@ -184,13 +197,13 @@ void test_create_stub(void)
     real->logical_address = (obl_logical_address) 14;
     obl_cache_insert(d->cache, real);
 
-    CU_ASSERT(_obl_resolve_stub(o, 0) == real);
+    CU_ASSERT(_obl_resolve_stub(o) == real);
 
     obl_destroy_object(real);
     obl_destroy_database(d);
 }
 
-void test_boolean_objects(void)
+void test_boolean_object(void)
 {
     struct obl_database *d;
 
@@ -215,12 +228,12 @@ CU_pSuite initialize_object_suite(void)
         return NULL;
     }
 
-    ADD_TEST(test_create_integer);
-    ADD_TEST(test_create_string);
-    ADD_TEST(test_create_fixed);
-    ADD_TEST(test_create_shape);
-    ADD_TEST(test_create_slotted);
-    ADD_TEST(test_boolean_objects);
+    ADD_TEST(test_integer_object);
+    ADD_TEST(test_string_object);
+    ADD_TEST(test_fixed_object);
+    ADD_TEST(test_shape_object);
+    ADD_TEST(test_slotted_object);
+    ADD_TEST(test_boolean_object);
 
     return pSuite;
 }

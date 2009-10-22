@@ -50,7 +50,8 @@ static char *error_messages[] = {
         "Unable to allocate an object", "Unable to read file",
         "Unable to open file", "Error during Unicode conversion",
         "Incorrect object storage type", "Bad argument length",
-        "Missing a critical system object", "Database must be open"
+        "Missing a critical system object", "Database must be open",
+        "Invalid index"
 };
 
 /* Addresses of the elements in obl_root. */

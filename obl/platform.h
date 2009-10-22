@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2009 Ashley J. Wilson, Roger E. Ostrander
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
@@ -14,7 +14,7 @@
 
 #include "unicode/utypes.h"
 
-/*
+/**
  * A single ObjectLite "word".  This is the smallest unit in which anything can
  * be addressed by, read from, or written to the database, and is used to store
  * "small" signed numeric quantities.  obl_words and obl_uwords are often used
@@ -23,18 +23,24 @@
  */
 typedef int32_t obl_int;
 
-/*
+/**
  * The same storage size as an obl_int, but unsigned.
  */
 typedef uint32_t obl_uint;
 
-/*
+/**
  * Minimum and maximum values that can be assigned to obl_ints and obl_uints.
  */
 #define OBL_INT_MIN INT32_MIN
 #define OBL_INT_MAX INT32_MAX
 
 #define OBL_UINT_MAX UINT32_MAX
+
+/**
+ * A useful sentinel value to return from functions that communicate with
+ * obl_uint.
+ */
+#define OBL_SENTINEL OBL_UINT_MAX
 
 /*
  * Width of an address unit, physical or logical.

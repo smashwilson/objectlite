@@ -23,12 +23,12 @@ static void print_invalid_object(struct obl_object *o,
 
 /* Function types. */
 
-typedef struct obl_object *(*obl_object_print_function)(
-        struct obl_object *o, int depth, int indent);
+typedef void (*obl_object_print_function)(struct obl_object *o,
+        int depth, int indent);
 
 /* Function maps. */
 
-static obl_object_print_function print_functions[OBL_STORAGE_TYPE_MAX] = {
+static obl_object_print_function print_functions[OBL_STORAGE_TYPE_MAX + 1] = {
         &obl_print_shape,
         &obl_print_slotted,
         &obl_print_fixed,
@@ -81,9 +81,10 @@ obl_uint obl_object_wordsize(struct obl_object *o)
     }
 }
 
+/* Objects shapes should never be stubbed. */
 struct obl_object *obl_object_shape(struct obl_object *o)
 {
-    return _obl_resolve_stub(o->shape);
+    return o->shape;
 }
 
 void obl_print_object(struct obl_object *o, int depth, int indent)
@@ -99,7 +100,7 @@ void obl_destroy_object(struct obl_object *o)
     free(o);
 }
 
-enum obl_storage_type obl_storage_of(const struct obl_object *o)
+enum obl_storage_type obl_storage_of(struct obl_object *o)
 {
     struct obl_object *shape;
 

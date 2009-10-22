@@ -41,7 +41,7 @@ struct obl_object *_obl_create_bool(struct obl_database *d, int truth)
     return result;
 }
 
-int obl_boolean_value(const struct obl_object *bool)
+int obl_boolean_value(struct obl_object *bool)
 {
     if (obl_storage_of(bool) != OBL_BOOLEAN) {
         OBL_WARN(bool->database, "Non-boolean object: assuming truth.");
