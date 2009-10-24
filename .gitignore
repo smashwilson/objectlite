@@ -15,6 +15,7 @@
 *.a
 *.dll
 *.lib
+unittests
 
 # Ignore ObjectLite databases and log files.
 *.obl
