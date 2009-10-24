@@ -13,6 +13,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "unicode/ucnv.h"
 
@@ -130,14 +131,14 @@ obl_uint obl_object_wordsize(struct obl_object *o)
     case OBL_INTEGER:
         return 2;
     case OBL_FLOAT:
-        return 1 + ceil((double) 32 / sizeof(obl_uint));
+        return 1 + (obl_uint) ceil((double) 32 / sizeof(obl_uint));
     case OBL_DOUBLE:
-        return 1 + ceil((double) 64 / sizeof(obl_uint));
+        return 1 + (obl_uint) ceil((double) 64 / sizeof(obl_uint));
     case OBL_CHAR:
-        return 1 + ceil((double) sizeof(obl_uint) / sizeof(UChar32));
+        return 1 + (obl_uint) ceil((double) sizeof(obl_uint) / sizeof(UChar32));
     case OBL_STRING:
         return 1 + obl_string_size(o) *
-            ceil((double) sizeof(obl_uint) / sizeof(UChar));
+            (obl_uint) ceil((double) sizeof(obl_uint) / sizeof(UChar));
     case OBL_BOOLEAN:
         return 2;
     case OBL_NIL:
@@ -293,5 +294,6 @@ static void print_invalid_object(struct obl_object *o,
 
     for (in = 0; in < indent; in++) { putchar(' '); }
     printf("<INVALID: logical 0x%08lx physical 0x%08lx>",
-            o->logical_address, o->physical_address);
+            (unsigned long) o->logical_address,
+            (unsigned long) o->physical_address);
 }

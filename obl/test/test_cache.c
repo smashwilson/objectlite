@@ -6,7 +6,7 @@
  * Unit tests for the LRU cache implemented by "cache.c".
  */
 
-#include "CUnit/Headers/Basic.h"
+#include "CUnit/Basic.h"
 
 #include "storage/object.h"
 #include "cache.h"

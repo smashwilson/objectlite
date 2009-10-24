@@ -132,9 +132,9 @@ void obl_destroy_object(struct obl_object *o);
 enum obl_storage_type obl_storage_of(struct obl_object *o);
 
 /**
- * Read a shape word from the current position of the file <source>, retrieve
+ * Read a shape word from the current position of the file `source`, retrieve
  * the shape object, then invoke the appropriate struct obl_object_read_function from
- * the <obl_read_functions> table to read the rest of the object.  Return the
+ * the obl_read_functions table to read the rest of the object.  Return the
  * populated struct obl_object structure.
  *
  * The created object lives on the heap and must be destroyed with a call to

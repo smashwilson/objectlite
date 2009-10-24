@@ -11,6 +11,8 @@
 #include "storage/object.h"
 #include "database.h"
 
+#include <stdlib.h>
+
 struct obl_object *_obl_create_stub(struct obl_database *d,
         obl_logical_address address)
 {

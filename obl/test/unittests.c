@@ -6,7 +6,7 @@
  * Master file and main() function for the ObjectLite unit testing suite.
  */
 
-#include "CUnit/Headers/Basic.h"
+#include "CUnit/Basic.h"
 
 #include "log.h"
 #include "database.h"

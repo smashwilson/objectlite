@@ -13,6 +13,8 @@
 #include "platform.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 struct obl_object *obl_create_shape(struct obl_database *d,
         struct obl_object *name, struct obl_object *slot_names,

@@ -12,6 +12,7 @@
 #include "storage/object.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 struct obl_object *obl_create_addrtreepage(struct obl_database *d,
         obl_uint depth)
@@ -86,7 +87,8 @@ void obl_print_addrtreepage(struct obl_object *addrtreepage,
     for (in = 0; in < indent; in++) { putchar(' '); }
 
     if (depth == 0) {
-        printf("<address tree page: 0x%08lx>\n", addrtreepage->logical_address);
+        printf("<address tree page: 0x%08lx>\n",
+                (unsigned long) addrtreepage->logical_address);
         return ;
     }
 
@@ -104,6 +106,7 @@ void obl_print_addrtreepage(struct obl_object *addrtreepage,
 
     for (i = 0; i < CHUNK_SIZE; i++) {
         for (in = 0; in < indent; in++) { putchar(' '); }
-        printf("[%03d] 0x%08lx\n", i, storage->contents[i]);
+        printf("[%03d] 0x%08lx\n", i,
+                (unsigned long) storage->contents[i]);
     }
 }

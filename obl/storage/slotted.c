@@ -11,6 +11,8 @@
 #include "storage/object.h"
 #include "database.h"
 
+#include <stdlib.h>
+
 struct obl_object *obl_create_slotted(struct obl_object *shape)
 {
     struct obl_object *result;

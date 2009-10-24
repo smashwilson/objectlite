@@ -11,6 +11,8 @@
 #include "database.h"
 #include "storage/object.h"
 
+#include <stdlib.h>
+
 struct obl_object *_obl_create_bool(struct obl_database *d, int truth)
 {
     struct obl_object *result, *shape;

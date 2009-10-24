@@ -6,7 +6,7 @@
  * Unit tests for the logical to physical address mapping.
  */
 
-#include "CUnit/Headers/Basic.h"
+#include "CUnit/Basic.h"
 
 #include "addressmap.h"
 

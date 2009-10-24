@@ -9,8 +9,9 @@
 #include "storage/object.h"
 
 #include <string.h>
+#include <stdlib.h>
 
-#include "CUnit/Headers/Basic.h"
+#include "CUnit/Basic.h"
 #include "unicode/ucnv.h"
 
 #include "database.h"

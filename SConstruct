@@ -8,15 +8,17 @@
 # build files as appropriate.
 
 import os
+import sys
+
 env = DefaultEnvironment(ENV = os.environ, tools = ['mingw'])
 
 # Include path.
-env.Append(CPPPATH = os.environ.get('INCLUDE'))
-env.Append(CPPPATH = ';obl')
+env.Append(CPPPATH = os.environ.get('CPATH'))
+env.Append(CPPPATH = os.pathsep + 'obl')
 
 # Library path.
-env.Append(LIBPATH = os.environ.get('LIB'))
-env.Append(LIBPATH = ';obl')
+env.Append(LIBPATH = os.environ.get('LD_LIBRARY_PATH'))
+env.Append(LIBPATH = os.pathsep + 'obl')
 
 env.Append(CCFLAGS = '-g');
 
@@ -26,10 +28,15 @@ obllib = StaticLibrary(
     Glob('obl/*.c') + Glob('obl/storage/*.c'))
 
 # unittests: Unit testing suite for libobjectlite. #############################
+
+utlibs = ['objectlite', 'cunit', 'icuuc']
+if sys.platform == 'win32':
+    utlibs.append('ws2_32')
+
 obltest = Program(
     'unittests',
     Glob('obl/test/*.c'),
-    LIBS = ['objectlite', 'cunit', 'ws2_32', 'icuuc'])
+    LIBS = utlibs)
 
 # Documentation with doxygen. ##################################################
 

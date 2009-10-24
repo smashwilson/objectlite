@@ -59,7 +59,7 @@ struct obl_object *obl_slotted_at(struct obl_object *slotted,
  * Return the contents of a slot by name.
  *
  * \param slotted An object with slotted storage.
- * \param name An obl_string_storage object containing the name of the slot
+ * \param slotname An obl_string_storage object containing the name of the slot
  *      to query.
  * \return The obl_object currently referenced by the named slot.  Reports an
  *      an error and returns obl_nil() if slotted is not actually a slotted

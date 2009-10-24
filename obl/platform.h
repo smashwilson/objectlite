@@ -90,17 +90,11 @@ typedef obl_address obl_logical_address;
 #include <netinet/in.h>
 #endif
 
-#if OBL_UINT_MAX == ULONG_MAX
-
 #define writable_uint(in) htonl(in)
 #define readable_uint(in) ((obl_uint) ntohl(in))
 
 #define writable_int(in) htonl(in)
 #define readable_int(in) ((obl_int) ntohl(in))
-
-#else
-#error "<obl_uint> and <unsigned long> types differ in size."
-#endif
 
 /* A UChar is guaranteed to be 16 bits wide. */
 #define writable_UChar(ch) htons(ch)

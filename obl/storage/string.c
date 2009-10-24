@@ -13,6 +13,9 @@
 
 #include "unicode/ucnv.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 struct obl_object *obl_create_string(struct obl_database *d,
         const UChar *uc, obl_uint length)
 {
@@ -242,7 +245,7 @@ void obl_print_string(struct obl_object *string, int depth, int indent)
     converted_size = obl_string_chars(string, buffer, buffer_size);
 
     for (in = 0; in < indent; in++) { putchar(' '); }
-    printf("%.*s", converted_size, buffer);
+    printf("%.*s", (int) converted_size, buffer);
 }
 
 struct obl_object *_allocate_string(struct obl_database *d,

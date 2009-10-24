@@ -7,7 +7,7 @@
  * This will constitute a fair amount of the public API.
  */
 
-#include "CUnit/Headers/Basic.h"
+#include "CUnit/Basic.h"
 
 #include "storage/object.h"
 #include "cache.h"

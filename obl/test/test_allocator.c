@@ -6,7 +6,7 @@
  * 
  */
 
-#include "CUnit/Headers/Basic.h"
+#include "CUnit/Basic.h"
 
 #include "allocator.h"
 

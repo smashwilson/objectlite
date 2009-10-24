@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "CUnit/Headers/Basic.h"
+#include "CUnit/Basic.h"
 
 #include "storage/object.h"
 #include "database.h"

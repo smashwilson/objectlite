@@ -12,6 +12,7 @@
 #include "database.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 struct obl_object *obl_create_fixed(struct obl_database *d, obl_uint length)
 {

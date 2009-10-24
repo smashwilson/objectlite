@@ -11,6 +11,8 @@
 #include "storage/object.h"
 #include "database.h"
 
+#include <stdlib.h>
+
 struct obl_object *obl_create_integer(struct obl_database *d, obl_int i)
 {
     struct obl_object *result;
