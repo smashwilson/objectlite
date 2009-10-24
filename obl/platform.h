@@ -128,7 +128,7 @@ int munmap(void *start, size_t length);
 #ifndef PROT_READ
 #define PROT_READ 1
 #define PROT_WRITE 2
-#define MAP_PRIVATE 1
+#define MAP_SHARED 1
 #define MAP_FAILED ((void*) -1)
 #endif
 

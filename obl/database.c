@@ -142,7 +142,7 @@ int obl_open_database(struct obl_database *d, int allow_creation)
 
     d->content_size = (obl_uint) (buffer.st_size / sizeof(obl_uint));
     d->content = (obl_uint*) mmap(NULL, d->content_size,
-            PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+            PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     close(fd);
 
     if (d->content_size < d->growth_size) {

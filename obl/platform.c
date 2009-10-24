@@ -40,7 +40,7 @@ void *mmap(void *start, size_t length, int prot, int flags,
         break;
     }
 
-    if (start != NULL || !(flags & MAP_PRIVATE)) {
+    if (start != NULL || !(flags & MAP_SHARED)) {
         /* Invalid use of this very limited mmap(). */
         return MAP_FAILED;
     }

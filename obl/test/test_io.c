@@ -537,7 +537,7 @@ void test_mmap(void)
     f = fopen(filename, "r+b");
     fd = fileno(f);
 
-    mapped = (char*) mmap(0, 10, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+    mapped = (char*) mmap(0, 10, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (mapped == MAP_FAILED) {
         CU_FAIL("Unable to map memory.");
         fclose(f);
