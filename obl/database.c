@@ -263,6 +263,7 @@ void obl_clear_error(struct obl_database *database)
 void obl_report_error(struct obl_database *database,
         error_code code, const char *message)
 {
+    const char *real_message;
     char *buffer;
     size_t message_size;
     OBL_ERROR(database, message);
@@ -274,14 +275,16 @@ void obl_report_error(struct obl_database *database,
     }
 
     if (message != NULL) {
-        message_size = strlen(message) + 1;
-        buffer = (char*) malloc(message_size);
-        memcpy(buffer, message, message_size);
-
-        database->last_error.message = buffer;
+        real_message = message;
     } else {
-        database->last_error.message = error_messages[code];
+        real_message = error_messages[code];
     }
+
+    message_size = strlen(real_message) + 1;
+    buffer = (char*) malloc(message_size);
+    memcpy(buffer, real_message, message_size);
+
+    database->last_error.message = buffer;
     database->last_error.code = code;
 }
 
