@@ -3,7 +3,15 @@
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
  *
+ * Implementation of a red-black tree with bottom-up insertion and deletion.
+ * Much credit for the code goes to Julienne Walker and the Eternally
+ * Confuzzled team for creating an excellent tutorial on the data structures:
+ *
+ * http://www.eternallyconfuzzled.com/tuts/datastructures/jsw_tut_rbtree.aspx
  * 
+ * Almost all of the code is taken from their implementation, with a few tweaks
+ * to have nodes hold obl_object structures, and to use enums for direction and
+ * color instead of boolean values.
  */
 
 #include "set.h"
