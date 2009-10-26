@@ -8,13 +8,6 @@
 
 #include "CUnit/Basic.h"
 
-#include "database.h"
-#include "set.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-
 /*
  * Prototypes for the initialization methods of each test_xyz module.
  */
@@ -27,58 +20,12 @@ CU_pSuite initialize_addressmap_suite(void);
 CU_pSuite initialize_allocator_suite(void);
 
 /*
- * A placeholder for those times that I want to run other temporary testing
- * code that isn't a unit test.  exit() at the end for best effect.
+ * Prototypes for non-CUnit test cases.  Manually call these from main() to
+ * run them.
  */
 
-void independent_test()
-{
-    struct obl_set *set;
-    struct obl_database *d;
-    obl_logical_address addr;
-    int black_height;
-
-    srand(time(NULL));
-
-    d = obl_create_database("foo.obl");
-    set = obl_create_set(&logical_address_keyfunction);
-
-    printf("Starting...");
-    for (addr = 0; addr < 10000000; addr++) {
-        struct obl_object *o;
-
-        o = obl_create_integer(d, (obl_uint) addr);
-        o->logical_address = (obl_logical_address) addr;
-
-        obl_set_insert(set, o);
-        if (addr % 1000 == 0) {
-            printf("\rInserted <%8lu>", addr);
-        }
-    }
-    printf("\n");
-
-    for (addr = 0; addr < 10000; addr++) {
-        struct obl_object o;
-        o.logical_address = (obl_logical_address) rand();
-
-        obl_set_remove(set, &o);
-
-        if (addr % 1000 == 0) {
-            printf("\rDeleted <%8lu>", addr);
-        }
-    }
-    printf("\n");
-
-    black_height = obl_set_verify(set);
-    if (black_height == 0) {
-        fprintf(stderr, "Set is invalid!");
-        exit(1);
-    } else {
-        printf("Set is valid! Black height: %d\n", black_height);
-    }
-
-    exit(0);
-}
+void stress_test_set(unsigned long insert_count,
+        unsigned long delete_count);
 
 /*
  * Initialize the CUnit testing suite, allowing each testing module to
@@ -86,8 +33,6 @@ void independent_test()
  */
 int main()
 {
-    independent_test();
-
     if (CU_initialize_registry() != CUE_SUCCESS) {
         return CU_get_error();
     }
