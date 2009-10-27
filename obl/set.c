@@ -66,6 +66,9 @@ static struct obl_rb_node *create_node(obl_set_keyfunction keyfunction,
 static struct obl_rb_node *insert_r(struct obl_rb_node *n,
         struct obl_rb_node *created);
 
+static struct obl_rb_node *lookup_r(struct obl_rb_node *n,
+        obl_set_key key);
+
 static struct obl_rb_node *remove_r(struct obl_rb_node *n,
         obl_set_key key, int *done);
 
@@ -124,7 +127,10 @@ void obl_set_insert(struct obl_set *set, struct obl_object *o)
 
 struct obl_object *obl_set_lookup(struct obl_set *set, obl_set_key key)
 {
-    /* */
+    struct obl_rb_node *n;
+
+    n = lookup_r(set->root, key);
+    return n == NULL ? NULL : n->o;
 }
 
 void obl_set_remove(struct obl_set *set, struct obl_object *o)
@@ -248,6 +254,20 @@ static struct obl_rb_node *insert_r(struct obl_rb_node *n,
     }
 
     return n;
+}
+
+static struct obl_rb_node *lookup_r(struct obl_rb_node *n,
+        obl_set_key key)
+{
+    enum direction dir;
+
+    if (n == NULL) {
+        return NULL;
+    } else if (n->key == key) {
+        return n;
+    } else {
+        return lookup_r(n->children[key < n->key ? LEFT : RIGHT], key);
+    }
 }
 
 static struct obl_rb_node *remove_r(struct obl_rb_node *n,
