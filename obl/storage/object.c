@@ -19,13 +19,18 @@
 
 /* Static function prototypes. */
 
-static struct obl_object *obl_invalid_read(struct obl_object *shape,
+static struct obl_object *invalid_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
-static void obl_invalid_write(struct obl_object *o, obl_uint *dest);
+static void invalid_write(struct obl_object *o, obl_uint *dest);
 
-static void print_invalid_object(struct obl_object *o,
+static void invalid_print(struct obl_object *o,
         int depth, int indent);
+
+static obl_uint no_children(struct obl_object *root,
+        struct obl_object **results, int *done);
+
+static void simple_deallocate(struct obl_object *o);
 
 /* Function types. */
 
@@ -35,7 +40,7 @@ static void print_invalid_object(struct obl_object *o,
  * memory mapped to the database file, and an offset at which reading is to
  * occur.
  */
-typedef struct obl_object *(*obl_object_read_function)(
+typedef struct obl_object *(*read_function)(
         struct obl_object *shape, obl_uint *source,
         obl_physical_address offset, int depth);
 
@@ -44,14 +49,27 @@ typedef struct obl_object *(*obl_object_read_function)(
  * not including its shape header word.  The object will be written at a
  * location specified by its assigned physical address.
  */
-typedef void (*obl_object_write_function)(
+typedef void (*write_function)(
         struct obl_object *object, obl_uint *source);
 
 /**
  * Signature of a function that recursively prints an object to stdout.
  */
-typedef void (*obl_object_print_function)(struct obl_object *o,
+typedef void (*print_function)(struct obl_object *o,
         int depth, int indent);
+
+/**
+ * Signature of a function that allows iteration over an obl_object's references
+ * to other obl_object structures.
+ */
+typedef obl_uint (*children_function)(struct obl_object *root,
+        struct obl_object **results, int *heaped);
+
+/**
+ * Signature of a function that deallocates an object and its internal
+ * structure.
+ */
+typedef void (*deallocate_function)(struct obl_object *o);
 
 /* Function maps. */
 
@@ -60,61 +78,94 @@ typedef void (*obl_object_print_function)(struct obl_object *o,
  * specified in object.h and at the same index as its index in the
  * +obl_storage_type+ enumeration.
  */
-static obl_object_read_function obl_read_functions[OBL_STORAGE_TYPE_MAX + 1] = {
+static read_function read_functions[OBL_STORAGE_TYPE_MAX + 1] = {
         &obl_read_shape,        /* OBL_SHAPE */
         &obl_read_slotted,      /* OBL_SLOTTED */
-        &obl_invalid_read,      /* OBL_FIXED */
-        &obl_invalid_read,      /* OBL_CHUNK */
+        &invalid_read,          /* OBL_FIXED */
+        &invalid_read,          /* OBL_CHUNK */
         &obl_read_addrtreepage, /* OBL_ADDRTREEPAGE */
         &obl_read_integer,      /* OBL_INTEGER */
-        &obl_invalid_read,      /* OBL_FLOAT */
-        &obl_invalid_read,      /* OBL_DOUBLE */
-        &obl_invalid_read,      /* OBL_CHAR */
+        &invalid_read,          /* OBL_FLOAT */
+        &invalid_read,          /* OBL_DOUBLE */
+        &invalid_read,          /* OBL_CHAR */
         &obl_read_string,       /* OBL_STRING */
-        &obl_invalid_read,      /* OBL_BOOLEAN (invalid) */
-        &obl_invalid_read,      /* OBL_NIL (invalid) */
-        &obl_invalid_read       /* OBL_STUB (invalid) */
+        &invalid_read,          /* OBL_BOOLEAN (invalid) */
+        &invalid_read,          /* OBL_NIL (invalid) */
+        &invalid_read           /* OBL_STUB (invalid) */
 };
 
-/*
+/**
  * The array of object-writing functions.  Each function serializes an object
  * of a certain storage type, not including its header byte word, to the
  * location specified by its pre-set physical address.
  */
-static obl_object_write_function obl_write_functions[] = {
+static write_function write_functions[] = {
         &obl_write_shape,        /* OBL_SHAPE */
         &obl_write_slotted,      /* OBL_SLOTTED */
         &obl_write_fixed,        /* OBL_FIXED */
-        &obl_invalid_write,      /* OBL_CHUNK */
+        &invalid_write,          /* OBL_CHUNK */
         &obl_write_addrtreepage, /* OBL_ADDRTREEPAGE */
         &obl_write_integer,      /* OBL_INTEGER */
-        &obl_invalid_write,      /* OBL_FLOAT */
-        &obl_invalid_write,      /* OBL_DOUBLE */
-        &obl_invalid_write,      /* OBL_CHAR */
+        &invalid_write,          /* OBL_FLOAT */
+        &invalid_write,          /* OBL_DOUBLE */
+        &invalid_write,          /* OBL_CHAR */
         &obl_write_string,       /* OBL_STRING */
-        &obl_invalid_write,      /* OBL_BOOLEAN (invalid) */
-        &obl_invalid_write,      /* OBL_NIL (invalid) */
-        &obl_invalid_write       /* OBL_STUB (invalid) */
+        &invalid_write,          /* OBL_BOOLEAN (invalid) */
+        &invalid_write,          /* OBL_NIL (invalid) */
+        &invalid_write           /* OBL_STUB (invalid) */
 };
 
-static obl_object_print_function print_functions[OBL_STORAGE_TYPE_MAX + 1] = {
-        &obl_print_shape,
-        &obl_print_slotted,
-        &obl_print_fixed,
-        &print_invalid_object, /* OBL_CHUNK */
-        &obl_print_addrtreepage,
-        &obl_print_integer,
-        &print_invalid_object, /* OBL_FLOAT */
-        &print_invalid_object, /* OBL_DOUBLE */
-        &print_invalid_object, /* OBL_CHAR */
-        &obl_print_string,
-        &obl_print_boolean,
-        &obl_print_nil,
-        &print_invalid_object /* OBL_STUB */
+static print_function print_functions[OBL_STORAGE_TYPE_MAX + 1] = {
+        &obl_print_shape,        /* OBL_SHAPE */
+        &obl_print_slotted,      /* OBL_SLOTTED */
+        &obl_print_fixed,        /* OBL_FIXED */
+        &invalid_print,          /* OBL_CHUNK */
+        &obl_print_addrtreepage, /* OBL_ADDRTREEPAGE */
+        &obl_print_integer,      /* OBL_INTEGER */
+        &invalid_print,          /* OBL_FLOAT */
+        &invalid_print,          /* OBL_DOUBLE */
+        &invalid_print,          /* OBL_CHAR */
+        &obl_print_string,       /* OBL_STRING */
+        &obl_print_boolean,      /* OBL_BOOLEAN */
+        &obl_print_nil,          /* OBL_NIL */
+        &invalid_print           /* OBL_STUB (invalid) */
+};
+
+static children_function children_functions[OBL_STORAGE_TYPE_MAX + 1] = {
+        &_obl_shape_children,   /* OBL_SHAPE */
+        &_obl_slotted_children, /* OBL_SLOTTED */
+        &_obl_fixed_children,   /* OBL_FIXED */
+        &no_children,           /* OBL_CHUNK */
+        &no_children,           /* OBL_ADDRTREEPAGE */
+        &no_children,           /* OBL_INTEGER */
+        &no_children,           /* OBL_FLOAT */
+        &no_children,           /* OBL_DOUBLE */
+        &no_children,           /* OBL_CHAR */
+        &no_children,           /* OBL_STRING */
+        &no_children,           /* OBL_BOOLEAN */
+        &no_children,           /* OBL_NIL */
+        &no_children            /* OBL_STUB */
+};
+
+static deallocate_function deallocate_functions[OBL_STORAGE_TYPE_MAX + 1] = {
+        &simple_deallocate,       /* OBL_SHAPE */
+        &_obl_slotted_deallocate, /* OBL_SLOTTED */
+        &_obl_fixed_deallocate,   /* OBL_FIXED */
+        &simple_deallocate,       /* OBL_CHUNK */
+        &simple_deallocate,       /* OBL_ADDRTREEPAGE */
+        &simple_deallocate,       /* OBL_INTEGER */
+        &simple_deallocate,       /* OBL_FLOAT */
+        &simple_deallocate,       /* OBL_DOUBLE */
+        &simple_deallocate,       /* OBL_CHAR */
+        &_obl_string_deallocate,  /* OBL_STRING */
+        &simple_deallocate,       /* OBL_BOOLEAN */
+        &simple_deallocate,       /* OBL_NIL */
+        &simple_deallocate        /* OBL_STUB */
 };
 
 /* Implementation. */
 
+/* TODO use storage dispatch for this. */
 obl_uint obl_object_wordsize(struct obl_object *o)
 {
     switch(obl_storage_of(o)) {
@@ -204,7 +255,7 @@ struct obl_object *obl_read_object(struct obl_database *d,
         function_index = obl_shape_storagetype(shape);
     }
 
-    result = (obl_read_functions[function_index])(
+    result = (read_functions[function_index])(
             shape, source, base, depth);
     result->shape = shape;
     result->physical_address = base;
@@ -235,10 +286,16 @@ void obl_write_object(struct obl_object *o, obl_uint *dest)
         function_index = (int) OBL_SHAPE;
     }
 
-    dest[o->physical_address] = writable_uint(
-            (obl_uint) shape->logical_address);
+    dest[o->physical_address] = writable_logical(shape->logical_address);
 
-    (*obl_write_functions[function_index])(o, dest);
+    (*write_functions[function_index])(o, dest);
+}
+
+obl_uint _obl_children(struct obl_object *root,
+        struct obl_object **results, int *heaped)
+{
+    *heaped = 0;
+    return (*children_functions[obl_storage_of(root)])(root, results, heaped);
 }
 
 struct obl_object *_obl_allocate_object(struct obl_database *d)
@@ -257,13 +314,23 @@ struct obl_object *_obl_allocate_object(struct obl_database *d)
     return result;
 }
 
+/*
+ * Delegate to one of the per-storage functions in deallocate_functions.  You
+ * always want to free the pointer you're passed, so do that at the end.
+ */
+void _obl_deallocate_object(struct obl_object *o)
+{
+    (*deallocate_functions[obl_storage_of(o)])(o);
+    free(o);
+}
+
 /* Static function implementations. */
 
 /**
  * Invoked for any storage type that is either not defined yet, or isn't
  * supposed to actually be read from the database.
  */
-static struct obl_object *obl_invalid_read(struct obl_object *shape,
+static struct obl_object *invalid_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address base, int depth)
 {
     obl_report_errorf(shape->database, OBL_WRONG_STORAGE,
@@ -276,7 +343,7 @@ static struct obl_object *obl_invalid_read(struct obl_object *shape,
  * Invoked for any storage type that is either not defined yet, or isn't
  * supposed to actually be written to the database.
  */
-static void obl_invalid_write(struct obl_object *o, obl_uint *dest)
+static void invalid_write(struct obl_object *o, obl_uint *dest)
 {
     obl_report_errorf(o->database, OBL_WRONG_STORAGE,
             "Attempt to write an object with an invalid storage type (%lu).",
@@ -287,7 +354,7 @@ static void obl_invalid_write(struct obl_object *o, obl_uint *dest)
  * Invoked for any storage type that is either invalid or whose print function
  * hasn't been written yet.
  */
-static void print_invalid_object(struct obl_object *o,
+static void invalid_print(struct obl_object *o,
         int depth, int indent)
 {
     int in;
@@ -296,4 +363,35 @@ static void print_invalid_object(struct obl_object *o,
     printf("<INVALID: logical 0x%08lx physical 0x%08lx>",
             (unsigned long) o->logical_address,
             (unsigned long) o->physical_address);
+}
+
+/**
+ * Invoked for any storage type that has no children (i.e. most of them).
+ *
+ * \param root Any object of a storage type without direct children.
+ * \param results [out] Set to NULL.
+ * \param heaped [out] Set to false.
+ * \return Zero.
+ */
+static obl_uint no_children(struct obl_object *root,
+        struct obl_object **results, int *heaped)
+{
+    *results = NULL;
+    return (obl_uint) 0;
+}
+
+/**
+ * An deallocate_function to be invoked for any object without
+ * special storage requirements.  This is sufficient for any obl_object storage
+ * type that does not perform malloc() calls in its creation function other
+ * than the one within _obl_allocate_object() and the one for the storage
+ * itself.
+ *
+ * \param o The object to deallocate.
+ */
+static void simple_deallocate(struct obl_object *o)
+{
+    if (o->storage.any_storage != NULL) {
+        free(o->storage.any_storage);
+    }
 }

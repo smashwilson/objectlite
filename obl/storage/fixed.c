@@ -115,7 +115,7 @@ struct obl_object *obl_read_fixed(struct obl_object *shape,
     o = obl_create_fixed(shape->database, length);
 
     for (i = 0; i < length; i++) {
-        addr = (obl_logical_address) readable_uint(source[base + 2 + i]);
+        addr = readable_logical(source[base + 2 + i]);
         if (depth <= 0) {
             linked = _obl_create_stub(shape->database, addr);
         } else {
@@ -161,4 +161,17 @@ void obl_print_fixed(struct obl_object *fixed, int depth, int indent)
         obl_print_object(obl_fixed_at(fixed, i), depth - 1, indent + 2);
         printf("\n");
     }
+}
+
+obl_uint _obl_fixed_children(struct obl_object *fixed,
+        struct obl_object **results, int *heaped)
+{
+    results = fixed->storage.fixed_storage->contents;
+    return obl_fixed_size(fixed);
+}
+
+void _obl_fixed_deallocate(struct obl_object *fixed)
+{
+    free(fixed->storage.fixed_storage->contents);
+    free(fixed->storage.fixed_storage);
 }

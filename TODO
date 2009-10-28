@@ -40,7 +40,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
 - make the shape of a shape another shape.
 * printstrings for objects.
 * split object.h into a difference source file for each storage type
-- write accessors and mutators for storage structs
+* write accessors and mutators for storage structs
 - combine "create"/"open" and "destroy"/"close" operations.  possibly create
    with an open configuration struct?
 - give obl_database an indirect reference to the database file to hide things
@@ -52,7 +52,8 @@ A rough timeline of the tasks to finish before we see release, large and small.
 - use a heap-based physical address allocator.
 - write the transaction mechanism.
 - manage a read set and a write set instead of the LRU cache.
-- use the read and write sets for actual cleanup of garbage.
+= use the read and write sets for actual cleanup of garbage.
+- store stubs within the read set.
 - implement a cross-platform semaphore wrapper.  manage access to the read and
    write sets, transaction commits, and other critical resources.
 

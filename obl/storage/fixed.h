@@ -101,4 +101,26 @@ void obl_write_fixed(struct obl_object *fixed, obl_uint *dest);
  */
 void obl_print_fixed(struct obl_object *fixed, int depth, int indent);
 
+/**
+ * Provide access to the obl_objects recursively referenced by this one.  Beware,
+ * this function does not resolve stubs; for internal use only.
+ *
+ * \param fixed The root object.
+ * \param results [out] Pointed to the first obl_object child.
+ * \param heaped [out] False; fixed objects already have a nice heap array
+ *      to return as it is.
+ * \return The number of array-indexable obl_object structures following
+ *      results.
+ */
+obl_uint _obl_fixed_children(struct obl_object *fixed,
+        struct obl_object **results, int *heaped);
+
+/**
+ * Deallocate a fixed object, its internal storage, and any obl_stub_storage
+ * objects linked from it.  For internal use only.
+ *
+ * \param fixed The object to delete.
+ */
+void _obl_fixed_deallocate(struct obl_object *fixed);
+
 #endif /* FIXED_H */

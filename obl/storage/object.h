@@ -133,7 +133,7 @@ enum obl_storage_type obl_storage_of(struct obl_object *o);
 
 /**
  * Read a shape word from the current position of the file `source`, retrieve
- * the shape object, then invoke the appropriate struct obl_object_read_function from
+ * the shape object, then invoke the appropriate struct read_function from
  * the obl_read_functions table to read the rest of the object.  Return the
  * populated struct obl_object structure.
  *
@@ -150,6 +150,20 @@ struct obl_object *obl_read_object(struct obl_database *d,
 void obl_write_object(struct obl_object *o, obl_uint *dest);
 
 /**
+ * Useful for iterating over referenced obl_object structures.  For internal
+ * use only; this call does not resolve any stubs encountered.
+ *
+ * \param root The object at the root of the graph.
+ * \param results [out] Assigned to the first addressable child.
+ * \param heaped [out] Most of the time, we can get away without doing heap
+ *      allocation.  When we can't, this variable will be set to 1.
+ * \return The number of obl_objects addressable from the pointer assigned to
+ *      results.
+ */
+obl_uint _obl_children(struct obl_object *root,
+        struct obl_object **results, int *heaped);
+
+/**
  * Allocate a new obl_object from the heap, without specified storage.  For
  * internal use only.
  *
@@ -158,5 +172,14 @@ void obl_write_object(struct obl_object *o, obl_uint *dest);
  *      error will be logged in d if the allocation is unsuccessful.
  */
 struct obl_object *_obl_allocate_object(struct obl_database *d);
+
+/**
+ * Deallocate the memory associated with an obl_object.  For internal use only.
+ * Properly disposes of internal structure, but does not recursively delete
+ * an object's children.
+ *
+ * \param o The object to free.
+ */
+void _obl_deallocate_object(struct obl_object *o);
 
 #endif

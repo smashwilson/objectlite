@@ -137,14 +137,14 @@ enum obl_storage_type obl_shape_storagetype(struct obl_object *shape);
  */
 void obl_destroy_cshape(struct obl_object *o);
 
-/*
+/**
  * Read a shape object.  Shapes are themselves a fixed shape (sorry, no turtles
  * all the way down -- yet).
  */
 struct obl_object *obl_read_shape(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
-/*
+/**
  * Write a shape object.
  */
 void obl_write_shape(struct obl_object *string, obl_uint *dest);
@@ -157,5 +157,17 @@ void obl_write_shape(struct obl_object *string, obl_uint *dest);
  * \param indent The level of output indentation.
  */
 void obl_print_shape(struct obl_object *shape, int depth, int indent);
+
+/**
+ * Assign results to an array of the obl_object instances reachable from this
+ * one.
+ *
+ * \param shape The shape object.
+ * \param results [out] Assigned to the array address.
+ * \param heaped [out] True; we have to heap allocate results.
+ * \return The number of valid references in results.
+ */
+obl_uint _obl_shape_children(struct obl_object *shape,
+        struct obl_object **results, int *heaped);
 
 #endif /* SHAPE_H */

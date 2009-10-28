@@ -119,6 +119,13 @@ void obl_write_string(struct obl_object *string, obl_uint *dest);
 void obl_print_string(struct obl_object *string, int depth, int indent);
 
 /**
+ * Destroy a string's internal storage.  For internal use only.
+ *
+ * \param string The string to destroy.
+ */
+void _obl_string_deallocate(struct obl_object *string);
+
+/**
  * Allocate the common internal structure of a string object.  For internal
  * use only.
  *

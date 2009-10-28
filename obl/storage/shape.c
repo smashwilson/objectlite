@@ -291,3 +291,18 @@ void obl_print_shape(struct obl_object *shape, int depth, int indent)
     puts("Current Shape:");
     obl_print_object(current_shape, depth - 1, indent + 2);
 }
+
+obl_uint _obl_shape_children(struct obl_object *shape,
+        struct obl_object **results, int *heaped)
+{
+    struct obl_shape_storage *storage;
+
+    storage = shape->storage.shape_storage;
+    *heaped = 1;
+    results = (struct obl_object **) malloc(sizeof(struct obl_object*) * 3);
+    results[0] = storage->name;
+    results[1] = storage->slot_names;
+    results[2] = storage->current_shape;
+
+    return (obl_uint) 3;
+}

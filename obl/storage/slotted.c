@@ -205,3 +205,16 @@ void obl_print_slotted(struct obl_object *slotted, int depth, int indent)
         printf("\n");
     }
 }
+
+obl_uint _obl_slotted_children(struct obl_object *slotted,
+        struct obl_object **results, int *heaped)
+{
+    *results = &(slotted->storage.slotted_storage->slots);
+    return obl_shape_slotcount(obl_object_shape(slotted));
+}
+
+void _obl_slotted_deallocate(struct obl_object *slotted)
+{
+    free(slotted->storage.slotted_storage->slots);
+    free(slotted->storage.slotted_storage);
+}

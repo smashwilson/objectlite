@@ -248,6 +248,12 @@ void obl_print_string(struct obl_object *string, int depth, int indent)
     printf("%.*s", (int) converted_size, buffer);
 }
 
+void _obl_string_deallocate(struct obl_object *string)
+{
+    free(string->storage.string_storage->contents);
+    free(string->storage.string_storage);
+}
+
 struct obl_object *_allocate_string(struct obl_database *d,
         UChar *uc, obl_uint length)
 {
