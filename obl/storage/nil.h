@@ -44,6 +44,6 @@ struct obl_object *_obl_create_nil(struct obl_database *d);
  * \param depth Ignored.
  * \param indent The level of output indentation.
  */
-void obl_print_nil(struct obl_object *nil, int depth, int indent);
+void obl_nil_print(struct obl_object *nil, int depth, int indent);
 
 #endif /* NIL_H */

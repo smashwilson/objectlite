@@ -62,6 +62,6 @@ int obl_boolean_value(struct obl_object *o);
  * \param depth Unused.
  * \param indent The level of indentation.
  */
-void obl_print_boolean(struct obl_object *boolean, int depth, int indent);
+void obl_boolean_print(struct obl_object *boolean, int depth, int indent);
 
 #endif /* BOOLEAN_H */

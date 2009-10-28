@@ -102,7 +102,7 @@ void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
     fixed->storage.fixed_storage->contents[index] = value;
 }
 
-struct obl_object *obl_read_fixed(struct obl_object *shape,
+struct obl_object *obl_fixed_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address base, int depth)
 {
     obl_uint length;
@@ -127,7 +127,7 @@ struct obl_object *obl_read_fixed(struct obl_object *shape,
     return o;
 }
 
-void obl_write_fixed(struct obl_object *fixed, obl_uint *dest)
+void obl_fixed_write(struct obl_object *fixed, obl_uint *dest)
 {
     obl_uint length;
     obl_uint i;
@@ -145,7 +145,7 @@ void obl_write_fixed(struct obl_object *fixed, obl_uint *dest)
     }
 }
 
-void obl_print_fixed(struct obl_object *fixed, int depth, int indent)
+void obl_fixed_print(struct obl_object *fixed, int depth, int indent)
 {
     int ind, i;
 

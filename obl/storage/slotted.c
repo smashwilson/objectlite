@@ -129,7 +129,7 @@ void obl_slotted_atcnamed_put(struct obl_object *slotted,
     obl_slotted_at_put(slotted, obl_shape_slotcnamed(slotted->shape, slotname), value);
 }
 
-struct obl_object *obl_read_slotted(struct obl_object *shape,
+struct obl_object *obl_slotted_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address base, int depth)
 {
     struct obl_object *result;
@@ -154,7 +154,7 @@ struct obl_object *obl_read_slotted(struct obl_object *shape,
     return result;
 }
 
-void obl_write_slotted(struct obl_object *slotted, obl_uint *dest)
+void obl_slotted_write(struct obl_object *slotted, obl_uint *dest)
 {
     obl_uint slot_count;
     obl_uint i;
@@ -170,7 +170,7 @@ void obl_write_slotted(struct obl_object *slotted, obl_uint *dest)
     }
 }
 
-void obl_print_slotted(struct obl_object *slotted, int depth, int indent)
+void obl_slotted_print(struct obl_object *slotted, int depth, int indent)
 {
     int in, slot_i;
     struct obl_object *shape, *slotnames, *slotname, *slot;

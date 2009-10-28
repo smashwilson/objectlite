@@ -79,16 +79,16 @@ typedef void (*deallocate_function)(struct obl_object *o);
  * +obl_storage_type+ enumeration.
  */
 static read_function read_functions[OBL_STORAGE_TYPE_MAX + 1] = {
-        &obl_read_shape,        /* OBL_SHAPE */
-        &obl_read_slotted,      /* OBL_SLOTTED */
+        &obl_shape_read,        /* OBL_SHAPE */
+        &obl_slotted_read,      /* OBL_SLOTTED */
         &invalid_read,          /* OBL_FIXED */
         &invalid_read,          /* OBL_CHUNK */
-        &obl_read_addrtreepage, /* OBL_ADDRTREEPAGE */
-        &obl_read_integer,      /* OBL_INTEGER */
+        &obl_addrtreepage_read, /* OBL_ADDRTREEPAGE */
+        &obl_integer_read,      /* OBL_INTEGER */
         &invalid_read,          /* OBL_FLOAT */
         &invalid_read,          /* OBL_DOUBLE */
         &invalid_read,          /* OBL_CHAR */
-        &obl_read_string,       /* OBL_STRING */
+        &obl_string_read,       /* OBL_STRING */
         &invalid_read,          /* OBL_BOOLEAN (invalid) */
         &invalid_read,          /* OBL_NIL (invalid) */
         &invalid_read           /* OBL_STUB (invalid) */
@@ -100,34 +100,34 @@ static read_function read_functions[OBL_STORAGE_TYPE_MAX + 1] = {
  * location specified by its pre-set physical address.
  */
 static write_function write_functions[] = {
-        &obl_write_shape,        /* OBL_SHAPE */
-        &obl_write_slotted,      /* OBL_SLOTTED */
-        &obl_write_fixed,        /* OBL_FIXED */
+        &obl_shape_write,        /* OBL_SHAPE */
+        &obl_slotted_write,      /* OBL_SLOTTED */
+        &obl_fixed_write,        /* OBL_FIXED */
         &invalid_write,          /* OBL_CHUNK */
-        &obl_write_addrtreepage, /* OBL_ADDRTREEPAGE */
-        &obl_write_integer,      /* OBL_INTEGER */
+        &obl_addrtreepage_write, /* OBL_ADDRTREEPAGE */
+        &obl_integer_write,      /* OBL_INTEGER */
         &invalid_write,          /* OBL_FLOAT */
         &invalid_write,          /* OBL_DOUBLE */
         &invalid_write,          /* OBL_CHAR */
-        &obl_write_string,       /* OBL_STRING */
+        &obl_string_write,       /* OBL_STRING */
         &invalid_write,          /* OBL_BOOLEAN (invalid) */
         &invalid_write,          /* OBL_NIL (invalid) */
         &invalid_write           /* OBL_STUB (invalid) */
 };
 
 static print_function print_functions[OBL_STORAGE_TYPE_MAX + 1] = {
-        &obl_print_shape,        /* OBL_SHAPE */
-        &obl_print_slotted,      /* OBL_SLOTTED */
-        &obl_print_fixed,        /* OBL_FIXED */
+        &obl_shape_print,        /* OBL_SHAPE */
+        &obl_slotted_print,      /* OBL_SLOTTED */
+        &obl_fixed_print,        /* OBL_FIXED */
         &invalid_print,          /* OBL_CHUNK */
-        &obl_print_addrtreepage, /* OBL_ADDRTREEPAGE */
-        &obl_print_integer,      /* OBL_INTEGER */
+        &obl_addrtreepage_print, /* OBL_ADDRTREEPAGE */
+        &obl_integer_print,      /* OBL_INTEGER */
         &invalid_print,          /* OBL_FLOAT */
         &invalid_print,          /* OBL_DOUBLE */
         &invalid_print,          /* OBL_CHAR */
-        &obl_print_string,       /* OBL_STRING */
-        &obl_print_boolean,      /* OBL_BOOLEAN */
-        &obl_print_nil,          /* OBL_NIL */
+        &obl_string_print,       /* OBL_STRING */
+        &obl_boolean_print,      /* OBL_BOOLEAN */
+        &obl_nil_print,          /* OBL_NIL */
         &invalid_print           /* OBL_STUB (invalid) */
 };
 

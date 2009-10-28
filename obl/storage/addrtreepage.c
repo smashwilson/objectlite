@@ -43,7 +43,7 @@ struct obl_object *obl_create_addrtreepage(struct obl_database *d,
     return result;
 }
 
-struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
+struct obl_object *obl_addrtreepage_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address base, int depth)
 {
     struct obl_object *result;
@@ -62,7 +62,7 @@ struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
     return result;
 }
 
-void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest)
+void obl_addrtreepage_write(struct obl_object *treepage, obl_uint *dest)
 {
     int i;
     obl_physical_address base;
@@ -78,7 +78,7 @@ void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest)
     }
 }
 
-void obl_print_addrtreepage(struct obl_object *addrtreepage,
+void obl_addrtreepage_print(struct obl_object *addrtreepage,
         int depth, int indent)
 {
     int in, i;

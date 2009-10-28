@@ -141,13 +141,13 @@ void obl_destroy_cshape(struct obl_object *o);
  * Read a shape object.  Shapes are themselves a fixed shape (sorry, no turtles
  * all the way down -- yet).
  */
-struct obl_object *obl_read_shape(struct obl_object *shape,
+struct obl_object *obl_shape_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
 /**
  * Write a shape object.
  */
-void obl_write_shape(struct obl_object *string, obl_uint *dest);
+void obl_shape_write(struct obl_object *string, obl_uint *dest);
 
 /**
  * Output a shape nicely to stdout.
@@ -156,7 +156,7 @@ void obl_write_shape(struct obl_object *string, obl_uint *dest);
  * \param depth Used to control object graph recursion.
  * \param indent The level of output indentation.
  */
-void obl_print_shape(struct obl_object *shape, int depth, int indent);
+void obl_shape_print(struct obl_object *shape, int depth, int indent);
 
 /**
  * Assign results to an array of the obl_object instances reachable from this

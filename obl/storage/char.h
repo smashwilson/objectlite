@@ -61,6 +61,6 @@ struct obl_object *obl_create_uchar(struct obl_database *d, UChar32 uc);
  * \param c An object with character storage.
  * \param depth Determines the level of indentation.
  */
-void obl_print_char(struct obl_object *c, int depth);
+void obl_char_print(struct obl_object *c, int depth);
 
 #endif /* CHAR_H */

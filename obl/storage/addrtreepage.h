@@ -56,13 +56,13 @@ struct obl_object *obl_create_addrtreepage(struct obl_database *d,
  * physical address (so that they can used during the address lookup process)
  * so tree pages don't respect the +depth+ parameter.
  */
-struct obl_object *obl_read_addrtreepage(struct obl_object *shape,
+struct obl_object *obl_addrtreepage_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
 /**
  * Write an address map tree page.
  */
-void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest);
+void obl_addrtreepage_write(struct obl_object *treepage, obl_uint *dest);
 
 /**
  * Output the contents of an address tree page.  This will usually be an
@@ -74,7 +74,7 @@ void obl_write_addrtreepage(struct obl_object *treepage, obl_uint *dest);
  *      this object.
  * \param indent Level of indentation.
  */
-void obl_print_addrtreepage(struct obl_object *addrtreepage,
+void obl_addrtreepage_print(struct obl_object *addrtreepage,
         int depth, int indent);
 
 #endif /* ADDRTREEPAGE_H */

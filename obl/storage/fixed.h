@@ -84,13 +84,13 @@ void obl_fixed_at_put(struct obl_object *fixed, obl_uint index,
 /**
  * Read a fixed-length collection.
  */
-struct obl_object *obl_read_fixed(struct obl_object *shape,
+struct obl_object *obl_fixed_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
 /**
  * Write a fixed-length collection.
  */
-void obl_write_fixed(struct obl_object *fixed, obl_uint *dest);
+void obl_fixed_write(struct obl_object *fixed, obl_uint *dest);
 
 /**
  * Output the contents of a fixed collection to stdout.
@@ -99,7 +99,7 @@ void obl_write_fixed(struct obl_object *fixed, obl_uint *dest);
  * \param depth Used to control object graph recursion.
  * \param indent The level of output indentation.
  */
-void obl_print_fixed(struct obl_object *fixed, int depth, int indent);
+void obl_fixed_print(struct obl_object *fixed, int depth, int indent);
 
 /**
  * Provide access to the obl_objects recursively referenced by this one.  Beware,

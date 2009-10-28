@@ -211,7 +211,7 @@ void obl_destroy_cshape(struct obl_object *shape)
     obl_destroy_object(storage->slot_names);
 }
 
-struct obl_object *obl_read_shape(struct obl_object *shape,
+struct obl_object *obl_shape_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address base, int depth)
 {
     struct obl_object *result;
@@ -241,7 +241,7 @@ struct obl_object *obl_read_shape(struct obl_object *shape,
     return result;
 }
 
-void obl_write_shape(struct obl_object *shape, obl_uint *dest)
+void obl_shape_write(struct obl_object *shape, obl_uint *dest)
 {
     struct obl_object *name, *slot_names, *current_shape;
 
@@ -260,7 +260,7 @@ void obl_write_shape(struct obl_object *shape, obl_uint *dest)
             (obl_uint) obl_shape_storagetype(shape));
 }
 
-void obl_print_shape(struct obl_object *shape, int depth, int indent)
+void obl_shape_print(struct obl_object *shape, int depth, int indent)
 {
     int in;
     struct obl_object *name, *slots, *current_shape;

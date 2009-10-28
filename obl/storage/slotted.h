@@ -102,13 +102,13 @@ void obl_slotted_atcnamed_put(struct obl_object *slotted,
  * Read a slotted object.  The number of slots expected is determined by the
  * provided shape.
  */
-struct obl_object *obl_read_slotted(struct obl_object *shape,
+struct obl_object *obl_slotted_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
 /**
  * Write a slotted object.
  */
-void obl_write_slotted(struct obl_object *slotted, obl_uint *dest);
+void obl_slotted_write(struct obl_object *slotted, obl_uint *dest);
 
 /**
  * Output a slotted object nicely to stdout.
@@ -117,7 +117,7 @@ void obl_write_slotted(struct obl_object *slotted, obl_uint *dest);
  * \param depth Used to control object graph recursion.
  * \param indent The level of output indentation.
  */
-void obl_print_slotted(struct obl_object *slotted, int depth, int indent);
+void obl_slotted_print(struct obl_object *slotted, int depth, int indent);
 
 /**
  * Iterate over a slotted object's referenced children.  For internal use

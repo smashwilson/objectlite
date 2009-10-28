@@ -34,7 +34,7 @@ void test_read_integer(void)
     d = obl_create_database(filename);
 
     shape = obl_at_address(d, OBL_INTEGER_SHAPE_ADDR);
-    o = obl_read_integer(shape, (obl_uint*) contents,
+    o = obl_integer_read(shape, (obl_uint*) contents,
             (obl_physical_address) 0, 0);
     CU_ASSERT(obl_integer_value(o) == 0x11223344);
     CU_ASSERT(o->physical_address == (obl_physical_address) 0);
@@ -58,7 +58,7 @@ void test_read_string(void)
     d = obl_create_database(filename);
 
     shape = obl_at_address(d, OBL_STRING_SHAPE_ADDR);
-    o = obl_read_string(shape, (obl_uint*) contents,
+    o = obl_string_read(shape, (obl_uint*) contents,
             (obl_physical_address) 0, 0);
     CU_ASSERT(obl_string_size(o) == 4);
     CU_ASSERT(obl_string_ccmp(o, "abcd") == 0);
@@ -85,11 +85,11 @@ void test_read_fixed(void)
     shape = obl_at_address(d, OBL_FIXED_SHAPE_ADDR);
 
     /*
-     * With depth 0, obl_read_fixed should create STUB objects for all linked
+     * With depth 0, obl_fixed_read should create STUB objects for all linked
      * addresses read.  obl_fixed_at() should resolve these stubs, so test
      * them by direct inspection.
      */
-    o = obl_read_fixed(shape, (obl_uint*) contents,
+    o = obl_fixed_read(shape, (obl_uint*) contents,
             (obl_physical_address) 0, 0);
     CU_ASSERT(obl_fixed_size(o) == 4);
     stub = o->storage.fixed_storage->contents[0];
@@ -103,7 +103,7 @@ void test_read_fixed(void)
     obl_destroy_object(o);
 
     /*
-     * With depth 1, obl_read_fixed should populate its members with actual
+     * With depth 1, obl_fixed_read should populate its members with actual
      * obl_objects acquired from obl_at_address.  Prepopulate the cache so
      * that those calls have something to find.
      */
@@ -122,7 +122,7 @@ void test_read_fixed(void)
     obl_cache_insert(d->cache, three);
     obl_cache_insert(d->cache, four);
 
-    o = obl_read_fixed(shape, (obl_uint*) contents,
+    o = obl_fixed_read(shape, (obl_uint*) contents,
             (obl_physical_address) 0, 1);
     linked = o->storage.fixed_storage->contents[0];
     CU_ASSERT(linked == one);
@@ -175,7 +175,7 @@ void test_read_shape(void)
     obl_cache_insert(d->cache, name);
     obl_cache_insert(d->cache, slot_names);
 
-    out = obl_read_shape(obl_nil(d), (obl_uint*) contents,
+    out = obl_shape_read(obl_nil(d), (obl_uint*) contents,
             (obl_physical_address) 0, 2);
     CU_ASSERT(obl_shape_storagetype(out) == OBL_SLOTTED);
     CU_ASSERT(out->storage.shape_storage->name == name);
@@ -217,7 +217,7 @@ void test_read_slotted(void)
     obl_cache_insert(d->cache, one);
     obl_cache_insert(d->cache, two);
 
-    o = obl_read_slotted(shape, (obl_uint *) contents, (obl_physical_address) 0, 1);
+    o = obl_slotted_read(shape, (obl_uint *) contents, (obl_physical_address) 0, 1);
     CU_ASSERT(obl_slotted_at(o, 0) == one);
     CU_ASSERT(obl_slotted_at(o, 1) == two);
     CU_ASSERT(obl_slotted_atcnamed(o, "one") == one);
@@ -246,7 +246,7 @@ void test_read_addrtreepage(void)
     d = obl_create_database(filename);
 
     shape = obl_at_address(d, OBL_ADDRTREEPAGE_SHAPE_ADDR);
-    treepage = obl_read_addrtreepage(shape, (obl_uint*) contents, 0, 1);
+    treepage = obl_addrtreepage_read(shape, (obl_uint*) contents, 0, 1);
 
     CU_ASSERT(treepage->storage.addrtreepage_storage->height == (obl_uint) 2);
     CU_ASSERT(treepage->storage.addrtreepage_storage->contents[0] ==
@@ -304,7 +304,7 @@ void test_write_integer(void)
 
     o = obl_create_integer(d, (obl_int) 0x12345678);
     o->physical_address = (obl_physical_address) 0;
-    obl_write_integer(o, (obl_uint*) contents);
+    obl_integer_write(o, (obl_uint*) contents);
 
     CU_ASSERT(memcmp(contents, expected, 8) == 0);
 
@@ -329,7 +329,7 @@ void test_write_string(void)
 
     o = obl_create_cstring(d, "hello", 5);
     o->physical_address = (obl_physical_address) 0;
-    obl_write_string(o, (obl_uint*) contents);
+    obl_string_write(o, (obl_uint*) contents);
 
     CU_ASSERT(memcmp(contents, expected, 20) == 0);
 
@@ -367,7 +367,7 @@ void test_write_fixed(void)
     obl_fixed_at_put(o, 1, two);
     obl_fixed_at_put(o, 2, three);
 
-    obl_write_fixed(o, (obl_uint*) contents);
+    obl_fixed_write(o, (obl_uint*) contents);
 
     CU_ASSERT(memcmp(contents, expected, 20) == 0);
 
@@ -404,7 +404,7 @@ void test_write_shape(void)
     shape->storage.shape_storage->slot_names->logical_address =
             (obl_logical_address) 0xCCDD;
 
-    obl_write_shape(shape, (obl_uint*) contents);
+    obl_shape_write(shape, (obl_uint*) contents);
     CU_ASSERT(memcmp(contents, expected, 20) == 0);
 
     obl_destroy_cshape(shape);
@@ -443,7 +443,7 @@ void test_write_slotted(void)
     obl_slotted_at_put(slotted, 1, bbb);
     obl_slotted_at_put(slotted, 2, ccc);
 
-    obl_write_slotted(slotted, (obl_uint*) contents);
+    obl_slotted_write(slotted, (obl_uint*) contents);
     CU_ASSERT(memcmp(contents, expected, 16) == 0);
 
     obl_destroy_object(aaa);
@@ -473,7 +473,7 @@ void test_write_addrtreepage(void)
     treepage->storage.addrtreepage_storage->contents[1] =
             (obl_physical_address) 0x00AA00BB;
 
-    obl_write_addrtreepage(treepage, (obl_uint*) contents);
+    obl_addrtreepage_write(treepage, (obl_uint*) contents);
     CU_ASSERT(memcmp(contents, expected, 4 + CHUNK_SIZE * 4) == 0);
 
     obl_destroy_object(treepage);

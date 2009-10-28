@@ -56,13 +56,13 @@ obl_int obl_integer_value(struct obl_object *o);
 /**
  *  Read a single-word obl_integer_object.
  */
-struct obl_object *obl_read_integer(struct obl_object *shape,
+struct obl_object *obl_integer_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
 /**
  * Write an integer object.
  */
-void obl_write_integer(struct obl_object *integer, obl_uint *dest);
+void obl_integer_write(struct obl_object *integer, obl_uint *dest);
 
 /**
  * Output an integer to stdout.
@@ -71,6 +71,6 @@ void obl_write_integer(struct obl_object *integer, obl_uint *dest);
  * \param depth Unused.
  * \param indent The level of output indentation.
  */
-void obl_print_integer(struct obl_object *integer, int depth, int indent);
+void obl_integer_print(struct obl_object *integer, int depth, int indent);
 
 #endif /* INTEGER_H */

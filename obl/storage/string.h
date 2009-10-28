@@ -101,13 +101,13 @@ size_t obl_string_value(struct obl_object *o,
 /**
  * Read a length-prefixed UTF-16BE string object.
  */
-struct obl_object *obl_read_string(struct obl_object *shape,
+struct obl_object *obl_string_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address offset, int depth);
 
 /*
  * Write a string object.
  */
-void obl_write_string(struct obl_object *string, obl_uint *dest);
+void obl_string_write(struct obl_object *string, obl_uint *dest);
 
 /**
  * Output a string to stdout.
@@ -116,7 +116,7 @@ void obl_write_string(struct obl_object *string, obl_uint *dest);
  * \param depth Ignored.
  * \param indent The level of output indentation.
  */
-void obl_print_string(struct obl_object *string, int depth, int indent);
+void obl_string_print(struct obl_object *string, int depth, int indent);
 
 /**
  * Destroy a string's internal storage.  For internal use only.

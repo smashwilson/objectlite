@@ -53,7 +53,7 @@ int obl_boolean_value(struct obl_object *bool)
     return (int) (bool->storage.boolean_storage->value);
 }
 
-void obl_print_boolean(struct obl_object *boolean, int depth, int indent)
+void obl_boolean_print(struct obl_object *boolean, int depth, int indent)
 {
     int in;
 

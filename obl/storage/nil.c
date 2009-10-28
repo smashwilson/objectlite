@@ -26,7 +26,7 @@ struct obl_object *_obl_create_nil(struct obl_database *d)
     return result;
 }
 
-void obl_print_nil(struct obl_object *nil, int depth, int indent)
+void obl_nil_print(struct obl_object *nil, int depth, int indent)
 {
     int in;
 

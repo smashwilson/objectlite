@@ -183,7 +183,7 @@ size_t obl_string_value(struct obl_object *string,
 }
 
 /* Strings are stored as UTF-16BE with a one-word length prefix. */
-struct obl_object *obl_read_string(struct obl_object *shape,
+struct obl_object *obl_string_read(struct obl_object *shape,
         obl_uint *source, obl_physical_address base, int depth)
 {
     obl_uint length;
@@ -213,7 +213,7 @@ struct obl_object *obl_read_string(struct obl_object *shape,
     return o;
 }
 
-void obl_write_string(struct obl_object *string, obl_uint *dest)
+void obl_string_write(struct obl_object *string, obl_uint *dest)
 {
     obl_uint length;
     obl_uint i;
@@ -234,7 +234,7 @@ void obl_write_string(struct obl_object *string, obl_uint *dest)
     }
 }
 
-void obl_print_string(struct obl_object *string, int depth, int indent)
+void obl_string_print(struct obl_object *string, int depth, int indent)
 {
     int in;
     char *buffer;
