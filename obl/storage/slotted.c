@@ -209,7 +209,7 @@ void obl_slotted_print(struct obl_object *slotted, int depth, int indent)
 obl_uint _obl_slotted_children(struct obl_object *slotted,
         struct obl_object **results, int *heaped)
 {
-    *results = &(slotted->storage.slotted_storage->slots);
+    results = slotted->storage.slotted_storage->slots;
     return obl_shape_slotcount(obl_object_shape(slotted));
 }
 

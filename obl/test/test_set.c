@@ -43,7 +43,6 @@ void stress_test_set(unsigned long insert_count,
     printf("Starting...");
     for (addr = 0; addr < insert_count; addr++) {
         struct obl_object *o;
-
         o = obl_create_integer(d, (obl_uint) addr);
         o->logical_address = (obl_logical_address) addr;
 
@@ -52,26 +51,36 @@ void stress_test_set(unsigned long insert_count,
             printf("\rInserted <%8lu>", addr);
         }
     }
-    printf("\n");
+    printf("\rInserted <%8lu>\n", addr);
 
     for (addr = 0; addr < delete_count; addr++) {
-        struct obl_object o;
-        o.logical_address = (obl_logical_address) rand();
+        struct obl_object *o;
 
-        obl_set_remove(set, &o);
+        o = obl_set_lookup(set, (obl_set_key) addr);
+
+        if (o != NULL) {
+            obl_set_remove(set, o);
+            _obl_deallocate_object(o);
+        }
 
         if (addr % 1000 == 0) {
             printf("\rDeleted  <%8lu>", addr);
         }
     }
-    printf("\n");
+    printf("\rDeleted  <%8lu>\n", addr);
 
     black_height = obl_set_verify(set);
     if (black_height == 0) {
         fprintf(stderr, "Set is invalid!");
-        exit(1);
     } else {
         printf("Set is valid! Black height: %d\n", black_height);
-        exit(0);
     }
+
+    printf("Destroying set... ");
+    obl_destroy_set(set, &_obl_deallocate_object);
+    printf("Set destroyed.");
+
+    obl_destroy_database(d);
+
+    exit(0);
 }

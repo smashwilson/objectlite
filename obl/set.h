@@ -35,6 +35,12 @@ typedef obl_address obl_set_key;
 typedef obl_set_key (*obl_set_keyfunction)(struct obl_object *);
 
 /**
+ * Some obl_set functions allow you to pass a callback function to be invoked
+ * during tree traversal.  Such arguments must match this signature.
+ */
+typedef void (*obl_set_callback)(struct obl_object *);
+
+/**
  * The externally visible set structure.  Allocate them with obl_create_set.
  */
 struct obl_set {
@@ -87,6 +93,15 @@ struct obl_object *obl_set_lookup(struct obl_set *set, obl_set_key key);
  *      object currently mapped to the same key as o, not necessarily o itself.
  */
 void obl_set_remove(struct obl_set *set, struct obl_object *o);
+
+/**
+ * Deallocate a set, including all internal nodes and referenced obl_objects.
+ *
+ * \param set The set to deallocate.  This storage will be freed.
+ * \param callback If non-NULL, this callback function will be invoked with
+ *      each obl_object in the set as the nodes containing them are destroyed.
+ */
+void obl_destroy_set(struct obl_set *set, obl_set_callback callback);
 
 /**
  * An obl_set_keyfunction that produces a map from assigned logical addresses

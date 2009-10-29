@@ -75,6 +75,8 @@ static struct obl_rb_node *remove_r(struct obl_rb_node *n,
 static struct obl_rb_node *remove_balance(struct obl_rb_node *n,
         enum direction dir, int *done);
 
+static void destroy_r(struct obl_rb_node *n, obl_set_callback callback);
+
 static struct obl_rb_node *rotate_single(struct obl_rb_node *fulcrum,
         enum direction dir);
 
@@ -139,6 +141,11 @@ void obl_set_remove(struct obl_set *set, struct obl_object *o)
 
     done = 0;
     set->root = remove_r(set->root, set->keyfunction(o), &done);
+}
+
+void obl_destroy_set(struct obl_set *set, obl_set_callback callback)
+{
+    destroy_r(set->root, callback);
 }
 
 obl_set_key logical_address_keyfunction(struct obl_object *o)
@@ -247,8 +254,12 @@ static struct obl_rb_node *insert_r(struct obl_rb_node *n,
         }
 
     } else {
-        /* This key already exists within the set. */
-        /* FIXME: Deallocate n->o in an orderly fashion. */
+        /* This key already exists within the set.  Deallocate the old one's
+         * storage and assign it the new obl_object payload.
+         */
+        if (n->o != created->o) {
+            _obl_deallocate_object(n->o);
+        }
         n->o = created->o;
         free(created);
     }
@@ -295,9 +306,7 @@ static struct obl_rb_node *remove_r(struct obl_rb_node *n,
                     *done = 1;
                 }
 
-                /* FIXME: Deallocate n->o as well. */
                 free(n);
-
                 return saved;
             } else {
                 struct obl_rb_node *heir;
@@ -372,6 +381,21 @@ static struct obl_rb_node *remove_balance(struct obl_rb_node *n,
     }
 
     return n;
+}
+
+static void destroy_r(struct obl_rb_node *n, obl_set_callback callback)
+{
+    if (n == NULL) {
+        return ;
+    }
+
+    destroy_r(n->children[LEFT], callback);
+    destroy_r(n->children[RIGHT], callback);
+
+    if (callback != NULL) {
+        (*callback)(n->o);
+    }
+    free(n);
 }
 
 static struct obl_rb_node *rotate_single(struct obl_rb_node *fulcrum,
