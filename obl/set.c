@@ -46,6 +46,16 @@ struct obl_rb_node {
 
 };
 
+static struct iterator_stack {
+
+    struct obl_rb_node *current;
+
+    int seen;
+
+    struct iterator_stack *parent;
+
+};
+
 /*
  * Convenience macros for concise node manipulation and testing.
  */
@@ -74,6 +84,8 @@ static struct obl_rb_node *remove_r(struct obl_rb_node *n,
 
 static struct obl_rb_node *remove_balance(struct obl_rb_node *n,
         enum direction dir, int *done);
+
+static struct obl_object *inorder_iternext(struct obl_set_iterator *iter);
 
 static void destroy_r(struct obl_rb_node *n, obl_set_callback callback);
 
@@ -141,6 +153,43 @@ void obl_set_remove(struct obl_set *set, struct obl_object *o)
 
     done = 0;
     set->root = remove_r(set->root, set->keyfunction(o), &done);
+}
+
+struct obl_set_iterator *obl_set_inorder_iter(struct obl_set *set)
+{
+    struct obl_set_iterator *it;
+    struct iterator_stack *stack;
+
+    it = malloc(sizeof(struct obl_set_iterator));
+    it->next_function = &inorder_iternext;
+
+    stack = malloc(sizeof(struct iterator_stack));
+    stack->current = set->root;
+    stack->dir = LEFT;
+    stack->parent = NULL;
+
+    it->stack = stack;
+
+    return it;
+}
+
+struct obl_object *obl_set_iternext(struct obl_set_iterator *iter)
+{
+    return iter->next_function(iter);
+}
+
+struct obl_set_iterator *obl_set_destroyiter(struct obl_set_iterator *iter)
+{
+    struct iterator_stack *stack, *next;
+
+    stack = iter->stack;
+    while (stack != NULL) {
+        next = stack->parent;
+        free(stack);
+        stack = next;
+    }
+
+    free(iter);
 }
 
 void obl_destroy_set(struct obl_set *set, obl_set_callback callback)
@@ -381,6 +430,96 @@ static struct obl_rb_node *remove_balance(struct obl_rb_node *n,
     }
 
     return n;
+}
+
+static struct obl_object *inorder_iternext(struct obl_set_iterator *iter)
+{
+    struct iterator_stack *stack_bottom;
+    struct obl_rb_node *current_node;
+    struct obl_result *result;
+
+    stack_bottom = iter->stack;
+    current_node = stack_bottom->current;
+
+    /*
+     * Descend to the beginning of the left subtree, pushing stack frames as you
+     * go.
+     */
+    while (current_node->children[LEFT] != NULL) {
+        struct iterator_stack *context;
+
+        current_node = current_node->children[LEFT];
+
+        /* Push a new frame on the stack. */
+        context = malloc(sizeof(iterator_stack));
+        context->current = current_node;
+        context->seen = 0;
+        context->parent = stack_bottom;
+
+        stack_bottom = context;
+    }
+
+    /* This is going to be the current result. */
+    result = current_node->o;
+
+    /* If this node has a right subchild, */
+
+    /* *** */
+
+    if (stack_bottom->seen) {
+        struct iterator_stack *context;
+
+        /* Unwind all of the stack that we've already traversed. */
+        while (stack_bottom->seen || current_node->children[RIGHT] == NULL) {
+            struct iterator_stack *parent;
+
+            /*
+             * Pop the top frame from the stack.  If we run out of stack,
+             * we're out of set.
+             */
+            parent = stack_bottom->parent;
+            free(stack_bottom);
+            if (parent == NULL) {
+                return NULL;
+            }
+            stack_bottom = parent;
+            current_node = parent->current;
+        }
+
+        /*
+         * Begin traversal of the right subtree by pushing a stack frame for the
+         * right child.
+         */
+        context = malloc(sizeof(iterator_stack));
+        context->current = current_node->children[RIGHT];
+        context->seen = 0;
+        context->parent = stack_bottom;
+    }
+
+    /*
+     * Descend to the beginning of the left subtree, creating stack frames
+     * as you go.
+     */
+    while (current_node->children[LEFT] != NULL) {
+        struct iterator_stack *context;
+
+        current_node = current_node->children[LEFT];
+
+        /* Push a new frame on the stack. */
+        context = malloc(sizeof(iterator_stack));
+        context->current = current_node;
+        context->seen = 0;
+        context->parent = stack_bottom;
+
+        stack_bottom = context;
+    }
+
+    /*
+     * We've hit the bottom of the left subtree; swap directions and return
+     * this node's value.
+     */
+    stack_bottom->seen = 1;
+    return current_node->o;
 }
 
 static void destroy_r(struct obl_rb_node *n, obl_set_callback callback)

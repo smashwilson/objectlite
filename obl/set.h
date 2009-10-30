@@ -17,6 +17,9 @@
 /* defined in set.c */
 struct obl_rb_node;
 
+/* defined in set.c */
+static struct iterator_stack;
+
 /**
  * obl_set_key must be able to store both obl_address and uintptr_t values, so
  * use whichever has greater width.
@@ -58,6 +61,14 @@ struct obl_set {
 
 };
 
+struct obl_set_iterator {
+
+    struct iterator_stack *stack;
+
+    struct obl_object *(*next_function)(struct obl_set_iterator *self);
+
+};
+
 /**
  * Create an obl_set that uses the provided function to generate item keys.
  *
@@ -93,6 +104,12 @@ struct obl_object *obl_set_lookup(struct obl_set *set, obl_set_key key);
  *      object currently mapped to the same key as o, not necessarily o itself.
  */
 void obl_set_remove(struct obl_set *set, struct obl_object *o);
+
+struct obl_set_iterator *obl_set_inorder_iter(struct obl_set *set);
+
+struct obl_object *obl_set_iternext(struct obl_set_iterator *iter);
+
+struct obl_set_iterator *obl_set_destroyiter(struct obl_set_iterator *iter);
 
 /**
  * Deallocate a set, including all internal nodes and referenced obl_objects.
