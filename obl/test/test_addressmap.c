@@ -11,6 +11,7 @@
 #include "addressmap.h"
 
 #include "storage/object.h"
+#include "cache.h"
 #include "database.h"
 #include "unitutilities.h"
 
@@ -19,7 +20,6 @@ const static char *filename = "addrmap.obl";
 void test_map_leaf(void)
 {
     struct obl_database *d;
-    struct obl_object *addrtreepage;
     obl_physical_address result;
     const char contents[] = {
             0x00, 0x00, 0x00, 0x00, /* padding word */
@@ -46,7 +46,6 @@ void test_map_leaf(void)
 void test_map_branch(void)
 {
     struct obl_database *d;
-    struct obl_object *branch, *leaf;
     obl_physical_address result;
     const char contents[] = {
             0x00, 0x00, 0x00, 0x00,  /* A padding word */

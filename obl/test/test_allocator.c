@@ -10,6 +10,7 @@
 
 #include "allocator.h"
 
+#include "cache.h"
 #include "database.h"
 #include "storage/object.h"
 #include "platform.h"
@@ -52,7 +53,6 @@ static void teardown_database(struct obl_database *d)
 void test_allocate_logical(void)
 {
     struct obl_database *d;
-    struct obl_object *allocator, *logical, *physical;
     obl_logical_address result;
 
     d = setup_database();

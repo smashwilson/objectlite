@@ -222,7 +222,7 @@ void test_cache_deletion(void)
     struct obl_object o[10];
     struct obl_cache_entry *current_entry;
     struct obl_cache_age_entry *current_age;
-    int index, count;
+    int index;
 
     cache = obl_create_cache(5, 100);
     CU_ASSERT_FATAL(cache != NULL);

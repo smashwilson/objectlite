@@ -21,6 +21,7 @@ env.Append(LIBPATH = os.environ.get('LD_LIBRARY_PATH'))
 env.Append(LIBPATH = os.pathsep + 'obl')
 
 env.Append(CCFLAGS = '-g');
+env.Append(CCFLAGS = '-Wall');
 
 # libobjectlite: The core library. #############################################
 obllib = StaticLibrary(

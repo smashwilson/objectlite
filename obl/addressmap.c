@@ -71,7 +71,7 @@ obl_physical_address obl_address_lookup(struct obl_database *d,
     height = readable_uint(d->content[base + 1]);
     mask = ~((1 << (PAGE_SHIFT * (height + 1))) - 1);
 
-    if (mask & (obl_uint) logical != 0) {
+    if ((mask & (obl_uint) logical) != 0) {
         return OBL_PHYSICAL_UNASSIGNED;
     }
 

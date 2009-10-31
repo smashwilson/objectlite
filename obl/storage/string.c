@@ -14,6 +14,7 @@
 #include "unicode/ucnv.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 struct obl_object *obl_create_string(struct obl_database *d,

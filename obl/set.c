@@ -313,7 +313,7 @@ struct obl_object *obl_set_iternext(struct obl_set_iterator *iter)
     return iter->next_function(iter);
 }
 
-struct obl_set_iterator *obl_set_destroyiter(struct obl_set_iterator *iter)
+void obl_set_destroyiter(struct obl_set_iterator *iter)
 {
     struct iterator_context *stack, *next;
 
@@ -463,8 +463,6 @@ static struct obl_rb_node *insert_r(struct obl_rb_node *n,
 static struct obl_rb_node *lookup_r(struct obl_rb_node *n,
         obl_set_key key)
 {
-    enum direction dir;
-
     if (n == NULL) {
         return NULL;
     } else if (n->key == key) {
@@ -578,7 +576,7 @@ static struct obl_rb_node *remove_balance(struct obl_rb_node *n,
 
 static struct obl_object *inorder_iternext(struct obl_set_iterator *iter)
 {
-    struct iterator_context *current_stack, *to_push;
+    struct iterator_context *current_stack;
     struct obl_rb_node *current_node;
     struct obl_object *result;
 

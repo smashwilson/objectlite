@@ -141,7 +141,6 @@ void obl_cache_delete_at(struct obl_cache *cache,
         obl_logical_address address)
 {
     struct obl_cache_entry *previous_bucket, *found_bucket;
-    struct obl_cache_age_entry *found_age;
 
     found_bucket = lookup_address(cache, address, &previous_bucket);
     if (found_bucket == NULL) {
@@ -255,7 +254,7 @@ static void insert_in_bucket(struct obl_cache *cache, int bucket_index,
 static struct obl_cache_entry *lookup_address(struct obl_cache *cache,
         obl_logical_address address, struct obl_cache_entry **previous)
 {
-    struct obl_cache_entry *head, *current, *last;
+    struct obl_cache_entry *head, *current;
     int bucket_index;
 
     bucket_index = bucket_for_address(cache, address);

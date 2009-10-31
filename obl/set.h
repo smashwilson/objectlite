@@ -149,7 +149,7 @@ struct obl_object *obl_set_iternext(struct obl_set_iterator *iter);
  *
  * @param iter The iterator to destroy.
  */
-struct obl_set_iterator *obl_set_destroyiter(struct obl_set_iterator *iter);
+void obl_set_destroyiter(struct obl_set_iterator *iter);
 
 /**
  * Deallocate a set, including all internal nodes and referenced obl_objects.

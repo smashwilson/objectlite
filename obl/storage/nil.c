@@ -11,9 +11,11 @@
 #include "storage/object.h"
 #include "database.h"
 
+#include <stdio.h>
+
 struct obl_object *_obl_create_nil(struct obl_database *d)
 {
-    struct obl_object *result, *shape;
+    struct obl_object *result;
 
     result = _obl_allocate_object(d);
     if (result == NULL) {

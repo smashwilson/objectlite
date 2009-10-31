@@ -14,6 +14,7 @@
 #include "CUnit/Basic.h"
 #include "unicode/ucnv.h"
 
+#include "cache.h"
 #include "database.h"
 #include "log.h"
 #include "unitutilities.h"
@@ -43,7 +44,6 @@ void test_string_object(void)
     struct obl_database *d;
     struct obl_object *o;
     char *buffer;
-    int i;
 
     d = obl_create_database("unit.obl");
 

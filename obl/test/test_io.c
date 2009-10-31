@@ -15,6 +15,7 @@
 #include "CUnit/Basic.h"
 
 #include "storage/object.h"
+#include "cache.h"
 #include "database.h"
 #include "platform.h"
 #include "unitutilities.h"
@@ -350,7 +351,6 @@ void test_write_fixed(void)
             0x00, 0x00, 0x00, 0xBB, /* Object two. */
             0x00, 0x00, 0x00, 0xCC, /* Object three. */
     };
-    int i;
 
     d = obl_create_database(filename);
 
@@ -391,7 +391,6 @@ void test_write_shape(void)
             0xff, 0xff, 0xff, 0xf1, /* Current shape = OBL_NIL_ADDR */
             0x00, 0x00, 0x00, 0x01  /* Storage type = OBL_SLOTTED */
     };
-    int i;
 
     d = obl_create_database(filename);
 

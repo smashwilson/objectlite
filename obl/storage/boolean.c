@@ -12,10 +12,11 @@
 #include "storage/object.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 struct obl_object *_obl_create_bool(struct obl_database *d, int truth)
 {
-    struct obl_object *result, *shape;
+    struct obl_object *result;
     struct obl_boolean_storage *storage;
 
     result = _obl_allocate_object(d);

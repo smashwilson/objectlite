@@ -12,6 +12,7 @@
 #include "database.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 struct obl_object *obl_create_integer(struct obl_database *d, obl_int i)
 {
