@@ -96,8 +96,9 @@ void stress_test_set(unsigned long insert_count,
     iter = obl_set_destroying_iter(set);
     while ((current = obl_set_iternext(iter)) != NULL) {
         if (verbose) {
-            printf(" XX %ld\n", (long) obl_integer_value(current));
+            printf(" XX %ld", (long) obl_integer_value(current));
         }
+        _obl_deallocate_object(current);
     }
     obl_set_destroyiter(iter);
     printf("Set destroyed.\n");

@@ -174,15 +174,6 @@ static struct obl_object *destroying_iternext(
         struct obl_set_iterator *iter);
 
 /**
- * Recursive helper for obl_destroy_set().
- *
- * @param n Root of some subtree.
- * @param callback A function to execute with the payload of each node as it's
- *      destroyed.
- */
-static void destroy_r(struct obl_rb_node *n, obl_set_callback callback);
-
-/**
  * A utility function to perform node rotations.
  *
  * @param fulcrum Root of the subtree to rotate.
@@ -338,7 +329,16 @@ struct obl_set_iterator *obl_set_destroyiter(struct obl_set_iterator *iter)
 
 void obl_destroy_set(struct obl_set *set, obl_set_callback callback)
 {
-    destroy_r(set->root, callback);
+    struct obl_set_iterator *iter;
+    struct obl_object *current;
+
+    iter = obl_set_destroying_iter(set);
+    while ((current = obl_set_iternext(iter)) != NULL) {
+        if (callback != NULL) {
+            callback(current);
+        }
+    }
+    obl_set_destroyiter(iter);
 }
 
 obl_set_key logical_address_keyfunction(struct obl_object *o)
@@ -685,21 +685,6 @@ static struct obl_object *destroying_iternext(
     iter->stack = new_context;
 
     return result;
-}
-
-static void destroy_r(struct obl_rb_node *n, obl_set_callback callback)
-{
-    if (n == NULL) {
-        return ;
-    }
-
-    destroy_r(n->children[LEFT], callback);
-    destroy_r(n->children[RIGHT], callback);
-
-    if (callback != NULL) {
-        (*callback)(n->o);
-    }
-    free(n);
 }
 
 static struct obl_rb_node *rotate_single(struct obl_rb_node *fulcrum,
