@@ -10,9 +10,9 @@
 #include "CUnit/Basic.h"
 
 #include "storage/object.h"
-#include "cache.h"
 #include "constants.h"
 #include "database.h"
+#include "set.h"
 #include "unitutilities.h"
 
 #include <stdio.h>
@@ -22,7 +22,6 @@ const char *filename = "database.obl";
 void test_initialize_database(void)
 {
     struct obl_database *database;
-    struct obl_cache *cache;
 
     database = obl_create_database(filename);
     CU_ASSERT_FATAL(database != NULL);
@@ -30,16 +29,6 @@ void test_initialize_database(void)
 
     if (database->filename != NULL) {
         CU_ASSERT(strcmp(database->filename, filename) == 0);
-    }
-
-    if (database->cache != NULL) {
-        cache = database->cache;
-        CU_ASSERT(cache->current_size == 0);
-        CU_ASSERT(cache->max_size == DEFAULT_CACHE_SIZE);
-        CU_ASSERT(cache->bucket_count == DEFAULT_CACHE_BUCKETS);
-        CU_ASSERT(cache->buckets != NULL);
-    } else {
-        CU_FAIL("Cache not allocated.");
     }
 
     CU_ASSERT(database->log_config.filename == NULL);
@@ -126,10 +115,10 @@ void test_at_address(void)
     out = obl_at_address(d, OBL_TRUE_ADDR);
     CU_ASSERT(obl_boolean_value(out));
 
-    /* obl_at_address should hit the cache. */
+    /* obl_at_address should hit the read set. */
     in = obl_create_integer(d, (obl_int) 14);
     in->logical_address = 123;
-    obl_cache_insert(d->cache, in);
+    obl_set_insert(d->read_set, in);
 
     out = obl_at_address(d, 123);
     CU_ASSERT(in == out);
@@ -195,9 +184,6 @@ void test_database_io(void)
     o = obl_at_address(d, addr);
     CU_ASSERT(obl_integer_value(o) == (obl_int) 42);
 
-    if (o != obl_nil(d)) {
-        obl_destroy_object(o);
-    }
     obl_close_database(d);
     obl_destroy_database(d);
 }

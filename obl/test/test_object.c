@@ -14,9 +14,9 @@
 #include "CUnit/Basic.h"
 #include "unicode/ucnv.h"
 
-#include "cache.h"
 #include "database.h"
 #include "log.h"
+#include "set.h"
 #include "unitutilities.h"
 
 void test_integer_object(void)
@@ -183,7 +183,7 @@ void test_slotted_object(void)
 void test_stub_object(void)
 {
     struct obl_database *d;
-    struct obl_object *o, *real;
+    struct obl_object *o;
 
     d = obl_create_database("unit.obl");
 
@@ -193,14 +193,8 @@ void test_stub_object(void)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(obl_shape_storagetype(o->shape) == OBL_STUB);
     CU_ASSERT(_obl_is_stub(o));
+    CU_ASSERT(obl_set_lookup(d->read_set, (obl_set_key) 14) == o);
 
-    real = obl_create_integer(d, (obl_int) 42);
-    real->logical_address = (obl_logical_address) 14;
-    obl_cache_insert(d->cache, real);
-
-    CU_ASSERT(_obl_resolve_stub(o) == real);
-
-    obl_destroy_object(real);
     obl_destroy_database(d);
 }
 

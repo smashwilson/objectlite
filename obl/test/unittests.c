@@ -13,7 +13,6 @@
  */
 
 CU_pSuite initialize_io_suite(void);
-CU_pSuite initialize_cache_suite(void);
 CU_pSuite initialize_database_suite(void);
 CU_pSuite initialize_object_suite(void);
 CU_pSuite initialize_addressmap_suite(void);
@@ -39,7 +38,6 @@ int main()
 
     if (
             (initialize_io_suite() == NULL) ||
-            (initialize_cache_suite() == NULL) ||
             (initialize_database_suite() == NULL) ||
             (initialize_object_suite() == NULL) ||
             (initialize_addressmap_suite() == NULL) ||

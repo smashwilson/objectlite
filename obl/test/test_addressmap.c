@@ -11,8 +11,8 @@
 #include "addressmap.h"
 
 #include "storage/object.h"
-#include "cache.h"
 #include "database.h"
+#include "set.h"
 #include "unitutilities.h"
 
 const static char *filename = "addrmap.obl";
@@ -182,13 +182,13 @@ void test_create_leaf(void)
     d->content = content;
     d->root.address_map_addr = (obl_physical_address) branch;
 
-    /* Create and address allocator and prime the cache with it. */
+    /* Create and address allocator and prime the read set with it. */
     allocator = obl_create_slotted(obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
     next_physical = obl_create_integer(d, (obl_int) leaf);
     obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
     allocator->logical_address = (obl_logical_address) 1;
     d->root.allocator_addr = allocator->logical_address;
-    obl_cache_insert(d->cache, allocator);
+    obl_set_insert(d->read_set, allocator);
 
     obl_address_assign(d,
             (obl_logical_address) 0x00000403,
@@ -196,7 +196,6 @@ void test_create_leaf(void)
 
     CU_ASSERT(memcmp(content, expected, CL_SIZE * 4) == 0);
 
-    obl_destroy_object(allocator);
     obl_destroy_object(next_physical);
     obl_destroy_database(d);
 }
@@ -233,13 +232,13 @@ void test_create_branch(void)
     d->content = content;
     d->root.address_map_addr = (obl_physical_address) 1;
 
-    /* Create an address allocator and prime the cache with it. */
+    /* Create an address allocator and prime the read set with it. */
     allocator = obl_create_slotted(obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
     next_physical = obl_create_integer(d, (obl_int) branch);
     obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
     allocator->logical_address = (obl_logical_address) 1;
     d->root.allocator_addr = allocator->logical_address;
-    obl_cache_insert(d->cache, allocator);
+    obl_set_insert(d->read_set, allocator);
 
     obl_address_assign(d,
             (obl_logical_address) 0x0000010F,
@@ -249,7 +248,6 @@ void test_create_branch(void)
     CU_ASSERT(d->root.address_map_addr == (obl_physical_address) branch);
     CU_ASSERT(d->root.dirty);
 
-    obl_destroy_object(allocator);
     obl_destroy_object(next_physical);
     obl_destroy_database(d);
 }

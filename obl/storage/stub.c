@@ -10,6 +10,7 @@
 
 #include "storage/object.h"
 #include "database.h"
+#include "set.h"
 
 #include <stdlib.h>
 
@@ -37,6 +38,12 @@ struct obl_object *_obl_create_stub(struct obl_database *d,
     result->shape = obl_at_address(d, OBL_STUB_SHAPE_ADDR);
     result->storage.stub_storage = storage;
     result->logical_address = address;
+
+    /*
+     * Store the newly created stub within the read set, so that it will be
+     * deallocated with the rest of the read objects.
+     */
+    obl_set_insert(d->read_set, result);
 
     return result;
 }

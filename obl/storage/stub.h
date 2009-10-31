@@ -3,7 +3,7 @@
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
  *
- * 
+ * @file stub.h
  */
 
 #ifndef STUB_H
@@ -41,8 +41,8 @@ struct obl_object *_obl_create_stub(struct obl_database *d,
  * If an object is a stub, return the actual object it's standing in for;
  * otherwise, return it untouched.
  *
- * \param o An object, possibly of stub storage.
- * \return Either o itself, or a new obl_object that it was deferring.
+ * @param o An object, possibly of stub storage.
+ * @return Either o itself, or a new obl_object that it was deferring.
  */
 struct obl_object *_obl_resolve_stub(struct obl_object *o);
 

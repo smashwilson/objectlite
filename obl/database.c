@@ -12,10 +12,10 @@
 #include "storage/object.h"
 #include "addressmap.h"
 #include "allocator.h"
-#include "cache.h"
 #include "constants.h"
 #include "log.h"
 #include "platform.h"
+#include "set.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -65,7 +65,7 @@ static char *error_messages[] = {
 struct obl_database *obl_create_database(const char *filename)
 {
     struct obl_database *database;
-    struct obl_cache *cache;
+    struct obl_set *read_set;
 
     database = (struct obl_database*) malloc(sizeof(struct obl_database));
     if (database == NULL) {
@@ -87,19 +87,19 @@ struct obl_database *obl_create_database(const char *filename)
     database->root.shape_map_addr = OBL_PHYSICAL_UNASSIGNED;
     database->root.dirty = 0;
 
-    cache = obl_create_cache(DEFAULT_CACHE_BUCKETS, DEFAULT_CACHE_SIZE);
-    if (cache == NULL) {
+    read_set = obl_create_set(&logical_address_keyfunction);
+    if (read_set == NULL) {
         obl_report_error(database, OBL_OUT_OF_MEMORY,
-                "Unable to allocate cache.");
+                "Unable to allocate read set.");
         free(database);
         return NULL;
     }
-    database->cache = cache;
+    database->read_set = read_set;
 
     if (_initialize_fixed_objects(database)) {
         obl_report_error(database, OBL_OUT_OF_MEMORY,
                 "Unable to allocate fixed space.");
-        obl_destroy_cache(database->cache);
+        obl_destroy_set(database->read_set, &_obl_deallocate_object);
         free(database);
         return NULL;
     }
@@ -178,9 +178,9 @@ struct obl_object *obl_at_address_depth(struct obl_database *database,
         return database->fixed[_index_for_fixed(address)];
     }
 
-    /* Check for a cache hit. */
-    o = obl_cache_get(database->cache, address);
-    if (o != NULL) {
+    /* If this object already exists within the read set, return it. */
+    o = obl_set_lookup(database->read_set, (obl_set_key) address);
+    if (o != NULL && ! _obl_is_stub(o)) {
         return o;
     }
 
@@ -190,7 +190,10 @@ struct obl_object *obl_at_address_depth(struct obl_database *database,
         return obl_nil(database);
     }
 
-    return obl_read_object(database, database->content, addr, depth);
+    o = obl_read_object(database, database->content, addr, depth);
+    obl_set_insert(database->read_set, o);
+
+    return o;
 }
 
 struct obl_object *obl_nil(struct obl_database *database)
@@ -226,8 +229,8 @@ void obl_destroy_database(struct obl_database *database)
     int i;
     struct obl_object *o;
 
-    if (database->cache != NULL) {
-        obl_destroy_cache(database->cache);
+    if (database->read_set != NULL) {
+        obl_destroy_set(database->read_set, &_obl_deallocate_object);
     }
 
     for (i = 0; i < OBL_FIXED_SIZE; i++) {
@@ -540,10 +543,10 @@ static void _bootstrap_database(struct obl_database *d)
     obl_address_assign(d,
             next_logical->logical_address, next_logical->physical_address);
 
-    /* Cache temporary objects. */
-    obl_cache_insert(d->cache, allocator);
-    obl_cache_insert(d->cache, next_physical);
-    obl_cache_insert(d->cache, next_logical);
+    /* Store temporary objects in the read set. */
+    obl_set_insert(d->read_set, allocator);
+    obl_set_insert(d->read_set, next_physical);
+    obl_set_insert(d->read_set, next_logical);
 }
 
 static void _read_root(struct obl_database *d)

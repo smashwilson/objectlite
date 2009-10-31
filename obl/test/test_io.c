@@ -15,9 +15,9 @@
 #include "CUnit/Basic.h"
 
 #include "storage/object.h"
-#include "cache.h"
 #include "database.h"
 #include "platform.h"
+#include "set.h"
 #include "unitutilities.h"
 
 static const char *filename = "testing.obl";
@@ -105,7 +105,7 @@ void test_read_fixed(void)
 
     /*
      * With depth 1, obl_fixed_read should populate its members with actual
-     * obl_objects acquired from obl_at_address.  Prepopulate the cache so
+     * obl_objects acquired from obl_at_address.  Prepopulate the read set so
      * that those calls have something to find.
      */
     one = obl_create_integer(d, (obl_int) 427);
@@ -118,10 +118,10 @@ void test_read_fixed(void)
     three->logical_address = (obl_logical_address) 0x0C0D;
     four->logical_address = (obl_logical_address) 0x0D0E;
 
-    obl_cache_insert(d->cache, one);
-    obl_cache_insert(d->cache, two);
-    obl_cache_insert(d->cache, three);
-    obl_cache_insert(d->cache, four);
+    obl_set_insert(d->read_set, one);
+    obl_set_insert(d->read_set, two);
+    obl_set_insert(d->read_set, three);
+    obl_set_insert(d->read_set, four);
 
     o = obl_fixed_read(shape, (obl_uint*) contents,
             (obl_physical_address) 0, 1);
@@ -135,11 +135,6 @@ void test_read_fixed(void)
     CU_ASSERT(linked == four);
 
     obl_destroy_object(o);
-    obl_destroy_object(one);
-    obl_destroy_object(two);
-    obl_destroy_object(three);
-    obl_destroy_object(four);
-
     obl_destroy_database(d);
 }
 
@@ -173,8 +168,8 @@ void test_read_shape(void)
     obl_fixed_at_put(slot_names, 1, slot_two_name);
     slot_names->logical_address = (obl_logical_address) 2;
 
-    obl_cache_insert(d->cache, name);
-    obl_cache_insert(d->cache, slot_names);
+    obl_set_insert(d->read_set, name);
+    obl_set_insert(d->read_set, slot_names);
 
     out = obl_shape_read(obl_nil(d), (obl_uint*) contents,
             (obl_physical_address) 0, 2);
@@ -183,10 +178,8 @@ void test_read_shape(void)
     CU_ASSERT(out->storage.shape_storage->slot_names == slot_names);
     CU_ASSERT(out->storage.shape_storage->current_shape == obl_nil(d));
 
-    obl_destroy_object(name);
     obl_destroy_object(slot_one_name);
     obl_destroy_object(slot_two_name);
-    obl_destroy_object(slot_names);
     obl_destroy_object(out);
 
     obl_destroy_database(d);
@@ -215,8 +208,8 @@ void test_read_slotted(void)
     two = obl_create_cstring(d, "value", 5);
     two->logical_address = (obl_logical_address) 0xBB;
 
-    obl_cache_insert(d->cache, one);
-    obl_cache_insert(d->cache, two);
+    obl_set_insert(d->read_set, one);
+    obl_set_insert(d->read_set, two);
 
     o = obl_slotted_read(shape, (obl_uint *) contents, (obl_physical_address) 0, 1);
     CU_ASSERT(obl_slotted_at(o, 0) == one);
@@ -225,8 +218,6 @@ void test_read_slotted(void)
     CU_ASSERT(obl_slotted_atcnamed(o, "two") == two);
 
     obl_destroy_object(o);
-    obl_destroy_object(one);
-    obl_destroy_object(two);
     obl_destroy_cshape(shape);
 
     obl_destroy_database(d);
