@@ -33,7 +33,6 @@ void stress_test_set(unsigned long insert_count,
  */
 int main()
 {
-
     if (CU_initialize_registry() != CUE_SUCCESS) {
         return CU_get_error();
     }

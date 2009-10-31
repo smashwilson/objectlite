@@ -30,12 +30,17 @@
 void stress_test_set(unsigned long insert_count,
         unsigned long delete_count)
 {
+    int verbose;
     struct obl_set *set;
     struct obl_database *d;
     obl_logical_address addr;
     int black_height;
+    struct obl_set_iterator *iter;
+    struct obl_object *current;
 
     srand(time(NULL));
+
+    verbose = insert_count - delete_count <= 100;
 
     d = obl_create_database("foo.obl");
     set = obl_create_set(&logical_address_keyfunction);
@@ -76,23 +81,25 @@ void stress_test_set(unsigned long insert_count,
         printf("Set is valid! Black height: %d\n", black_height);
     }
 
-    if (insert_count - delete_count <= 100) {
-        struct obl_set_iterator *iter;
-        struct obl_object *current;
-
+    if (verbose) {
         obl_set_print(set);
 
         printf("Inorder traversal:\n");
         iter = obl_set_inorder_iter(set);
         while ((current = obl_set_iternext(iter)) != NULL) {
-            printf(" -> %ld", (long) obl_integer_value(current));
+            printf(" -> %ld\n", (long) obl_integer_value(current));
         }
-        puts("");
         obl_set_destroyiter(iter);
     }
 
-    printf("Destroying set... ");
-    obl_destroy_set(set, &_obl_deallocate_object);
+    printf("Destroying set:\n");
+    iter = obl_set_destroying_iter(set);
+    while ((current = obl_set_iternext(iter)) != NULL) {
+        if (verbose) {
+            printf(" XX %ld\n", (long) obl_integer_value(current));
+        }
+    }
+    obl_set_destroyiter(iter);
     printf("Set destroyed.\n");
 
     obl_destroy_database(d);

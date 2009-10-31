@@ -125,6 +125,16 @@ void obl_set_remove(struct obl_set *set, struct obl_object *o);
 struct obl_set_iterator *obl_set_inorder_iter(struct obl_set *set);
 
 /**
+ * Create an obl_set_iterator that traverses an obl_set in a preorder traversal,
+ * deallocating the set structure as it goes.  It's important to follow this
+ * iterator to the end, or you'll leak memory.
+ *
+ * @param set The set to destroy.
+ * @return A newly allocated obl_set_iterator configured to delete its set.
+ */
+struct obl_set_iterator *obl_set_destroying_iter(struct obl_set *set);
+
+/**
  * Advance an iterator created by obl_set_inorder_iter() to its next item.
  *
  * @param iter The iterator to advance.

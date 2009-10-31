@@ -167,6 +167,13 @@ static struct obl_rb_node *remove_balance(struct obl_rb_node *n,
 static struct obl_object *inorder_iternext(struct obl_set_iterator *iter);
 
 /**
+ * obl_set_iterator "next" function used by an obl_set_destroying_iter()
+ * iterator.
+ */
+static struct obl_object *destroying_iternext(
+        struct obl_set_iterator *iter);
+
+/**
  * Recursive helper for obl_destroy_set().
  *
  * @param n Root of some subtree.
@@ -286,6 +293,26 @@ struct obl_set_iterator *obl_set_inorder_iter(struct obl_set *set)
     }
 
     it->stack = stack;
+
+    return it;
+}
+
+struct obl_set_iterator *obl_set_destroying_iter(struct obl_set *set)
+{
+    struct obl_set_iterator *it;
+    struct iterator_context *context;
+
+    it = malloc(sizeof(struct obl_set_iterator));
+    it->next_function = &destroying_iternext;
+
+    context = NULL;
+    if (set->root != NULL) {
+        context = malloc(sizeof(struct iterator_context));
+        context->node = set->root;
+        context->parent = NULL;
+        context->visited = 0;
+    }
+    it->stack = context;
 
     return it;
 }
@@ -599,6 +626,63 @@ static struct obl_object *inorder_iternext(struct obl_set_iterator *iter)
     }
 
     iter->stack = current_stack;
+
+    return result;
+}
+
+static struct obl_object *destroying_iternext(
+        struct obl_set_iterator *iter)
+{
+    struct iterator_context *current_context, *new_context, *parent;
+    struct obl_rb_node *current_node;
+    struct obl_object *result;
+
+    current_context = iter->stack;
+    if (current_context == NULL) {
+        /* The set has been destroyed. */
+        return NULL;
+    }
+
+    current_node = current_context->node;
+    parent = current_context->parent;
+    new_context = parent;
+
+    result = current_node->o;
+
+    /* Destroy the current node. */
+    free(current_node);
+
+    /* Allocate a new context frame for the right child. */
+    if (current_node->children[RIGHT] != NULL) {
+        struct iterator_context *right;
+
+        right = malloc(sizeof(struct iterator_context));
+        right->node = current_node->children[RIGHT];
+        right->parent = parent;
+        right->visited = 0;
+
+        parent = right;
+        new_context = right;
+    }
+
+    /* Allocate a new context frame for the left child. */
+    if (current_node->children[LEFT] != NULL ) {
+        struct iterator_context *left;
+
+        left = malloc(sizeof(struct iterator_context));
+        left->node = current_node->children[LEFT];
+        left->parent = parent;
+        left->visited = 0;
+
+        parent = left;
+        new_context = left;
+    }
+
+    /* Destroy the former current context.  Replace it with its child nodes,
+     * if any were created.
+     */
+    free(current_context);
+    iter->stack = new_context;
 
     return result;
 }
