@@ -48,10 +48,10 @@ void stress_test_set(unsigned long insert_count,
 
         obl_set_insert(set, o);
         if (addr % 1000 == 0) {
-            printf("\rInserted <%8lu>", addr);
+            printf("\rInserted <%8lu>", (unsigned long) addr);
         }
     }
-    printf("\rInserted <%8lu>\n", addr);
+    printf("\rInserted <%8lu>\n", (unsigned long) addr);
 
     for (addr = 0; addr < delete_count; addr++) {
         struct obl_object *o;
@@ -64,10 +64,10 @@ void stress_test_set(unsigned long insert_count,
         }
 
         if (addr % 1000 == 0) {
-            printf("\rDeleted  <%8lu>", addr);
+            printf("\rDeleted  <%8lu>", (unsigned long) addr);
         }
     }
-    printf("\rDeleted  <%8lu>\n", addr);
+    printf("\rDeleted  <%8lu>\n", (unsigned long) addr);
 
     black_height = obl_set_verify(set);
     if (black_height == 0) {
@@ -76,9 +76,24 @@ void stress_test_set(unsigned long insert_count,
         printf("Set is valid! Black height: %d\n", black_height);
     }
 
+    if (insert_count - delete_count <= 100) {
+        struct obl_set_iterator *iter;
+        struct obl_object *current;
+
+        obl_set_print(set);
+
+        printf("Inorder traversal:\n");
+        iter = obl_set_inorder_iter(set);
+        while ((current = obl_set_iternext(iter)) != NULL) {
+            printf(" -> %ld", (long) obl_integer_value(current));
+        }
+        puts("");
+        obl_set_destroyiter(iter);
+    }
+
     printf("Destroying set... ");
     obl_destroy_set(set, &_obl_deallocate_object);
-    printf("Set destroyed.");
+    printf("Set destroyed.\n");
 
     obl_destroy_database(d);
 

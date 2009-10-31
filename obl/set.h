@@ -3,6 +3,8 @@
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
  *
+ * @file set.h
+ *
  * Implements a scalable obl_object set with a red-black tree.
  */
 
@@ -18,7 +20,7 @@
 struct obl_rb_node;
 
 /* defined in set.c */
-static struct iterator_stack;
+struct iterator_context;
 
 /**
  * obl_set_key must be able to store both obl_address and uintptr_t values, so
@@ -61,10 +63,17 @@ struct obl_set {
 
 };
 
+/**
+ * Used to perform set traversals of various kinds.  Acquire one with
+ * obl_set_inorder_iter(), advance through it with obl_set_iternext(), and
+ * destroy it when complete with obl_set_destroyiter().
+ */
 struct obl_set_iterator {
 
-    struct iterator_stack *stack;
+    /** Internal iterator state. */
+    struct iterator_context *stack;
 
+    /** The function used to advance through the set. */
     struct obl_object *(*next_function)(struct obl_set_iterator *self);
 
 };
@@ -72,9 +81,9 @@ struct obl_set_iterator {
 /**
  * Create an obl_set that uses the provided function to generate item keys.
  *
- * \param keyfunction Pointer to a function that derives obl_set_key values
+ * @param keyfunction Pointer to a function that derives obl_set_key values
  *      from obl_object instances.
- * \return A newly allocated obl_set, or NULL if the allocation failed.
+ * @return A newly allocated obl_set, or NULL if the allocation failed.
  */
 struct obl_set *obl_create_set(obl_set_keyfunction keyfunction);
 
@@ -83,39 +92,60 @@ struct obl_set *obl_create_set(obl_set_keyfunction keyfunction);
  * already present, it will be deallocated and this object will be inserted
  * in its place.
  *
- * \param set The set to add to.
- * \param o The object to add.
+ * @param set The set to add to.
+ * @param o The object to add.
  */
 void obl_set_insert(struct obl_set *set, struct obl_object *o);
 
 /**
  * Return an obl_object that is currently mapped to a provided obl_set_key.
  *
- * \param set The set possibly containing the object.
- * \param key Key value to query.
+ * @param set The set possibly containing the object.
+ * @param key Key value to query.
  */
 struct obl_object *obl_set_lookup(struct obl_set *set, obl_set_key key);
 
 /**
  * Remove an obl_object from the set.
  *
- * \param set The set to remove from.
- * \param o The object to remove.  Note that this call will actually remove any
+ * @param set The set to remove from.
+ * @param o The object to remove.  Note that this call will actually remove any
  *      object currently mapped to the same key as o, not necessarily o itself.
  */
 void obl_set_remove(struct obl_set *set, struct obl_object *o);
 
+/**
+ * Create an obl_set_iterator that traverses the set in order of increasing
+ * key.
+ *
+ * @param set The set to traverse.
+ * @return A newly allocated obl_set_iterator configured to perform an
+ *      inorder traversal.
+ */
 struct obl_set_iterator *obl_set_inorder_iter(struct obl_set *set);
 
+/**
+ * Advance an iterator created by obl_set_inorder_iter() to its next item.
+ *
+ * @param iter The iterator to advance.
+ * @return The next obl_object in the tree, or NULL if the traversal is
+ *      complete.
+ */
 struct obl_object *obl_set_iternext(struct obl_set_iterator *iter);
 
+/**
+ * Deallocate an iterator in an orderly fashion, including any stored state if
+ * the iterator has not been completed yet.
+ *
+ * @param iter The iterator to destroy.
+ */
 struct obl_set_iterator *obl_set_destroyiter(struct obl_set_iterator *iter);
 
 /**
  * Deallocate a set, including all internal nodes and referenced obl_objects.
  *
- * \param set The set to deallocate.  This storage will be freed.
- * \param callback If non-NULL, this callback function will be invoked with
+ * @param set The set to deallocate.  This storage will be freed.
+ * @param callback If non-NULL, this callback function will be invoked with
  *      each obl_object in the set as the nodes containing them are destroyed.
  */
 void obl_destroy_set(struct obl_set *set, obl_set_callback callback);
@@ -136,8 +166,8 @@ obl_set_key heap_address_keyfunction(struct obl_object *o);
 /**
  * Test an obl_set's internal structure for consistency.
  *
- * \param set The set to verify.
- * \return 1 if the set's structure is valid, 0 if it is not.  Error messages
+ * @param set The set to verify.
+ * @return 1 if the set's structure is valid, 0 if it is not.  Error messages
  *      describing the kind(s) of violation discovered will print to stderr.
  */
 int obl_set_verify(struct obl_set *set);
@@ -146,7 +176,7 @@ int obl_set_verify(struct obl_set *set);
  * Pretty-print an obl_set to standard out.  Um, only call this with small sets
  * unless you don't like responsive terminals.
  *
- * \param set The set to print.
+ * @param set The set to print.
  */
 void obl_set_print(struct obl_set *set);
 

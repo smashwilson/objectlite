@@ -1,4 +1,6 @@
 /**
+ * @file set.c
+ *
  * Copyright (C) 2009 Ashley J. Wilson, Roger E. Ostrander
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
@@ -23,36 +25,68 @@
  * Internal data structures.
  */
 
+/**
+ * Red-black tree nodes may have one of two colors applied: RED or BLACK.  A
+ * node's color is used during insertion and deletion to perform tree-balancing
+ * operations.
+ */
 enum color {
+    /**
+     * RED nodes do not contribute to a tree's "black height".  RED nodes must
+     * have black children.
+     */
     RED,
+
+    /**
+     * The root is BLACK.  The number of BLACK nodes traversed in any path
+     * through the tree must be equal.
+     */
     BLACK
 };
 
+/**
+ * Used as indices into the children array.  Makes it easier to exploit
+ * symmetry.
+ */
 enum direction {
     LEFT,
     RIGHT,
     DIRECTION_MAX
 };
 
+/**
+ * An internal node of a red-black tree.
+ */
 struct obl_rb_node {
 
+    /** Object held at this level of the tree. */
     struct obl_object *o;
 
+    /** Key value derived from the object o. */
     obl_set_key key;
 
+    /** Color applied to this node. */
     enum color color;
 
+    /** Child nodes, LEFT and RIGHT. */
     struct obl_rb_node *children[DIRECTION_MAX];
 
 };
 
-static struct iterator_stack {
+/**
+ * Internal structure used to store intermediate state during a tree traversal
+ * using an obl_set_iterator.
+ */
+struct iterator_context {
 
-    struct obl_rb_node *current;
+    /** Tree node at this context. */
+    struct obl_rb_node *node;
 
-    int seen;
+    /** Parent context, or NULL. */
+    struct iterator_context *parent;
 
-    struct iterator_stack *parent;
+    /** 0 if this context has not been visited, 1 if it has. */
+    int visited;
 
 };
 
@@ -68,33 +102,105 @@ static struct iterator_stack {
  * Static function prototypes.
  */
 
+/**
+ * Recursive helper for obl_set_verify().
+ *
+ * @param n The current node, which may be NULL.
+ */
 static int verify_r(struct obl_rb_node *n);
 
+/**
+ * Create a new node, colored RED.
+ *
+ * @param keyfunction Use this function to derive a key from the object.
+ * @param o Store this object at the node.
+ */
 static struct obl_rb_node *create_node(obl_set_keyfunction keyfunction,
         struct obl_object *o);
 
+/**
+ * Recursive helper for obl_set_insert().
+ *
+ * @param n Current node context.
+ * @param created A newly created node to be inserted within the tree.
+ * @return The node to take the place of n in the parent structure.
+ */
 static struct obl_rb_node *insert_r(struct obl_rb_node *n,
         struct obl_rb_node *created);
 
+/**
+ * Recursive helper for obl_set_lookup().
+ *
+ * @param n Current node context.
+ * @param key Key value to find.
+ * @return The node that corresponds to key, or NULL if there are none.
+ */
 static struct obl_rb_node *lookup_r(struct obl_rb_node *n,
         obl_set_key key);
 
+/**
+ * Recursive helper for obl_set_remove().
+ *
+ * @param n Root of some subtree.
+ * @param key The key to remove.
+ * @param done Status flag to stop balancing when it's unnecessary to do so.
+ * @return The node that should take the place of n in the parent structure.
+ */
 static struct obl_rb_node *remove_r(struct obl_rb_node *n,
         obl_set_key key, int *done);
 
+/**
+ * Balancing subroutine invoked from remove_r().
+ *
+ * @param n Root of some subtree.
+ * @param dir The direction to perform rotations and so on in.
+ * @param done Status flag.
+ * @return The node that should take the place of n in the parent structure.
+ */
 static struct obl_rb_node *remove_balance(struct obl_rb_node *n,
         enum direction dir, int *done);
 
+/**
+ * obl_set_iterator "next" function to perform an inorder traversal of the
+ * provided set.
+ */
 static struct obl_object *inorder_iternext(struct obl_set_iterator *iter);
 
+/**
+ * Recursive helper for obl_destroy_set().
+ *
+ * @param n Root of some subtree.
+ * @param callback A function to execute with the payload of each node as it's
+ *      destroyed.
+ */
 static void destroy_r(struct obl_rb_node *n, obl_set_callback callback);
 
+/**
+ * A utility function to perform node rotations.
+ *
+ * @param fulcrum Root of the subtree to rotate.
+ * @param dir Direction of rotation.
+ * @return The node that should become the new root of this subtree.
+ */
 static struct obl_rb_node *rotate_single(struct obl_rb_node *fulcrum,
         enum direction dir);
 
+/**
+ * As rotate_single(), but... twice.
+ *
+ * @param fulcrum
+ * @param dir
+ * @return
+ */
 static struct obl_rb_node *rotate_double(struct obl_rb_node *fulcrum,
         enum direction dir);
 
+/**
+ * Recursive helper for obl_set_print().
+ *
+ * @param n The node to output.
+ * @param indent The number of spaces to indent this level of the tree.
+ */
 static void print_node(struct obl_rb_node *n, int indent);
 
 /*
@@ -158,15 +264,26 @@ void obl_set_remove(struct obl_set *set, struct obl_object *o)
 struct obl_set_iterator *obl_set_inorder_iter(struct obl_set *set)
 {
     struct obl_set_iterator *it;
-    struct iterator_stack *stack;
+    struct obl_rb_node *node;
+    struct iterator_context *stack, *parent;
 
     it = malloc(sizeof(struct obl_set_iterator));
     it->next_function = &inorder_iternext;
 
-    stack = malloc(sizeof(struct iterator_stack));
-    stack->current = set->root;
-    stack->dir = LEFT;
-    stack->parent = NULL;
+    node = set->root;
+    stack = NULL;
+    parent = NULL;
+
+    /* Push frames to the leftmost child of the tree. */
+    while (node != NULL) {
+        stack = malloc(sizeof(struct iterator_context));
+        stack->node = node;
+        stack->parent = parent;
+        stack->visited = 0;
+
+        parent = stack;
+        node = node->children[LEFT];
+    }
 
     it->stack = stack;
 
@@ -180,7 +297,7 @@ struct obl_object *obl_set_iternext(struct obl_set_iterator *iter)
 
 struct obl_set_iterator *obl_set_destroyiter(struct obl_set_iterator *iter)
 {
-    struct iterator_stack *stack, *next;
+    struct iterator_context *stack, *next;
 
     stack = iter->stack;
     while (stack != NULL) {
@@ -233,10 +350,10 @@ static int verify_r(struct obl_rb_node *n)
     /* Test for invalid binary tree: keys out of order. */
     if ( (left_child != NULL && left_child->key >= n->key) ||
             (right_child != NULL && right_child->key <= n->key) ) {
-        fprintf(stderr, "Binary Tree violation (%u < (%u) < %u)\n",
-                (left_child == NULL ? 0 : left_child->key),
-                n->key,
-                (right_child == NULL ? 0 : right_child->key));
+        fprintf(stderr, "Binary Tree violation (%lu < (%lu) < %lu)\n",
+                (unsigned long) (left_child == NULL ? 0 : left_child->key),
+                (unsigned long) n->key,
+                (unsigned long) (right_child == NULL ? 0 : right_child->key));
         return 0;
     }
 
@@ -434,92 +551,56 @@ static struct obl_rb_node *remove_balance(struct obl_rb_node *n,
 
 static struct obl_object *inorder_iternext(struct obl_set_iterator *iter)
 {
-    struct iterator_stack *stack_bottom;
+    struct iterator_context *current_stack, *to_push;
     struct obl_rb_node *current_node;
-    struct obl_result *result;
+    struct obl_object *result;
 
-    stack_bottom = iter->stack;
-    current_node = stack_bottom->current;
-
-    /*
-     * Descend to the beginning of the left subtree, pushing stack frames as you
-     * go.
-     */
-    while (current_node->children[LEFT] != NULL) {
-        struct iterator_stack *context;
-
-        current_node = current_node->children[LEFT];
-
-        /* Push a new frame on the stack. */
-        context = malloc(sizeof(iterator_stack));
-        context->current = current_node;
-        context->seen = 0;
-        context->parent = stack_bottom;
-
-        stack_bottom = context;
+    current_stack = iter->stack;
+    if (current_stack == NULL) {
+        /* This iterator is complete. */
+        return NULL;
     }
+    current_node = current_stack->node;
 
-    /* This is going to be the current result. */
+    /* Visit the current node. */
     result = current_node->o;
+    current_stack->visited = 1;
 
-    /* If this node has a right subchild, */
+    /* If this node has a right subtree, push frames for it. */
+    if (current_node->children[RIGHT] != NULL) {
+        struct iterator_context *child;
 
-    /* *** */
+        child = malloc(sizeof(struct iterator_context));
+        child->node = current_node->children[RIGHT];
+        child->parent = current_stack;
+        child->visited = 0;
 
-    if (stack_bottom->seen) {
-        struct iterator_stack *context;
+        current_stack = child;
+        current_node = child->node;
 
-        /* Unwind all of the stack that we've already traversed. */
-        while (stack_bottom->seen || current_node->children[RIGHT] == NULL) {
-            struct iterator_stack *parent;
+        while (current_node->children[LEFT] != NULL) {
+            child = malloc(sizeof(struct iterator_context));
+            child->node = current_node->children[LEFT];
+            child->parent = current_stack;
+            child->visited = 0;
 
-            /*
-             * Pop the top frame from the stack.  If we run out of stack,
-             * we're out of set.
-             */
-            parent = stack_bottom->parent;
-            free(stack_bottom);
-            if (parent == NULL) {
-                return NULL;
-            }
-            stack_bottom = parent;
-            current_node = parent->current;
+            current_stack = child;
+            current_node = child->node;
         }
-
-        /*
-         * Begin traversal of the right subtree by pushing a stack frame for the
-         * right child.
-         */
-        context = malloc(sizeof(iterator_stack));
-        context->current = current_node->children[RIGHT];
-        context->seen = 0;
-        context->parent = stack_bottom;
     }
 
-    /*
-     * Descend to the beginning of the left subtree, creating stack frames
-     * as you go.
-     */
-    while (current_node->children[LEFT] != NULL) {
-        struct iterator_stack *context;
+    /* Pop all frames until the first unvisited context. */
+    while (current_stack != NULL && current_stack->visited) {
+        struct iterator_context *pop;
 
-        current_node = current_node->children[LEFT];
-
-        /* Push a new frame on the stack. */
-        context = malloc(sizeof(iterator_stack));
-        context->current = current_node;
-        context->seen = 0;
-        context->parent = stack_bottom;
-
-        stack_bottom = context;
+        pop = current_stack;
+        current_stack = current_stack->parent;
+        free(pop);
     }
 
-    /*
-     * We've hit the bottom of the left subtree; swap directions and return
-     * this node's value.
-     */
-    stack_bottom->seen = 1;
-    return current_node->o;
+    iter->stack = current_stack;
+
+    return result;
 }
 
 static void destroy_r(struct obl_rb_node *n, obl_set_callback callback)
