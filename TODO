@@ -57,7 +57,7 @@ A rough timeline of the tasks to finish before we see release, large and small.
 - garbage collection: mark and sweep, compacting and otherwise.
 - a configurable gc strategy, including options for manual, every n commits,
    or every n broken references.
-- implement a cross-platform semaphore wrapper.  manage access to the read and
+= implement a cross-platform semaphore wrapper.  manage access to the read and
    write sets, transaction commits, and other critical resources.
 
 # Compound object interfaces

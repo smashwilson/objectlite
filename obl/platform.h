@@ -3,6 +3,8 @@
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
  *
+ * @file platform.h
+ *
  * Platform-specific types and codes.
  */
 
@@ -136,6 +138,29 @@ int munmap(void *start, size_t length);
 
 #include <sys/mman.h>
 #include <stdio.h>
+
+#endif
+
+/*
+ * Basic semaphore operation: native on POSIX systems, emulated on WIN32.
+ */
+#ifdef WIN32
+
+typedef HANDLE sem_t;
+
+int sem_init(sem_t *sem, int pshared, unsigned value);
+
+int sem_wait(sem_t *sem);
+
+int sem_trywait(sem_t *sem);
+
+int sem_post(sem_t *sem);
+
+int sem_destroy(sem_t *sem);
+
+#else
+
+#include <semaphore.h>
 
 #endif
 
