@@ -19,6 +19,7 @@ CU_pSuite initialize_database_suite(void);
 CU_pSuite initialize_object_suite(void);
 CU_pSuite initialize_addressmap_suite(void);
 CU_pSuite initialize_allocator_suite(void);
+CU_pSuite initialize_transaction_suite(void);
 
 /*
  * Prototypes for non-CUnit test cases.  Manually call these from main() to
@@ -45,7 +46,8 @@ int main()
             (initialize_database_suite() == NULL) ||
             (initialize_object_suite() == NULL) ||
             (initialize_addressmap_suite() == NULL) ||
-            (initialize_allocator_suite() == NULL)
+            (initialize_allocator_suite() == NULL) ||
+            (initialize_transaction_suite() == NULL)
     ) {
         CU_cleanup_registry();
         return CU_get_error();

@@ -9,11 +9,16 @@
 #ifndef TRANSACTION_H
 #define TRANSACTION_H
 
-/* Defined in set.h */
+/* defined in set.h */
 struct obl_set;
+
+/* defined in session.h */
+struct obl_session;
 
 struct obl_transaction
 {
+    struct obl_session *session;
+
     struct obl_set *write_set;
 };
 

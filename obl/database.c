@@ -50,7 +50,8 @@ static char *error_messages[] = {
         "Unable to open file", "Error during Unicode conversion",
         "Incorrect object storage type", "Bad argument length",
         "Missing a critical system object", "Database must be open",
-        "Invalid index", "Invalid address"
+        "Invalid index", "Invalid address",
+        "An attempt was made to begin a transaction while one was already in progress"
 };
 
 /** Storage for fixed space, shared by all active databases. */
@@ -230,13 +231,6 @@ void obl_report_error(struct obl_database *database,
     const char *real_message;
     char *buffer;
     size_t message_size;
-    OBL_ERROR(database, message);
-
-    if (database == NULL) {
-        fprintf(stderr, "Unable to report error \"%s\":\n", message);
-        fprintf(stderr, "No database structure available to report it in.\n");
-        return;
-    }
 
     if (message != NULL) {
         real_message = message;
@@ -244,8 +238,16 @@ void obl_report_error(struct obl_database *database,
         real_message = error_messages[code];
     }
 
+    OBL_ERROR(database, real_message);
+
+    if (database == NULL) {
+        fprintf(stderr, "Unable to report error \"%s\":\n", real_message);
+        fprintf(stderr, "No database structure available to report it in.\n");
+        return;
+    }
+
     message_size = strlen(real_message) + 1;
-    buffer = (char*) malloc(message_size);
+    buffer = malloc(message_size);
     memcpy(buffer, real_message, message_size);
 
     database->last_error.message = buffer;
