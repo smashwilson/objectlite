@@ -35,13 +35,12 @@ struct obl_boolean_storage {
  * Creates the only instances of true (1) and false (0).  For internal use
  * only.
  *
- * \param d The database to create this boolean object within.
- * \param truth 1 creates the object true, 0 creates the object false.  Other
+ * @param truth 1 creates the object true, 0 creates the object false.  Other
  *      values will also create the object true.
- * \return A newly allocated obl_object containing obl_boolean_storage.
+ * @return A newly allocated obl_object containing obl_boolean_storage.
  *
- * \sa obl_true()
- * \sa obl_false()
+ * @sa obl_true()
+ * @sa obl_false()
  */
 struct obl_object *_obl_create_bool(struct obl_database *d, int truth);
 
@@ -49,8 +48,8 @@ struct obl_object *_obl_create_bool(struct obl_database *d, int truth);
  * Convert the +obl_true()+ or +obl_false()+ objects into the appropriate truth
  * value for C if statements and so on.
  *
- * \param o An object with OBL_BOOLEAN storage.
- * \return 1 if o is true, 0 if it is false.  Reports an error and returns true
+ * @param o An object with OBL_BOOLEAN storage.
+ * @return 1 if o is true, 0 if it is false.  Reports an error and returns true
  *      if o is not a boolean.
  */
 int obl_boolean_value(struct obl_object *o);
@@ -58,9 +57,9 @@ int obl_boolean_value(struct obl_object *o);
 /**
  * Output a boolean object to stdout.
  *
- * \param boolean The boolean object.
- * \param depth Unused.
- * \param indent The level of indentation.
+ * @param boolean The boolean object.
+ * @param depth Unused.
+ * @param indent The level of indentation.
  */
 void obl_boolean_print(struct obl_object *boolean, int depth, int indent);
 

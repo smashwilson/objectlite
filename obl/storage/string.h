@@ -34,10 +34,9 @@ struct obl_string_storage {
 /**
  * Create a new obl_string_storage object from a Unicode string.
  *
- * \param d The database that should own this string.
- * \param uc A Unicode string, stored as a C array of code points.
- * \param length The length of uc.
- * \return The newly allocated obl_string_storage object.
+ * @param uc A Unicode string, stored as a C array of code points.
+ * @param length The length of uc.
+ * @return The newly allocated obl_string_storage object.
  */
 struct obl_object *obl_create_string(struct obl_database *d,
         const UChar *uc, obl_uint length);
@@ -45,9 +44,8 @@ struct obl_object *obl_create_string(struct obl_database *d,
 /**
  * A convenience method to convert a small C string into an obl_object.
  *
- * \param d The database that should own this string.
- * \param c A C string.
- * \param length The length of c.
+ * @param c A C string.
+ * @param length The length of c.
  */
 struct obl_object *obl_create_cstring(struct obl_database *d,
         const char *c, obl_uint length);
@@ -129,10 +127,9 @@ void _obl_string_deallocate(struct obl_object *string);
  * Allocate the common internal structure of a string object.  For internal
  * use only.
  *
- * \param d The database that should own this object.
- * \param uc A mutable, heap-allocated array of code points it should contain.
- * \param length The length of uc.
- * \return The newly allocated obl_object.
+ * @param uc A mutable, heap-allocated array of code points it should contain.
+ * @param length The length of uc.
+ * @return The newly allocated obl_object.
  */
 struct obl_object *_allocate_string(struct obl_database *d,
         UChar *uc, obl_uint length);

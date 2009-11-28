@@ -40,19 +40,17 @@ struct obl_fixed_storage {
 /**
  * Create a new fixed-size collection.
  *
- * \param d The database that should own this object.
- * \param length The number of elements this collection should accomodate.
- * \return A newly allocated obl_object with obl_fixed_storage and all elements
+ * @param length The number of elements this collection should accomodate.
+ * @return A newly allocated obl_object with obl_fixed_storage and all elements
  *      initialized as obl_nil().
  */
-struct obl_object *obl_create_fixed(struct obl_database *d,
-        obl_uint length);
+struct obl_object *obl_create_fixed(obl_uint length);
 
 /**
  * Access the number of elements present in a fixed-size collection.
  *
- * \param fixed An object with fixed storage.
- * \return The number of elements contained within fixed.  Produces an error and
+ * @param fixed An object with fixed storage.
+ * @return The number of elements contained within fixed.  Produces an error and
  *      returns 0 if fixed does not have fixed storage.
  */
 obl_uint obl_fixed_size(struct obl_object *fixed);
@@ -60,9 +58,9 @@ obl_uint obl_fixed_size(struct obl_object *fixed);
 /**
  * Access an individual element of a fixed-size collection.
  *
- * \param fixed An object with fixed storage.
- * \param index The zero-based index of the element to retrieve.
- * \return The obl_object currently at the provided position.  Reports an error
+ * @param fixed An object with fixed storage.
+ * @param index The zero-based index of the element to retrieve.
+ * @return The obl_object currently at the provided position.  Reports an error
  *      if index is out of valid access bounds for this collection, or if
  *      fixed does not actually have fixed storage.
  */
@@ -71,10 +69,10 @@ struct obl_object *obl_fixed_at(struct obl_object *fixed, obl_uint index);
 /**
  * Set an element of a fixed-size collection.
  *
- * \param fixed An object with fixed storage.
- * \param index The zero-based index to place this object at.
- * \param value The object to assign to that position.
- * \return The obl_object currently at the provided position.  Reports an error
+ * @param fixed An object with fixed storage.
+ * @param index The zero-based index to place this object at.
+ * @param value The object to assign to that position.
+ * @return The obl_object currently at the provided position.  Reports an error
  *      if index is out of valid access bounds for this collection, or if
  *      fixed does not actually have fixed storage.
  */
@@ -95,9 +93,9 @@ void obl_fixed_write(struct obl_object *fixed, obl_uint *dest);
 /**
  * Output the contents of a fixed collection to stdout.
  *
- * \param fixed An object with fixed storage.
- * \param depth Used to control object graph recursion.
- * \param indent The level of output indentation.
+ * @param fixed An object with fixed storage.
+ * @param depth Used to control object graph recursion.
+ * @param indent The level of output indentation.
  */
 void obl_fixed_print(struct obl_object *fixed, int depth, int indent);
 
@@ -105,11 +103,11 @@ void obl_fixed_print(struct obl_object *fixed, int depth, int indent);
  * Provide access to the obl_objects recursively referenced by this one.  Beware,
  * this function does not resolve stubs; for internal use only.
  *
- * \param fixed The root object.
- * \param results [out] Pointed to the first obl_object child.
- * \param heaped [out] False; fixed objects already have a nice heap array
+ * @param fixed The root object.
+ * @param results [out] Pointed to the first obl_object child.
+ * @param heaped [out] False; fixed objects already have a nice heap array
  *      to return as it is.
- * \return The number of array-indexable obl_object structures following
+ * @return The number of array-indexable obl_object structures following
  *      results.
  */
 obl_uint _obl_fixed_children(struct obl_object *fixed,
@@ -119,7 +117,7 @@ obl_uint _obl_fixed_children(struct obl_object *fixed,
  * Deallocate a fixed object, its internal storage, and any obl_stub_storage
  * objects linked from it.  For internal use only.
  *
- * \param fixed The object to delete.
+ * @param fixed The object to delete.
  */
 void _obl_fixed_deallocate(struct obl_object *fixed);
 

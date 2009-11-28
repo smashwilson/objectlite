@@ -33,16 +33,16 @@ struct obl_nil_storage {
  * Creates the one and only NIL instance in the database.  For internal use
  * only.
  *
- * \param d The database that should own this nil object.
+ * @return A newly allocated NIL instance.
  */
-struct obl_object *_obl_create_nil(struct obl_database *d);
+struct obl_object *_obl_create_nil();
 
 /**
  * Output nil to stdout.
  *
- * \param nil The nil object.
- * \param depth Ignored.
- * \param indent The level of output indentation.
+ * @param nil The nil object.
+ * @param depth Ignored.
+ * @param indent The level of output indentation.
  */
 void obl_nil_print(struct obl_object *nil, int depth, int indent);
 

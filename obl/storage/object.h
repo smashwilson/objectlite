@@ -93,8 +93,8 @@ struct obl_object
  * Return the (non-recursive) storage size of this object.  Includes the shape
  * word in its calculations.
  *
- * \param o The object to size.
- * \return The storage size of o, in units of sizeof(obl_uint).
+ * @param o The object to size.
+ * @return The storage size of o, in units of sizeof(obl_uint).
  */
 obl_uint obl_object_wordsize(struct obl_object *o);
 
@@ -107,10 +107,10 @@ struct obl_object *obl_object_shape(struct obl_object *o);
  * Output the contents of an arbitrary object to stdout in a storage-defined
  * way.
  *
- * \param o The object to output.
- * \param depth How far to recurse into the object graph.  Notice that no
+ * @param o The object to output.
+ * @param depth How far to recurse into the object graph.  Notice that no
  *      cycle detection is done during the printing process.
- * \param indent The base indentation level.
+ * @param indent The base indentation level.
  */
 void obl_print_object(struct obl_object *o, int depth, int indent);
 
@@ -153,11 +153,11 @@ void obl_write_object(struct obl_object *o, obl_uint *dest);
  * Useful for iterating over referenced obl_object structures.  For internal
  * use only; this call does not resolve any stubs encountered.
  *
- * \param root The object at the root of the graph.
- * \param results [out] Assigned to the first addressable child.
- * \param heaped [out] Most of the time, we can get away without doing heap
+ * @param root The object at the root of the graph.
+ * @param results [out] Assigned to the first addressable child.
+ * @param heaped [out] Most of the time, we can get away without doing heap
  *      allocation.  When we can't, this variable will be set to 1.
- * \return The number of obl_objects addressable from the pointer assigned to
+ * @return The number of obl_objects addressable from the pointer assigned to
  *      results.
  */
 obl_uint _obl_children(struct obl_object *root,
@@ -167,9 +167,8 @@ obl_uint _obl_children(struct obl_object *root,
  * Allocate a new obl_object from the heap, without specified storage.  For
  * internal use only.
  *
- * \param d The obl_database that should own this object.
- * \return An obl_object if the malloc is successful, or NULL if it is not.  An
- *      error will be logged in d if the allocation is unsuccessful.
+ * @return An obl_object if the malloc is successful, or NULL if it is not.  An
+ *      error will be logged if the allocation is unsuccessful.
  */
 struct obl_object *_obl_allocate_object(struct obl_database *d);
 
@@ -178,7 +177,7 @@ struct obl_object *_obl_allocate_object(struct obl_database *d);
  * Properly disposes of internal structure, but does not recursively delete
  * an object's children.
  *
- * \param o The object to free.
+ * @param o The object to free.
  */
 void _obl_deallocate_object(struct obl_object *o);
 

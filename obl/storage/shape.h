@@ -72,13 +72,12 @@ struct obl_object *obl_create_shape(struct obl_database *d,
  * created with this function *must* be destroyed with obl_destroy_cshape() to
  * deallocate internal objects.
  *
- * \param d The database that should own this shape.
- * \param name A C string containing this shape's database unique, language
+ * @param name A C string containing this shape's database unique, language
  *      agnostic fully-qualified name.
- * \param slot_count The number of elements within slot_names.
- * \param slot_names An array of C strings naming each slot to be contained
+ * @param slot_count The number of elements within slot_names.
+ * @param slot_names An array of C strings naming each slot to be contained
  *      by instances of this shape, in order.
- * \param type The storage type used by this shape.
+ * @param type The storage type used by this shape.
  */
 struct obl_object *obl_create_cshape(struct obl_database *d,
         char *name, size_t slot_count, char **slot_names,

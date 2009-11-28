@@ -30,18 +30,17 @@ struct obl_integer_storage {
 /**
  * Convert a C int to an OBL_INTEGER object.
  *
- * \param d The database that should own this integer.
- * \param i An integral value.
- * \return A newly allocated obl_object containing the provided value.
+ * @param i An integral value.
+ * @return A newly allocated obl_object containing the provided value.
  */
-struct obl_object *obl_create_integer(struct obl_database *d, obl_int i);
+struct obl_object *obl_create_integer(obl_int i);
 
 /**
  * Modify the stored value of an existing OBL_INTEGER object.  Produces an
  * error if integer is not actually an integer object.
  *
- * \param integer An object with integer storage.
- * \param value The new value for integer to assume.
+ * @param integer An object with integer storage.
+ * @param value The new value for integer to assume.
  */
 void obl_integer_set(struct obl_object *integer, obl_int value);
 
@@ -49,7 +48,7 @@ void obl_integer_set(struct obl_object *integer, obl_int value);
  * Return the stored value of an integer object as a C int.  Produces an error
  * and returns 0 if o is not actually an integer.
  *
- * \param o An object with integer storage.
+ * @param o An object with integer storage.
  */
 obl_int obl_integer_value(struct obl_object *o);
 
@@ -67,9 +66,9 @@ void obl_integer_write(struct obl_object *integer, obl_uint *dest);
 /**
  * Output an integer to stdout.
  *
- * \param integer An object with integer storage.
- * \param depth Unused.
- * \param indent The level of output indentation.
+ * @param integer An object with integer storage.
+ * @param depth Unused.
+ * @param indent The level of output indentation.
  */
 void obl_integer_print(struct obl_object *integer, int depth, int indent);
 
