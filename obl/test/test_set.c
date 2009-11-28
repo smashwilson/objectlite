@@ -48,7 +48,7 @@ void stress_test_set(unsigned long insert_count,
     printf("Starting...");
     for (addr = 0; addr < insert_count; addr++) {
         struct obl_object *o;
-        o = obl_create_integer(d, (obl_uint) addr);
+        o = obl_create_integer((obl_uint) addr);
         o->logical_address = (obl_logical_address) addr;
 
         obl_set_insert(set, o);

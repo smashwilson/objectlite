@@ -18,6 +18,9 @@ struct obl_object;
 /* defined in database.h */
 struct obl_database;
 
+/* defined in session.h */
+struct obl_session;
+
 /**
  * Contains zero to many "slots" (more commonly known as instance variables).
  * Each slot contains a reference to another object.  The number of slots and
@@ -102,8 +105,9 @@ void obl_slotted_atcnamed_put(struct obl_object *slotted,
  * Read a slotted object.  The number of slots expected is determined by the
  * provided shape.
  */
-struct obl_object *obl_slotted_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth);
+struct obl_object *obl_slotted_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address offset, int depth);
 
 /**
  * Write a slotted object.

@@ -11,84 +11,82 @@
 #include "storage/object.h"
 #include "database.h"
 #include "platform.h"
+#include "session.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-struct obl_object *obl_create_shape(struct obl_database *d,
-        struct obl_object *name, struct obl_object *slot_names,
-        enum obl_storage_type type)
+struct obl_object *obl_create_shape(struct obl_object *name,
+        struct obl_object *slot_names, enum obl_storage_type type)
 {
     struct obl_object *result;
     struct obl_shape_storage *storage;
 
-    result = _obl_allocate_object(d);
+    result = _obl_allocate_object();
     if (result == NULL) {
         return NULL;
     }
 
-    storage = (struct obl_shape_storage*)
-            malloc(sizeof(struct obl_shape_storage));
+    storage = malloc(sizeof(struct obl_shape_storage));
     if (storage == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }
-    result->shape = obl_nil(d);
+    result->shape = obl_nil();
 
     storage->name = name;
     storage->slot_names = slot_names;
-    storage->current_shape = obl_nil(d);
+    storage->current_shape = obl_nil();
     storage->storage_format = (obl_uint) type;
     result->storage.shape_storage = storage;
 
     return result;
 }
 
-struct obl_object *obl_create_cshape(struct obl_database *d,
-        char *name, size_t slot_count, char **slot_names,
-        enum obl_storage_type type)
+struct obl_object *obl_create_cshape(char *name, size_t slot_count,
+        char **slot_names, enum obl_storage_type type)
 {
     struct obl_object *name_ob, *slots_ob, *slot_name_ob;
     struct obl_object *result;
     int i, j;
 
-    name_ob = obl_create_cstring(d, name, strlen(name));
+    name_ob = obl_create_cstring(name, strlen(name));
     if (name_ob == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
-    slots_ob = obl_create_fixed(d, slot_count);
+    slots_ob = obl_create_fixed(slot_count);
     if (slots_ob == NULL) {
         obl_destroy_object(name_ob);
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
     for (i = 0; i < slot_count; i++) {
-        slot_name_ob = obl_create_cstring(d,
-                slot_names[i], strlen(slot_names[i]));
+        slot_name_ob = obl_create_cstring(slot_names[i],
+                strlen(slot_names[i]));
         if (slot_name_ob == NULL) {
             for (j = 0; j < i; j++) {
                 obl_destroy_object(obl_fixed_at(slots_ob, j));
             }
             obl_destroy_object(slots_ob);
             obl_destroy_object(name_ob);
-            obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+            obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
             return NULL;
         }
         obl_fixed_at_put(slots_ob, i, slot_name_ob);
     }
 
-    result = obl_create_shape(d, name_ob, slots_ob, type);
+    result = obl_create_shape(name_ob, slots_ob, type);
     if (result == NULL) {
         for (j = 0; j < slot_count; j++) {
             obl_destroy_object(obl_fixed_at(slots_ob, j));
         }
         obl_destroy_object(slots_ob);
         obl_destroy_object(name_ob);
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
@@ -98,9 +96,9 @@ struct obl_object *obl_create_cshape(struct obl_database *d,
 struct obl_object *obl_shape_name(struct obl_object *shape)
 {
     if (obl_storage_of(shape) != OBL_SHAPE) {
-        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(shape), OBL_WRONG_STORAGE,
                 "obl_shape_name invoked with a non SHAPE object.");
-        return obl_nil(shape->database);
+        return obl_nil();
     }
 
     return _obl_resolve_stub(shape->storage.shape_storage->name);
@@ -109,9 +107,9 @@ struct obl_object *obl_shape_name(struct obl_object *shape)
 struct obl_object *obl_shape_slotnames(struct obl_object *shape)
 {
     if (obl_storage_of(shape) != OBL_SHAPE) {
-        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(shape), OBL_WRONG_STORAGE,
                 "obl_shape_slotnames invoked with a non SHAPE object.");
-        return obl_nil(shape->database);
+        return obl_nil();
     }
 
     return _obl_resolve_stub(shape->storage.shape_storage->slot_names);
@@ -120,7 +118,7 @@ struct obl_object *obl_shape_slotnames(struct obl_object *shape)
 obl_uint obl_shape_slotcount(struct obl_object *shape)
 {
     if (obl_storage_of(shape) != OBL_SHAPE) {
-        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(shape), OBL_WRONG_STORAGE,
                 "obl_shape_slotcount invoked with a non SHAPE object.");
         return OBL_SENTINEL;
     }
@@ -135,7 +133,7 @@ obl_uint obl_shape_slotnamed(struct obl_object *shape,
     obl_uint i;
 
     if (obl_storage_of(shape) != OBL_SHAPE) {
-        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(shape), OBL_WRONG_STORAGE,
                 "obl_shape_slotnamed invoked with a non SHAPE object.");
         return OBL_SENTINEL;
     }
@@ -150,19 +148,18 @@ obl_uint obl_shape_slotnamed(struct obl_object *shape,
     return OBL_SENTINEL;
 }
 
-obl_uint obl_shape_slotcnamed(struct obl_object *shape,
-        const char *name)
+obl_uint obl_shape_slotcnamed(struct obl_object *shape, const char *name)
 {
     struct obl_object *temporary;
     obl_uint result;
 
     if (obl_storage_of(shape) != OBL_SHAPE) {
-        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(shape), OBL_WRONG_STORAGE,
                 "obl_shape_slotcnamed invoked with a non SHAPE object.");
         return OBL_SENTINEL;
     }
 
-    temporary = obl_create_cstring(shape->database, name, strlen(name));
+    temporary = obl_create_cstring(name, strlen(name));
     if (temporary == NULL) {
         return OBL_SENTINEL;
     }
@@ -175,9 +172,9 @@ obl_uint obl_shape_slotcnamed(struct obl_object *shape,
 struct obl_object *obl_shape_currentshape(struct obl_object *shape)
 {
     if (obl_storage_of(shape) != OBL_SHAPE) {
-        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(shape), OBL_WRONG_STORAGE,
                 "obl_shape_currentshape invoked with a non SHAPE object.");
-        return obl_nil(shape->database);
+        return obl_nil();
     }
 
     return _obl_resolve_stub(shape->storage.shape_storage->current_shape);
@@ -186,7 +183,7 @@ struct obl_object *obl_shape_currentshape(struct obl_object *shape)
 enum obl_storage_type obl_shape_storagetype(struct obl_object *shape)
 {
     if (obl_storage_of(shape) != OBL_SHAPE) {
-        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(shape), OBL_WRONG_STORAGE,
                 "obl_shape_storagetype invoked with a non SHAPE object.");
         return 0;
     }
@@ -211,32 +208,32 @@ void obl_destroy_cshape(struct obl_object *shape)
     obl_destroy_object(storage->slot_names);
 }
 
-struct obl_object *obl_shape_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address base, int depth)
+struct obl_object *obl_shape_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source, obl_physical_address base,
+        int depth)
 {
     struct obl_object *result;
     obl_logical_address addr;
     struct obl_object *name, *slot_names, *current_shape;
     obl_uint storage_format;
 
-    addr = (obl_logical_address) readable_uint(source[base + 1]);
-    name = obl_at_address_depth(shape->database, addr, depth - 1);
+    addr = readable_logical(source[base + 1]);
+    name = obl_at_address_depth(session, addr, depth - 1);
 
-    addr = (obl_logical_address) readable_uint(source[base + 2]);
-    slot_names = obl_at_address_depth(shape->database, addr, depth - 1);
+    addr = readable_logical(source[base + 2]);
+    slot_names = obl_at_address_depth(session, addr, depth - 1);
 
-    addr = (obl_logical_address) readable_uint(source[base + 3]);
-    current_shape = obl_at_address_depth(shape->database, addr, depth - 1);
+    addr = readable_logical(source[base + 3]);
+    current_shape = obl_at_address_depth(session, addr, depth - 1);
 
     storage_format = readable_uint(source[base + 4]);
     if (storage_format > OBL_STORAGE_TYPE_MAX) {
-        obl_report_errorf(shape->database, OBL_WRONG_STORAGE,
+        obl_report_errorf(obl_database_of(shape), OBL_WRONG_STORAGE,
                 "Shape at physical address %ul has invalid storage format.",
                 (unsigned long) base);
     }
 
-    result = obl_create_shape(shape->database,
-            name, slot_names, storage_format);
+    result = obl_create_shape(name, slot_names, storage_format);
     result->storage.shape_storage->current_shape = current_shape;
     return result;
 }

@@ -42,7 +42,7 @@ struct obl_boolean_storage {
  * @sa obl_true()
  * @sa obl_false()
  */
-struct obl_object *_obl_create_bool(struct obl_database *d, int truth);
+struct obl_object *_obl_create_bool(int truth);
 
 /**
  * Convert the +obl_true()+ or +obl_false()+ objects into the appropriate truth

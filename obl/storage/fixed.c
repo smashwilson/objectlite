@@ -10,43 +10,43 @@
 
 #include "storage/object.h"
 #include "database.h"
+#include "session.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
-struct obl_object *obl_create_fixed(struct obl_database *d, obl_uint length)
+struct obl_object *obl_create_fixed(obl_uint length)
 {
     struct obl_object *result;
     struct obl_fixed_storage *storage;
     obl_uint i;
 
-    result = _obl_allocate_object(d);
+    result = _obl_allocate_object();
     if (result == NULL) {
         return NULL;
     }
 
-    storage = (struct obl_fixed_storage *)
-            malloc(sizeof(struct obl_fixed_storage));
+    storage = malloc(sizeof(struct obl_fixed_storage));
     if (storage == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }
     result->storage.fixed_storage = storage;
-    result->shape = obl_at_address(d, OBL_FIXED_SHAPE_ADDR);
+    result->shape = _obl_at_fixed_address(OBL_FIXED_SHAPE_ADDR);
 
     storage->length = length;
     storage->contents = (struct obl_object **)
             malloc(sizeof(struct obl_object*) * length);
     if (storage->contents == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         free(storage);
         return NULL;
     }
 
     for (i = 0; i < length; i++) {
-        storage->contents[i] = obl_nil(d);
+        storage->contents[i] = obl_nil();
     }
 
     return result;
@@ -55,7 +55,7 @@ struct obl_object *obl_create_fixed(struct obl_database *d, obl_uint length)
 obl_uint obl_fixed_size(struct obl_object *fixed)
 {
     if (obl_storage_of(fixed) != OBL_FIXED) {
-        obl_report_error(fixed->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(fixed), OBL_WRONG_STORAGE,
                 "obl_fixed_size requires an object with FIXED storage.");
         return 0;
     }
@@ -66,17 +66,17 @@ obl_uint obl_fixed_size(struct obl_object *fixed)
 struct obl_object *obl_fixed_at(struct obl_object *fixed, obl_uint index)
 {
     if (obl_storage_of(fixed) != OBL_FIXED) {
-        obl_report_error(fixed->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(fixed), OBL_WRONG_STORAGE,
                         "obl_fixed_at requires an object with FIXED storage.");
-        return obl_nil(fixed->database);
+        return obl_nil();
     }
 
     if (index >= obl_fixed_size(fixed)) {
-        obl_report_errorf(fixed->database, OBL_INVALID_INDEX,
+        obl_report_errorf(obl_database_of(fixed), OBL_INVALID_INDEX,
                 "obl_fixed_at called with an invalid index (%d, valid 0..%d)",
                 index,
                 obl_fixed_size(fixed) - 1);
-        return obl_nil(fixed->database);
+        return obl_nil();
     }
 
     return _obl_resolve_stub(fixed->storage.fixed_storage->contents[index]);
@@ -86,13 +86,13 @@ void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
         struct obl_object *value)
 {
     if (obl_storage_of(fixed) != OBL_FIXED) {
-        obl_report_error(fixed->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(fixed), OBL_WRONG_STORAGE,
                         "obl_fixed_at requires an object with FIXED storage.");
         return ;
     }
 
     if (index >= obl_fixed_size(fixed)) {
-        obl_report_errorf(fixed->database, OBL_INVALID_INDEX,
+        obl_report_errorf(obl_database_of(fixed), OBL_INVALID_INDEX,
                 "obl_fixed_at_put called with an invalid index (%d, valid 0..%d)",
                 index,
                 obl_fixed_size(fixed) - 1);
@@ -102,8 +102,9 @@ void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
     fixed->storage.fixed_storage->contents[index] = value;
 }
 
-struct obl_object *obl_fixed_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address base, int depth)
+struct obl_object *obl_fixed_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address base, int depth)
 {
     obl_uint length;
     obl_uint i;
@@ -112,14 +113,14 @@ struct obl_object *obl_fixed_read(struct obl_object *shape,
     struct obl_object *linked;
 
     length = readable_uint(source[base + 1]);
-    o = obl_create_fixed(shape->database, length);
+    o = obl_create_fixed(length);
 
     for (i = 0; i < length; i++) {
         addr = readable_logical(source[base + 2 + i]);
         if (depth <= 0) {
-            linked = _obl_create_stub(shape->database, addr);
+            linked = _obl_create_stub(session, addr);
         } else {
-            linked = obl_at_address_depth(shape->database, addr, depth - 1);
+            linked = obl_at_address_depth(session, addr, depth - 1);
         }
         obl_fixed_at_put(o, i, linked);
     }

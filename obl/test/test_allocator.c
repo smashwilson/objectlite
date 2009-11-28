@@ -13,6 +13,7 @@
 #include "storage/object.h"
 #include "database.h"
 #include "set.h"
+#include "session.h"
 #include "platform.h"
 
 static const char *filename = "allocator.obl";
@@ -24,10 +25,11 @@ static struct obl_database *setup_database()
 
     d = obl_create_database(filename);
 
-    allocator = obl_create_slotted(obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
+    allocator = obl_create_slotted(
+            _obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
     allocator->logical_address = (obl_logical_address) 1;
-    logical = obl_create_integer(d, (obl_int) 2);
-    physical = obl_create_integer(d, (obl_int) 1);
+    logical = obl_create_integer((obl_int) 2);
+    physical = obl_create_integer((obl_int) 1);
 
     obl_slotted_at_put(allocator, (obl_uint) 0, logical);
     obl_slotted_at_put(allocator, (obl_uint) 1, physical);
@@ -42,7 +44,7 @@ static void teardown_database(struct obl_database *d)
 {
     struct obl_object *allocator;
 
-    allocator = obl_at_address(d, d->root.allocator_addr);
+    allocator = _obl_at_address(d, d->root.allocator_addr);
     obl_destroy_object(obl_slotted_at(allocator, 0));
     obl_destroy_object(obl_slotted_at(allocator, 1));
 

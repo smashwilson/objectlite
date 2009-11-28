@@ -10,6 +10,7 @@
 #include "storage/object.h"
 
 #include "database.h"
+#include "session.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,8 +20,9 @@
 
 /* Static function prototypes. */
 
-static struct obl_object *invalid_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth);
+static struct obl_object *invalid_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address offset, int depth);
 
 static void invalid_write(struct obl_object *o, obl_uint *dest);
 
@@ -40,7 +42,7 @@ static void simple_deallocate(struct obl_object *o);
  * memory mapped to the database file, and an offset at which reading is to
  * occur.
  */
-typedef struct obl_object *(*read_function)(
+typedef struct obl_object *(*read_function)(struct obl_session *session,
         struct obl_object *shape, obl_uint *source,
         obl_physical_address offset, int depth);
 
@@ -49,14 +51,12 @@ typedef struct obl_object *(*read_function)(
  * not including its shape header word.  The object will be written at a
  * location specified by its assigned physical address.
  */
-typedef void (*write_function)(
-        struct obl_object *object, obl_uint *source);
+typedef void (*write_function)(struct obl_object *object, obl_uint *source);
 
 /**
  * Signature of a function that recursively prints an object to stdout.
  */
-typedef void (*print_function)(struct obl_object *o,
-        int depth, int indent);
+typedef void (*print_function)(struct obl_object *o, int depth, int indent);
 
 /**
  * Signature of a function that allows iteration over an obl_object's references
@@ -195,13 +195,13 @@ obl_uint obl_object_wordsize(struct obl_object *o)
     case OBL_NIL:
         return 2;
     default:
-        obl_report_error(o->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(o), OBL_WRONG_STORAGE,
                 "obl_object_wordsize called with an object of unknown storage.");
         return 0;
     }
 }
 
-/* Objects shapes should never be stubbed. */
+/* Object shapes should never be stubbed. */
 struct obl_object *obl_object_shape(struct obl_object *o)
 {
     return o->shape;
@@ -222,41 +222,46 @@ void obl_destroy_object(struct obl_object *o)
 
 enum obl_storage_type obl_storage_of(struct obl_object *o)
 {
-    struct obl_object *shape;
+    struct obl_object *shape = obl_object_shape(o);
 
-    shape = obl_object_shape(o);
-    if (shape == obl_nil(o->database)) {
+    if (shape == obl_nil()) {
         return OBL_SHAPE;
     } else {
         return obl_shape_storagetype(shape);
     }
 }
 
+struct obl_database *obl_database_of(struct obl_object *o)
+{
+    if (o->session == NULL) return NULL;
+    return o->session->database;
+}
+
 struct obl_object *obl_read_object(struct obl_database *d,
-        obl_uint *source, obl_physical_address base, int depth)
+        struct obl_session *s, obl_uint *source,
+        obl_physical_address base, int depth)
 {
     struct obl_object *shape, *result;
     obl_logical_address addr;
     int function_index;
 
-    addr = (obl_logical_address) readable_uint(source[base]);
-    shape = obl_at_address_depth(d, addr, 1);
+    addr = readable_logical(source[base]);
+    shape = _obl_at_address_depth(d, s, addr, 2);
 
-    if (shape != obl_nil(d) && obl_storage_of(shape) != OBL_SHAPE) {
+    if (shape != obl_nil() && obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_errorf(d, OBL_WRONG_STORAGE,
                 "Corrupt shape header at physical address %ul.",
                 base);
-        return obl_nil(d);
+        return obl_nil();
     }
 
-    if (shape == obl_nil(d)) {
+    if (shape == obl_nil()) {
         function_index = OBL_SHAPE;
     } else {
         function_index = obl_shape_storagetype(shape);
     }
 
-    result = (read_functions[function_index])(
-            shape, source, base, depth);
+    result = (read_functions[function_index])(s, shape, source, base, depth);
     result->shape = shape;
     result->physical_address = base;
 
@@ -274,13 +279,13 @@ void obl_write_object(struct obl_object *o, obl_uint *dest)
 
     shape = obl_object_shape(o);
 
-    if (shape != obl_nil(o->database) && obl_storage_of(shape) != OBL_SHAPE) {
-        obl_report_error(o->database, OBL_WRONG_STORAGE,
+    if (shape != obl_nil() && obl_storage_of(shape) != OBL_SHAPE) {
+        obl_report_error(obl_database_of(o), OBL_WRONG_STORAGE,
                 "Attempt to write an object with a shape that isn't a shape.");
         return ;
     }
 
-    if (shape != obl_nil(o->database)) {
+    if (shape != obl_nil()) {
         function_index = (int) obl_shape_storagetype(shape);
     } else {
         function_index = (int) OBL_SHAPE;
@@ -298,17 +303,16 @@ obl_uint _obl_children(struct obl_object *root,
     return (*children_functions[obl_storage_of(root)])(root, results, heaped);
 }
 
-struct obl_object *_obl_allocate_object(struct obl_database *d)
+struct obl_object *_obl_allocate_object()
 {
-    struct obl_object *result = (struct obl_object *)
-            malloc(sizeof(struct obl_object));
+    struct obl_object *result = malloc(sizeof(struct obl_object));
 
     if (result == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
-    result->database = d;
+    result->session = NULL;
     result->logical_address = OBL_LOGICAL_UNASSIGNED;
     result->physical_address = OBL_PHYSICAL_UNASSIGNED;
     return result;
@@ -330,13 +334,14 @@ void _obl_deallocate_object(struct obl_object *o)
  * Invoked for any storage type that is either not defined yet, or isn't
  * supposed to actually be read from the database.
  */
-static struct obl_object *invalid_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address base, int depth)
+static struct obl_object *invalid_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address base, int depth)
 {
-    obl_report_errorf(shape->database, OBL_WRONG_STORAGE,
+    obl_report_errorf(session->database, OBL_WRONG_STORAGE,
             "Attempt to read an object (0x%04lx) with an invalid storage type.",
             base);
-    return obl_nil(shape->database);
+    return obl_nil();
 }
 
 /**
@@ -345,7 +350,7 @@ static struct obl_object *invalid_read(struct obl_object *shape,
  */
 static void invalid_write(struct obl_object *o, obl_uint *dest)
 {
-    obl_report_errorf(o->database, OBL_WRONG_STORAGE,
+    obl_report_errorf(obl_database_of(o), OBL_WRONG_STORAGE,
             "Attempt to write an object with an invalid storage type (%lu).",
             obl_storage_of(o));
 }
@@ -368,10 +373,10 @@ static void invalid_print(struct obl_object *o,
 /**
  * Invoked for any storage type that has no children (i.e. most of them).
  *
- * \param root Any object of a storage type without direct children.
- * \param results [out] Set to NULL.
- * \param heaped [out] Set to false.
- * \return Zero.
+ * @param root Any object of a storage type without direct children.
+ * @param results [out] Set to NULL.
+ * @param heaped [out] Set to false.
+ * @return Zero.
  */
 static obl_uint no_children(struct obl_object *root,
         struct obl_object **results, int *heaped)
@@ -387,7 +392,7 @@ static obl_uint no_children(struct obl_object *root,
  * than the one within _obl_allocate_object() and the one for the storage
  * itself.
  *
- * \param o The object to deallocate.
+ * @param o The object to deallocate.
  */
 static void simple_deallocate(struct obl_object *o)
 {

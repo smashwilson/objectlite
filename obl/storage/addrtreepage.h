@@ -23,6 +23,9 @@ struct obl_object;
 /* defined in database.h */
 struct obl_database;
 
+/* defined in session.h */
+struct obl_session;
+
 /**
  * These structures are used internally to implement the logical to physical
  * address mapping.  See addressmap.h.
@@ -47,16 +50,16 @@ struct obl_addrtreepage_storage {
  * @return A newly allocated address tree page object with contents of
  *      OBL_PHYSICAL_UNASSIGNED.
  */
-struct obl_object *obl_create_addrtreepage(struct obl_database *d,
-        obl_uint depth);
+struct obl_object *obl_create_addrtreepage(obl_uint depth);
 
 /**
  * Read an address tree page.  Address tree pages reference each other by
  * physical address (so that they can used during the address lookup process)
  * so tree pages don't respect the +depth+ parameter.
  */
-struct obl_object *obl_addrtreepage_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth);
+struct obl_object *obl_addrtreepage_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address offset, int depth);
 
 /**
  * Write an address map tree page.

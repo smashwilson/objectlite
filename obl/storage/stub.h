@@ -17,6 +17,9 @@ struct obl_object;
 /* defined in database.h */
 struct obl_database;
 
+/* defined in session.h */
+struct obl_session;
+
 /**
  * Stand in for an object that has not yet been loaded.  The slots of objects
  * that are too deep in the object graph to load directly are instead populated
@@ -34,7 +37,7 @@ struct obl_stub_storage {
 };
 
 /** Placeholder for deferring an object load operation. */
-struct obl_object *_obl_create_stub(struct obl_database *d,
+struct obl_object *_obl_create_stub(struct obl_session *s,
         obl_logical_address address);
 
 /**

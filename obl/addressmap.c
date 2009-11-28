@@ -17,6 +17,7 @@
 #include "allocator.h"
 #include "constants.h"
 #include "database.h"
+#include "session.h"
 
 /* Prototypes for internal functions */
 

@@ -9,29 +9,28 @@
 #include "storage/addrtreepage.h"
 
 #include "database.h"
+#include "session.h"
 #include "storage/object.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
-struct obl_object *obl_create_addrtreepage(struct obl_database *d,
-        obl_uint depth)
+struct obl_object *obl_create_addrtreepage(obl_uint depth)
 {
     struct obl_object *result;
     struct obl_addrtreepage_storage *storage;
     obl_uint i;
 
-    result = _obl_allocate_object(d);
+    result = _obl_allocate_object();
     if (result == NULL) {
         return NULL;
     }
-    result->shape = obl_at_address(d, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    result->shape = _obl_at_fixed_address(OBL_ADDRTREEPAGE_SHAPE_ADDR);
 
-    storage = (struct obl_addrtreepage_storage*)
-            malloc(sizeof(struct obl_addrtreepage_storage));
+    storage = malloc(sizeof(struct obl_addrtreepage_storage));
     if (storage == NULL) {
         free(result);
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
     storage->height = depth;
@@ -43,8 +42,9 @@ struct obl_object *obl_create_addrtreepage(struct obl_database *d,
     return result;
 }
 
-struct obl_object *obl_addrtreepage_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address base, int depth)
+struct obl_object *obl_addrtreepage_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source, obl_physical_address base,
+        int depth)
 {
     struct obl_object *result;
     obl_uint height;
@@ -52,7 +52,7 @@ struct obl_object *obl_addrtreepage_read(struct obl_object *shape,
     int i;
 
     height = readable_uint(source[base + 1]);
-    result = obl_create_addrtreepage(shape->database, height);
+    result = obl_create_addrtreepage(height);
 
     for (i = 0; i < CHUNK_SIZE; i++) {
         addr = (obl_physical_address) readable_uint(source[base + 2 + i]);

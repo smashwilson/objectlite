@@ -14,21 +14,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-struct obl_object *_obl_create_bool(struct obl_database *d, int truth)
+struct obl_object *_obl_create_bool(int truth)
 {
     struct obl_object *result;
     struct obl_boolean_storage *storage;
 
-    result = _obl_allocate_object(d);
+    result = _obl_allocate_object();
     if (result == NULL) {
         return NULL;
     }
 
-    storage = (struct obl_boolean_storage*)
-            malloc(sizeof(struct obl_boolean_storage));
+    storage = malloc(sizeof(struct obl_boolean_storage));
     if (storage == NULL) {
         free(result);
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
@@ -38,7 +37,7 @@ struct obl_object *_obl_create_bool(struct obl_database *d, int truth)
         storage->value = (obl_uint) 0;
     }
 
-    result->shape = obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR);
+    result->shape = _obl_at_fixed_address(OBL_BOOLEAN_SHAPE_ADDR);
     result->storage.boolean_storage = storage;
 
     return result;
@@ -47,7 +46,7 @@ struct obl_object *_obl_create_bool(struct obl_database *d, int truth)
 int obl_boolean_value(struct obl_object *bool)
 {
     if (obl_storage_of(bool) != OBL_BOOLEAN) {
-        OBL_WARN(bool->database, "Non-boolean object: assuming truth.");
+        OBL_WARN(obl_database_of(bool), "Non-boolean object: assuming truth.");
         return 1;
     }
 

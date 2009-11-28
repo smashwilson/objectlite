@@ -19,6 +19,9 @@ struct obl_object;
 /* defined in database.h */
 struct obl_database;
 
+/* defined in session.h */
+struct obl_session;
+
 /**
  * A "Class" object which specifies how to interpret any object whose header
  * word points to it.
@@ -56,16 +59,15 @@ struct obl_shape_storage {
 /**
  * Construction of a shape object from already-persisted members.
  *
- * \param d The database that should own this shape.
- * \param name A language-agnostic representation of this shape's fully-
+ * @param name A language-agnostic representation of this shape's fully-
  *      qualified name.  Must be unique among all shapes known by the database.
- * \param slot_names A fixed-size collection of obl_string_storage objects
+ * @param slot_names A fixed-size collection of obl_string_storage objects
  *      that name each slot within instances of this shape.
- * \param type The storage type to be used by this shape.
+ * @param type The storage type to be used by this shape.
+ * @return The obl_object structure of this shape object.
  */
-struct obl_object *obl_create_shape(struct obl_database *d,
-        struct obl_object *name, struct obl_object *slot_names,
-        enum obl_storage_type type);
+struct obl_object *obl_create_shape(struct obl_object *name,
+        struct obl_object *slot_names, enum obl_storage_type type);
 
 /**
  * Direct creation of SHAPE objects from C primitives, for convenience.  Shapes
@@ -79,9 +81,8 @@ struct obl_object *obl_create_shape(struct obl_database *d,
  *      by instances of this shape, in order.
  * @param type The storage type used by this shape.
  */
-struct obl_object *obl_create_cshape(struct obl_database *d,
-        char *name, size_t slot_count, char **slot_names,
-        enum obl_storage_type type);
+struct obl_object *obl_create_cshape(char *name, size_t slot_count,
+        char **slot_names, enum obl_storage_type type);
 
 /**
  * Return the name object of a shape.
@@ -140,8 +141,9 @@ void obl_destroy_cshape(struct obl_object *o);
  * Read a shape object.  Shapes are themselves a fixed shape (sorry, no turtles
  * all the way down -- yet).
  */
-struct obl_object *obl_shape_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth);
+struct obl_object *obl_shape_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address offset, int depth);
 
 /**
  * Write a shape object.

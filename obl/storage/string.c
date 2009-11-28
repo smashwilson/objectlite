@@ -10,6 +10,7 @@
 
 #include "storage/object.h"
 #include "database.h"
+#include "session.h"
 
 #include "unicode/ucnv.h"
 
@@ -17,8 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 
-struct obl_object *obl_create_string(struct obl_database *d,
-        const UChar *uc, obl_uint length)
+struct obl_object *obl_create_string(const UChar *uc, obl_uint length)
 {
     UChar *copied;
     size_t bytes;
@@ -26,17 +26,16 @@ struct obl_object *obl_create_string(struct obl_database *d,
     bytes = sizeof(UChar) * (size_t) length;
     copied = (UChar *) malloc(bytes);
     if( copied == NULL ) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
     memcpy(copied, uc, bytes);
 
-    return _allocate_string(d, copied, length);
+    return _allocate_string(copied, length);
 }
 
-struct obl_object *obl_create_cstring(struct obl_database *d,
-        const char *c, obl_uint length)
+struct obl_object *obl_create_cstring(const char *c, obl_uint length)
 {
     UConverter *converter;
     size_t output_length;
@@ -46,7 +45,7 @@ struct obl_object *obl_create_cstring(struct obl_database *d,
 
     converter = ucnv_open(NULL, &status);
     if (U_FAILURE(status)) {
-        obl_report_errorf(d, OBL_CONVERSION_ERROR,
+        obl_report_errorf(NULL, OBL_CONVERSION_ERROR,
                 "Error creating Unicode converter: %s",
                 u_errorName(status));
         return NULL;
@@ -55,7 +54,7 @@ struct obl_object *obl_create_cstring(struct obl_database *d,
     output_length = (size_t) length * 2;
     output_string = (UChar *) malloc(sizeof(UChar) * output_length);
     if (output_string == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         return NULL;
     }
 
@@ -63,20 +62,20 @@ struct obl_object *obl_create_cstring(struct obl_database *d,
             c, length, &status);
     ucnv_close(converter);
     if (U_FAILURE(status)) {
-        obl_report_errorf(d, OBL_CONVERSION_ERROR,
+        obl_report_errorf(NULL, OBL_CONVERSION_ERROR,
                 "Unicode conversion failure: %s",
                 u_errorName(status));
         free(output_string);
         return NULL;
     }
 
-    return _allocate_string(d, output_string, (obl_uint) converted_length);
+    return _allocate_string(output_string, (obl_uint) converted_length);
 }
 
 obl_uint obl_string_size(struct obl_object *string)
 {
     if (obl_storage_of(string) != OBL_STRING) {
-        obl_report_error(string->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(string), OBL_WRONG_STORAGE,
                 "obl_string_size requires an object with STRING storage.");
         return 0;
     }
@@ -93,14 +92,14 @@ size_t obl_string_chars(struct obl_object *string,
     UErrorCode status = U_ZERO_ERROR;
 
     if (obl_storage_of(string) != OBL_STRING) {
-        obl_report_error(string->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(string), OBL_WRONG_STORAGE,
                 "obl_string_chars requires an object with STRING storage.");
         return 0;
     }
 
     converter = ucnv_open(NULL, &status);
     if (U_FAILURE(status)) {
-        obl_report_errorf(string->database, OBL_CONVERSION_ERROR,
+        obl_report_errorf(obl_database_of(string), OBL_CONVERSION_ERROR,
                 "Error opening Unicode converter: %s",
                 u_errorName(status));
         return 0;
@@ -113,7 +112,7 @@ size_t obl_string_chars(struct obl_object *string,
     ucnv_close(converter);
 
     if (U_FAILURE(status)) {
-        obl_report_errorf(string->database, OBL_CONVERSION_ERROR,
+        obl_report_errorf(obl_database_of(string), OBL_CONVERSION_ERROR,
                 "Unable to convert string from UTF-16: %s",
                 u_errorName(status));
     }
@@ -146,14 +145,14 @@ int obl_string_ccmp(struct obl_object *string, const char *match)
     int result;
 
     if (obl_storage_of(string) != OBL_STRING) {
-        obl_report_error(string->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(string), OBL_WRONG_STORAGE,
                 "obl_string_ccmp requires a STRING object.");
         return -1;
     }
 
-    temp = obl_create_cstring(string->database, match, strlen(match));
+    temp = obl_create_cstring(match, strlen(match));
     if (temp == NULL) {
-        obl_report_error(string->database, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(obl_database_of(string), OBL_OUT_OF_MEMORY, NULL);
         return -1;
     }
     result = obl_string_cmp(string, temp);
@@ -169,7 +168,7 @@ size_t obl_string_value(struct obl_object *string,
     size_t count , bytes;
 
     if (obl_storage_of(string) != OBL_STRING) {
-        obl_report_error(string->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(string), OBL_WRONG_STORAGE,
                 "obl_string_value called with a non-STRING object.");
         return 0;
     }
@@ -184,8 +183,9 @@ size_t obl_string_value(struct obl_object *string,
 }
 
 /* Strings are stored as UTF-16BE with a one-word length prefix. */
-struct obl_object *obl_string_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address base, int depth)
+struct obl_object *obl_string_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address base, int depth)
 {
     obl_uint length;
     obl_uint i;
@@ -195,10 +195,10 @@ struct obl_object *obl_string_read(struct obl_object *shape,
     struct obl_object *o;
 
     length = readable_uint(source[base + 1]);
-    contents = (UChar*) malloc(length * sizeof(UChar));
+    contents = malloc(length * sizeof(UChar));
     if (contents == NULL) {
-        obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
-        return obl_nil(shape->database);
+        obl_report_error(obl_database_of(shape), OBL_OUT_OF_MEMORY, NULL);
+        return obl_nil();
     }
 
     casted_source = (UChar *) source;
@@ -208,7 +208,7 @@ struct obl_object *obl_string_read(struct obl_object *shape,
                 casted_source[casted_offset + i]);
     }
 
-    o = obl_create_string(shape->database, contents, length);
+    o = obl_create_string(contents, length);
 
     free(contents);
     return o;
@@ -255,26 +255,24 @@ void _obl_string_deallocate(struct obl_object *string)
     free(string->storage.string_storage);
 }
 
-struct obl_object *_allocate_string(struct obl_database *d,
-        UChar *uc, obl_uint length)
+struct obl_object *_allocate_string(UChar *uc, obl_uint length)
 {
     struct obl_object *result;
     struct obl_string_storage *storage;
 
-    result = _obl_allocate_object(d);
+    result = _obl_allocate_object();
     if (result == NULL) {
         return NULL;
     }
 
-    storage = (struct obl_string_storage *)
-            malloc(sizeof(struct obl_string_storage));
+    storage = malloc(sizeof(struct obl_string_storage));
     if (storage == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }
     result->storage.string_storage = storage;
-    result->shape = obl_at_address(d, OBL_STRING_SHAPE_ADDR);
+    result->shape = _obl_at_fixed_address(OBL_STRING_SHAPE_ADDR);
 
     storage->length = length;
     storage->contents = uc;

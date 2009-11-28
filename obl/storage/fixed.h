@@ -19,6 +19,9 @@ struct obl_object;
 /* defined in database.h */
 struct obl_database;
 
+/* defined in session.h */
+struct obl_session;
+
 /**
  * An immutable length collection containing position-indexed references to
  * other objects.
@@ -82,8 +85,9 @@ void obl_fixed_at_put(struct obl_object *fixed, obl_uint index,
 /**
  * Read a fixed-length collection.
  */
-struct obl_object *obl_fixed_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth);
+struct obl_object *obl_fixed_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address offset, int depth);
 
 /**
  * Write a fixed-length collection.

@@ -13,16 +13,16 @@
 
 #include <stdio.h>
 
-struct obl_object *_obl_create_nil(struct obl_database *d)
+struct obl_object *_obl_create_nil()
 {
     struct obl_object *result;
 
-    result = _obl_allocate_object(d);
+    result = _obl_allocate_object();
     if (result == NULL) {
         return NULL;
     }
 
-    result->shape = obl_at_address(d, OBL_NIL_SHAPE_ADDR);
+    result->shape = _obl_at_fixed_address(OBL_NIL_SHAPE_ADDR);
     result->storage.nil_storage = NULL;
 
     return result;

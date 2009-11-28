@@ -12,12 +12,13 @@
 #include "storage/object.h"
 #include "constants.h"
 #include "database.h"
+#include "session.h"
 #include "set.h"
 #include "unitutilities.h"
 
 #include <stdio.h>
 
-const char *filename = "database.obl";
+static const char *filename = "database.obl";
 
 void test_initialize_database(void)
 {
@@ -82,23 +83,23 @@ void test_allocate_fixed_space(void)
     d = obl_create_database(filename);
     CU_ASSERT_FATAL(d != NULL);
 
-    o = obl_at_address(d, OBL_NIL_ADDR);
+    o = _obl_at_address(d, OBL_NIL_ADDR);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->shape != NULL);
-    CU_ASSERT(o->shape == obl_at_address(d, OBL_NIL_SHAPE_ADDR));
-    CU_ASSERT(o == obl_nil(d));
+    CU_ASSERT(o->shape == _obl_at_address(d, OBL_NIL_SHAPE_ADDR));
+    CU_ASSERT(o == obl_nil());
 
-    o = obl_at_address(d, OBL_TRUE_ADDR);
+    o = _obl_at_address(d, OBL_TRUE_ADDR);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->shape != NULL);
-    CU_ASSERT(o->shape == obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR));
-    CU_ASSERT(o == obl_true(d));
+    CU_ASSERT(o->shape == _obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR));
+    CU_ASSERT(o == obl_true());
 
-    o = obl_at_address(d, OBL_FALSE_ADDR);
+    o = _obl_at_address(d, OBL_FALSE_ADDR);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->shape != NULL);
-    CU_ASSERT(o->shape == obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR));
-    CU_ASSERT(o == obl_false(d));
+    CU_ASSERT(o->shape == _obl_at_address(d, OBL_BOOLEAN_SHAPE_ADDR));
+    CU_ASSERT(o == obl_false());
 
     obl_destroy_database(d);
 }
@@ -111,16 +112,16 @@ void test_at_address(void)
 
     d = obl_create_database(filename);
 
-    /* obl_at_address should defer to fixed space when appropriate. */
-    out = obl_at_address(d, OBL_TRUE_ADDR);
+    /* _obl_at_address should defer to fixed space when appropriate. */
+    out = _obl_at_address(d, OBL_TRUE_ADDR);
     CU_ASSERT(obl_boolean_value(out));
 
-    /* obl_at_address should hit the read set. */
-    in = obl_create_integer(d, (obl_int) 14);
+    /* _obl_at_address should hit the read set. */
+    in = obl_create_integer((obl_int) 14);
     in->logical_address = 123;
     obl_set_insert(d->read_set, in);
 
-    out = obl_at_address(d, 123);
+    out = _obl_at_address(d, 123);
     CU_ASSERT(in == out);
     CU_ASSERT(obl_integer_value(out) == (obl_int) 14);
 
@@ -155,6 +156,7 @@ void test_open_database(void)
 void test_database_io(void)
 {
     struct obl_database *d;
+    struct obl_session *s;
     struct obl_object *o;
     obl_logical_address addr;
 
@@ -163,28 +165,33 @@ void test_database_io(void)
     /* Write an object into the database. */
     d = obl_create_database(filename);
     obl_open_database(d, 1);
+    s = obl_create_session(d);
 
-    o = obl_create_integer(d, (obl_int) 42);
+    o = obl_create_integer((obl_int) 42);
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED);
 
+    o->session = s;
     _obl_write(o);
     CU_ASSERT(o->physical_address != OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(o->logical_address != OBL_LOGICAL_UNASSIGNED);
     addr = o->logical_address;
 
     obl_destroy_object(o);
+    obl_destroy_session(s);
     obl_close_database(d);
     obl_destroy_database(d);
 
     /* Read the object back from the database, clean cache and everything. */
     d = obl_create_database(filename);
     obl_open_database(d, 0);
+    s = obl_create_session(d);
 
-    o = obl_at_address(d, addr);
+    o = obl_at_address(s, addr);
     CU_ASSERT(obl_integer_value(o) == (obl_int) 42);
 
     obl_close_database(d);
+    obl_destroy_session(s);
     obl_destroy_database(d);
 }
 

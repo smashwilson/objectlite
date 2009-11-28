@@ -15,6 +15,7 @@
 #include "constants.h"
 #include "log.h"
 #include "platform.h"
+#include "session.h"
 #include "set.h"
 
 #include <sys/types.h>
@@ -28,9 +29,9 @@
 
 /* Internal function prototypes. */
 
-static inline int _is_fixed_address(const obl_logical_address addr);
+static int _initialize_fixed_space();
 
-static int _initialize_fixed_objects(struct obl_database *database);
+static void _destroy_fixed_space();
 
 static inline int _index_for_fixed(obl_logical_address addr);
 
@@ -42,16 +43,18 @@ static void _read_root(struct obl_database *d);
 
 static void _write_root(struct obl_database *d);
 
-/* Error codes: one for each error_code in error.h. */
-
+/** Error codes: one for each error_code in error.h. */
 static char *error_messages[] = {
         "EVERYTHING IS FINE",
         "Unable to allocate an object", "Unable to read file",
         "Unable to open file", "Error during Unicode conversion",
         "Incorrect object storage type", "Bad argument length",
         "Missing a critical system object", "Database must be open",
-        "Invalid index"
+        "Invalid index", "Invalid address"
 };
+
+/** Storage for fixed space, shared by all active databases. */
+static struct obl_object *fixed_space[OBL_FIXED_SIZE] = { 0 };
 
 /* Addresses of the elements in obl_root. */
 
@@ -61,6 +64,20 @@ static char *error_messages[] = {
 #define SHAPEMAP_ADDR 4
 
 /* External functions definitions. */
+
+int obl_startup()
+{
+    _initialize_fixed_space();
+
+    return 0;
+}
+
+int obl_shutdown()
+{
+    _destroy_fixed_space();
+
+    return 0;
+}
 
 struct obl_database *obl_create_database(const char *filename)
 {
@@ -95,14 +112,6 @@ struct obl_database *obl_create_database(const char *filename)
         return NULL;
     }
     database->read_set = read_set;
-
-    if (_initialize_fixed_objects(database)) {
-        obl_report_error(database, OBL_OUT_OF_MEMORY,
-                "Unable to allocate fixed space.");
-        obl_destroy_set(database->read_set, &_obl_deallocate_object);
-        free(database);
-        return NULL;
-    }
 
     database->content = NULL;
     database->content_size = (obl_uint) 0;
@@ -160,55 +169,19 @@ int obl_is_open(struct obl_database *d)
     return d->content != NULL && d->content_size > 0;
 }
 
-struct obl_object *obl_at_address(struct obl_database *database,
-        const obl_logical_address address)
+struct obl_object *obl_nil()
 {
-    return obl_at_address_depth(database, address,
-            database->default_stub_depth);
+    return _obl_at_fixed_address(OBL_NIL_ADDR);
 }
 
-struct obl_object *obl_at_address_depth(struct obl_database *database,
-        const obl_logical_address address, int depth)
+struct obl_object *obl_true()
 {
-    struct obl_object *o;
-    obl_physical_address addr;
-
-    /* Check for fixed addresses first. */
-    if (_is_fixed_address(address)) {
-        return database->fixed[_index_for_fixed(address)];
-    }
-
-    /* If this object already exists within the read set, return it. */
-    o = obl_set_lookup(database->read_set, (obl_set_key) address);
-    if (o != NULL && ! _obl_is_stub(o)) {
-        return o;
-    }
-
-    /* Look up the physical address. */
-    addr = obl_address_lookup(database, address);
-    if (addr == OBL_PHYSICAL_UNASSIGNED) {
-        return obl_nil(database);
-    }
-
-    o = obl_read_object(database, database->content, addr, depth);
-    obl_set_insert(database->read_set, o);
-
-    return o;
+    return _obl_at_fixed_address(OBL_TRUE_ADDR);
 }
 
-struct obl_object *obl_nil(struct obl_database *database)
+struct obl_object *obl_false()
 {
-    return obl_at_address(database, OBL_NIL_ADDR);
-}
-
-struct obl_object *obl_true(struct obl_database *database)
-{
-    return obl_at_address(database, OBL_TRUE_ADDR);
-}
-
-struct obl_object *obl_false(struct obl_database *database)
-{
-    return obl_at_address(database, OBL_FALSE_ADDR);
+    return _obl_at_fixed_address(OBL_FALSE_ADDR);
 }
 
 void obl_close_database(struct obl_database *database)
@@ -226,20 +199,8 @@ void obl_close_database(struct obl_database *database)
 
 void obl_destroy_database(struct obl_database *database)
 {
-    int i;
-    struct obl_object *o;
-
     if (database->read_set != NULL) {
         obl_destroy_set(database->read_set, &_obl_deallocate_object);
-    }
-
-    for (i = 0; i < OBL_FIXED_SIZE; i++) {
-        o = database->fixed[i];
-        if (o->shape == NULL) {
-            obl_destroy_cshape(o);
-        } else {
-            obl_destroy_object(database->fixed[i]);
-        }
     }
 
     if (database->last_error.message != NULL) {
@@ -313,11 +274,58 @@ void obl_report_errorf(struct obl_database *database, error_code code,
     free(buffer);
 }
 
+struct obl_object *_obl_at_address(struct obl_database *d,
+        obl_logical_address address)
+{
+    return _obl_at_address_depth(d, NULL, address, d->default_stub_depth);
+}
+
+struct obl_object *_obl_at_address_depth(struct obl_database *d,
+        struct obl_session *s, obl_logical_address address, int depth)
+{
+    struct obl_object *o;
+    obl_physical_address addr;
+
+    /* Check for fixed addresses first. */
+    if (IS_FIXED_ADDR(address)) {
+        return _obl_at_fixed_address(address);
+    }
+
+    /* If this object already exists within the read set, return it as-is. */
+    o = obl_set_lookup(d->read_set, (obl_set_key) address);
+    if (o != NULL && ! _obl_is_stub(o)) {
+        return o;
+    }
+
+    /* Look up the physical address. */
+    addr = obl_address_lookup(d, address);
+    if (addr == OBL_PHYSICAL_UNASSIGNED) {
+        return obl_nil();
+    }
+
+    o = obl_read_object(d, s, d->content, addr, depth);
+    o->session = s;
+    obl_set_insert(d->read_set, o);
+
+    return o;
+}
+
+struct obl_object *_obl_at_fixed_address(obl_logical_address address)
+{
+    if (!IS_FIXED_ADDR(address)) {
+        obl_report_errorf(NULL, OBL_INVALID_ADDRESS,
+                "Expected an address in fixed space, received 0x%lu.",
+                (unsigned long) address);
+        return NULL;
+    }
+
+    return fixed_space[_index_for_fixed(address)];
+}
+
 void _obl_write(struct obl_object *o)
 {
-    struct obl_database *d;
+    struct obl_database *d = obl_database_of(o);
 
-    d = o->database;
     if (!obl_is_open(d)) {
         obl_report_error(d, OBL_DATABASE_NOT_OPEN, NULL);
         return ;
@@ -346,12 +354,7 @@ void _obl_write(struct obl_object *o)
 
 /* Internal function implementations. */
 
-static inline int _is_fixed_address(const obl_logical_address addr)
-{
-    return addr >= OBL_FIXED_ADDR_MIN;
-}
-
-static int _initialize_fixed_objects(struct obl_database *database)
+static int _initialize_fixed_space()
 {
     int i;
     obl_logical_address addr;
@@ -362,14 +365,11 @@ static int _initialize_fixed_objects(struct obl_database *database)
     struct obl_object *fixed_shape, *string_shape, *undefined_shape;
     struct obl_object *nil;
 
-    database->fixed = (struct obl_object **)
-            malloc(sizeof(struct obl_object*) * OBL_FIXED_SIZE);
-    if (database->fixed == NULL) {
-        return 1;
-    }
-
+    /* If fixed space has already been allocated, don't allocate it twice. */
     for (i = 0; i < OBL_FIXED_SIZE; i++) {
-        database->fixed[i] = NULL;
+        if (fixed_space[i] != NULL) {
+            return 0;
+        }
     }
 
     /*
@@ -377,13 +377,10 @@ static int _initialize_fixed_objects(struct obl_database *database)
      * inside of shape objects (including their own).  Create these objects
      * first and manually correct the structures of their shape members.
      */
-    fixed_shape = obl_create_cshape(database, "FixedCollection",
-            0, no_slots, OBL_FIXED);
-    string_shape = obl_create_cshape(database, "String",
-            0, no_slots, OBL_STRING);
-    undefined_shape = obl_create_cshape(database, "Undefined",
-            0, no_slots, OBL_NIL);
-    nil = _obl_create_nil(database);
+    fixed_shape = obl_create_cshape("FixedCollection", 0, no_slots, OBL_FIXED);
+    string_shape = obl_create_cshape("String", 0, no_slots, OBL_STRING);
+    undefined_shape = obl_create_cshape("Undefined", 0, no_slots, OBL_NIL);
+    nil = _obl_create_nil();
 
     fixed_shape->shape = nil;
     fixed_shape->storage.shape_storage->current_shape = nil;
@@ -399,56 +396,80 @@ static int _initialize_fixed_objects(struct obl_database *database)
     undefined_shape->storage.shape_storage->slot_names->shape = fixed_shape;
     nil->shape = undefined_shape;
 
-    database->fixed[_index_for_fixed(OBL_FIXED_SHAPE_ADDR)] = fixed_shape;
-    database->fixed[_index_for_fixed(OBL_STRING_SHAPE_ADDR)] = string_shape;
-    database->fixed[_index_for_fixed(OBL_NIL_SHAPE_ADDR)] = undefined_shape;
-    database->fixed[_index_for_fixed(OBL_NIL_ADDR)] = nil;
+    fixed_space[_index_for_fixed(OBL_FIXED_SHAPE_ADDR)] = fixed_shape;
+    fixed_space[_index_for_fixed(OBL_STRING_SHAPE_ADDR)] = string_shape;
+    fixed_space[_index_for_fixed(OBL_NIL_SHAPE_ADDR)] = undefined_shape;
+    fixed_space[_index_for_fixed(OBL_NIL_ADDR)] = nil;
 
     /*
-     * Allocate the rest of the fixed-space shape objects.
+     * Allocate the rest of the fixed-space shape objects.  These are shape
+     * objects for ObjectLite primitives.
      */
-    database->fixed[_index_for_fixed(OBL_INTEGER_SHAPE_ADDR)] =
-            obl_create_cshape(database, "Integer", 0, no_slots, OBL_INTEGER);
-    database->fixed[_index_for_fixed(OBL_FLOAT_SHAPE_ADDR)] =
-            obl_create_cshape(database, "Float", 0, no_slots, OBL_FLOAT);
-    database->fixed[_index_for_fixed(OBL_DOUBLE_SHAPE_ADDR)] =
-            obl_create_cshape(database, "Double", 0, no_slots, OBL_DOUBLE);
-    database->fixed[_index_for_fixed(OBL_CHAR_SHAPE_ADDR)] =
-            obl_create_cshape(database, "Character", 0, no_slots, OBL_CHAR);
-
-    database->fixed[_index_for_fixed(OBL_CHUNK_SHAPE_ADDR)] =
-            obl_create_cshape(database, "OblChunk", 0, no_slots, OBL_CHUNK);
-    database->fixed[_index_for_fixed(OBL_BOOLEAN_SHAPE_ADDR)] =
-            obl_create_cshape(database, "Boolean", 0, no_slots, OBL_BOOLEAN);
-    database->fixed[_index_for_fixed(OBL_STUB_SHAPE_ADDR)] =
-            obl_create_cshape(database, "OblStub", 0, no_slots, OBL_STUB);
-    database->fixed[_index_for_fixed(OBL_ADDRTREEPAGE_SHAPE_ADDR)] =
-            obl_create_cshape(database, "OblAddressTreePage", 0, no_slots,
+    fixed_space[_index_for_fixed(OBL_INTEGER_SHAPE_ADDR)] =
+            obl_create_cshape("Integer", 0, no_slots, OBL_INTEGER);
+    fixed_space[_index_for_fixed(OBL_FLOAT_SHAPE_ADDR)] =
+            obl_create_cshape("Float", 0, no_slots, OBL_FLOAT);
+    fixed_space[_index_for_fixed(OBL_DOUBLE_SHAPE_ADDR)] =
+            obl_create_cshape("Double", 0, no_slots, OBL_DOUBLE);
+    fixed_space[_index_for_fixed(OBL_CHAR_SHAPE_ADDR)] =
+            obl_create_cshape("Character", 0, no_slots, OBL_CHAR);
+    fixed_space[_index_for_fixed(OBL_CHUNK_SHAPE_ADDR)] =
+            obl_create_cshape("OblChunk", 0, no_slots, OBL_CHUNK);
+    fixed_space[_index_for_fixed(OBL_BOOLEAN_SHAPE_ADDR)] =
+            obl_create_cshape("Boolean", 0, no_slots, OBL_BOOLEAN);
+    fixed_space[_index_for_fixed(OBL_STUB_SHAPE_ADDR)] =
+            obl_create_cshape("OblStub", 0, no_slots, OBL_STUB);
+    fixed_space[_index_for_fixed(OBL_ADDRTREEPAGE_SHAPE_ADDR)] =
+            obl_create_cshape("OblAddressTreePage", 0, no_slots,
                     OBL_ADDRTREEPAGE);
-    database->fixed[_index_for_fixed(OBL_ALLOCATOR_SHAPE_ADDR)] =
-            obl_create_cshape(database, "OblAllocator", 2, allocator_slots,
+    fixed_space[_index_for_fixed(OBL_ALLOCATOR_SHAPE_ADDR)] =
+            obl_create_cshape("OblAllocator", 2, allocator_slots,
                     OBL_SLOTTED);
 
     /*
      * Allocate the only instances of the other two of the three immutables:
-     * true, and false.
+     * true and false.
      */
-    database->fixed[_index_for_fixed(OBL_TRUE_ADDR)] =
-            _obl_create_bool(database, 1);
-    database->fixed[_index_for_fixed(OBL_FALSE_ADDR)] =
-            _obl_create_bool(database, 0);
+    fixed_space[_index_for_fixed(OBL_TRUE_ADDR)] = _obl_create_bool(1);
+    fixed_space[_index_for_fixed(OBL_FALSE_ADDR)] = _obl_create_bool(0);
 
     /* Set the logical and physical addresses of these objects. */
     for (i = 0; i < OBL_FIXED_SIZE; i++) {
+        if (fixed_space[i] == NULL) {
+            return 1;
+        }
+
         addr = (obl_logical_address) OBL_FIXED_ADDR_MIN + i;
-        database->fixed[i]->physical_address = (obl_physical_address) 0;
-        database->fixed[i]->logical_address = addr;
+        fixed_space[i]->physical_address = OBL_PHYSICAL_UNASSIGNED;
+        fixed_space[i]->logical_address = addr;
     }
 
     return 0;
 }
 
-static int _index_for_fixed(obl_logical_address addr)
+static void _destroy_fixed_space()
+{
+    int i;
+    struct obl_object *o, *nil;
+
+    nil = obl_nil();
+    for (i = 0; i < OBL_FIXED_SIZE; i++) {
+        o = fixed_space[i];
+        if (o != nil) {
+            if (o->shape == nil) {
+                obl_destroy_cshape(o);
+            } else {
+                obl_destroy_object(o);
+            }
+
+            fixed_space[i] = NULL;
+        }
+    }
+
+    obl_destroy_object(nil);
+}
+
+static inline int _index_for_fixed(obl_logical_address addr)
 {
     return addr - OBL_FIXED_ADDR_MIN;
 }
@@ -473,6 +494,7 @@ static void _bootstrap_database(struct obl_database *d)
 {
     /* obl\0 in hex. */
     const obl_uint magic = 0x6F626C00;
+    struct obl_session *s;
     struct obl_object *treepage, *allocator;
     struct obl_object *next_physical, *next_logical;
     obl_logical_address current_logical;
@@ -490,22 +512,24 @@ static void _bootstrap_database(struct obl_database *d)
      */
     current_physical = (obl_physical_address) 5;
 
+    s = obl_create_session(d);
+
     /* First: the allocator. */
-    allocator = obl_create_slotted(obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
+    allocator = obl_create_slotted(obl_at_address(s, OBL_ALLOCATOR_SHAPE_ADDR));
     allocator->logical_address = current_logical;
     allocator->physical_address = current_physical;
     current_logical++;
     current_physical += obl_object_wordsize(allocator);
 
     /* Next, its physical and logical word containers. */
-    next_physical = obl_create_integer(d, (obl_int) 0);
+    next_physical = obl_create_integer((obl_int) 0);
     next_physical->logical_address = current_logical;
     next_physical->physical_address = current_physical;
     obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
     current_logical++;
     current_physical += obl_object_wordsize(next_physical);
 
-    next_logical = obl_create_integer(d, (obl_int) 0);
+    next_logical = obl_create_integer((obl_int) 0);
     next_logical->logical_address = current_logical;
     next_logical->physical_address = current_physical;
     obl_slotted_atcnamed_put(allocator, "next_logical", next_logical);
@@ -516,7 +540,7 @@ static void _bootstrap_database(struct obl_database *d)
      * The first leaf of the address map.  Address map pages are not assigned
      * logical addresses.
      */
-    treepage = obl_create_addrtreepage(d, 0);
+    treepage = obl_create_addrtreepage(0);
     treepage->physical_address = current_physical;
     current_physical += obl_object_wordsize(treepage);
 
@@ -547,6 +571,8 @@ static void _bootstrap_database(struct obl_database *d)
     obl_set_insert(d->read_set, allocator);
     obl_set_insert(d->read_set, next_physical);
     obl_set_insert(d->read_set, next_logical);
+
+    obl_destroy_session(s);
 }
 
 static void _read_root(struct obl_database *d)

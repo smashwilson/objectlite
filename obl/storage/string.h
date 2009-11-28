@@ -18,6 +18,9 @@ struct obl_object;
 /* defined in database.h */
 struct obl_database;
 
+/* defined in session.h */
+struct obl_session;
+
 /**
  * A length-prefixed UTF-16 string.
  */
@@ -38,8 +41,7 @@ struct obl_string_storage {
  * @param length The length of uc.
  * @return The newly allocated obl_string_storage object.
  */
-struct obl_object *obl_create_string(struct obl_database *d,
-        const UChar *uc, obl_uint length);
+struct obl_object *obl_create_string(const UChar *uc, obl_uint length);
 
 /**
  * A convenience method to convert a small C string into an obl_object.
@@ -47,8 +49,7 @@ struct obl_object *obl_create_string(struct obl_database *d,
  * @param c A C string.
  * @param length The length of c.
  */
-struct obl_object *obl_create_cstring(struct obl_database *d,
-        const char *c, obl_uint length);
+struct obl_object *obl_create_cstring(const char *c, obl_uint length);
 
 /**
  * Return the number of code points contained within a string object.  Notice
@@ -99,8 +100,9 @@ size_t obl_string_value(struct obl_object *o,
 /**
  * Read a length-prefixed UTF-16BE string object.
  */
-struct obl_object *obl_string_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address offset, int depth);
+struct obl_object *obl_string_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address offset, int depth);
 
 /*
  * Write a string object.
@@ -131,7 +133,6 @@ void _obl_string_deallocate(struct obl_object *string);
  * @param length The length of uc.
  * @return The newly allocated obl_object.
  */
-struct obl_object *_allocate_string(struct obl_database *d,
-        UChar *uc, obl_uint length);
+struct obl_object *_allocate_string(UChar *uc, obl_uint length);
 
 #endif /* STRING_H */

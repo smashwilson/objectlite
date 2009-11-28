@@ -21,6 +21,9 @@ struct obl_cache;
 /* Defined in object.h */
 struct obl_object;
 
+/* Defined in session.h */
+struct obl_session;
+
 /** Size of fixed space. */
 #define OBL_FIXED_SIZE 15
 
@@ -56,6 +59,11 @@ typedef enum
     OBL_BOOLEAN_SHAPE_ADDR,            /* 0xfffe */
     OBL_STUB_SHAPE_ADDR                /* 0xffff */
 } obl_fixed_address;
+
+/**
+ * A handy macro to determine if a logical address falls within fixed space.
+ */
+#define IS_FIXED_ADDR(addr) ((addr) >= OBL_FIXED_ADDR_MIN)
 
 /**
  * The available error codes.  Each error code should correspond to one
@@ -141,9 +149,6 @@ struct obl_database {
      */
     struct obl_set *read_set;
 
-    /** Fixed object space. */
-    struct obl_object **fixed;
-
     /** Logging and error structures. */
     struct obl_log_configuration log_config;
     struct error last_error;
@@ -171,6 +176,19 @@ struct obl_database {
 };
 
 /**
+ * Allocate and prepare global internal ObjectLite resources.  Call this
+ * function before you invoke any other obl functions.
+ */
+int obl_startup();
+
+/**
+ * Clean up global internal ObjectLite resources.  Call this function before
+ * your program terminates, but after you're done calling any and all
+ * obl functions.
+ */
+int obl_shutdown();
+
+/**
  * Allocate structures for a new ObjectLite database interface layer, using all
  * of the default settings.  Database objects created in this manner must be
  * destroyed by obl_destroy_database().
@@ -196,32 +214,19 @@ int obl_open_database(struct obl_database *d, int allow_creation);
 int obl_is_open(struct obl_database *d);
 
 /**
- * The most basic query: return an object that lives at a known logical address.
- * Use the default stub depth as configures in database.
- */
-struct obl_object *obl_at_address(struct obl_database *database,
-        const obl_logical_address address);
-
-/**
- * Retrieve an object to a specified stub depth.
- */
-struct obl_object *obl_at_address_depth(struct obl_database *database,
-        const obl_logical_address address, int depth);
-
-/**
  * Return the single instance of nil.
  */
-struct obl_object *obl_nil(struct obl_database *database);
+struct obl_object *obl_nil();
 
 /**
  * Return the single object representing truth.
  */
-struct obl_object *obl_true(struct obl_database *database);
+struct obl_object *obl_true();
 
 /**
  * Return the single object representing falsehood.
  */
-struct obl_object *obl_false(struct obl_database *database);
+struct obl_object *obl_false();
 
 /**
  * Close the opened database file.
@@ -257,6 +262,41 @@ void obl_report_error(struct obl_database *database, error_code code,
  */
 void obl_report_errorf(struct obl_database *database, error_code code,
         const char *format, ...);
+
+/**
+ * Retrieve an object directly from the database using the default stub depth.
+ * For internal use only: these objects are not properly initialized with a
+ * session reference, so they will not properly track changes or self-dispose.
+ *
+ * @param d The database to perform the lookup within.
+ * @param address The logical address to query.
+ * @return The object assigned to the provided logical address, or #obl_nil().
+ */
+struct obl_object *_obl_at_address(struct obl_database *d,
+        obl_logical_address address);
+
+/**
+ * Retrieve an object to a specified stub depth.  For internal use only: users
+ * should use the obl_session #obl_at_address() call with an active session
+ * instead.
+ *
+ * @param d The database to perform the lookup within.
+ * @param s The session to associate discovered objects with.  May be NULL to
+ *      return unassociated objects.
+ * @param address The logical address to query.
+ * @param depth The maximum depth to resolve addresses.
+ */
+struct obl_object *_obl_at_address_depth(struct obl_database *d,
+        struct obl_session *s, obl_logical_address address, int depth);
+
+/**
+ * Retrieve an object directly from fixed space.  For internal use only.
+ *
+ * @param address A logical address within fixed space.
+ * @return The obl_object from fixed space.  Logs an error and returns NULL if
+ *      the address is invalid.
+ */
+struct obl_object *_obl_at_fixed_address(obl_logical_address address);
 
 /**
  * Allocate any necessary addresses, grow the database file if necessary, then

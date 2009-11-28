@@ -10,6 +10,7 @@
 
 #include "storage/object.h"
 #include "database.h"
+#include "session.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,20 +24,19 @@ struct obl_object *obl_create_slotted(struct obl_object *shape)
     obl_uint i;
 
     if (obl_storage_of(shape) != OBL_SHAPE) {
-        obl_report_error(shape->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(shape), OBL_WRONG_STORAGE,
                 "obl_create_slotted requires a SHAPE object.");
         return NULL;
     }
 
-    result = _obl_allocate_object(shape->database);
+    result = _obl_allocate_object();
     if (result == NULL) {
         return NULL;
     }
 
-    storage = (struct obl_slotted_storage*)
-            malloc(sizeof(struct obl_slotted_storage));
+    storage = malloc(sizeof(struct obl_slotted_storage));
     if (storage == NULL) {
-        obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(obl_database_of(shape), OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }
@@ -44,10 +44,9 @@ struct obl_object *obl_create_slotted(struct obl_object *shape)
     result->shape = shape;
 
     slot_count = obl_shape_slotcount(shape);
-    slots = (struct obl_object **)
-            malloc(sizeof(struct obl_object*) * slot_count);
+    slots = malloc(sizeof(struct obl_object*) * slot_count);
     if (slots == NULL) {
-        obl_report_error(shape->database, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(obl_database_of(shape), OBL_OUT_OF_MEMORY, NULL);
         free(result);
         free(storage);
         return NULL;
@@ -55,7 +54,7 @@ struct obl_object *obl_create_slotted(struct obl_object *shape)
     storage->slots = slots;
 
     for (i = 0; i < slot_count; i++) {
-        slots[i] = obl_nil(shape->database);
+        slots[i] = obl_nil();
     }
 
     return result;
@@ -66,17 +65,17 @@ struct obl_object *obl_slotted_at(struct obl_object *slotted, obl_uint index)
     obl_uint maximum;
 
     if (obl_storage_of(slotted) != OBL_SLOTTED) {
-        obl_report_error(slotted->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(slotted), OBL_WRONG_STORAGE,
                 "obl_slotted_at requires a SLOTTED object.");
-        return obl_nil(slotted->database);
+        return obl_nil();
     }
 
     maximum = obl_shape_slotcount(obl_object_shape(slotted));
     if (index >= maximum) {
-        obl_report_errorf(slotted->database, OBL_INVALID_INDEX,
+        obl_report_errorf(obl_database_of(slotted), OBL_INVALID_INDEX,
                 "obl_slotted_at called with an invalid index (%d, valid 0..%d)",
                 index, maximum - 1);
-        return obl_nil(slotted->database);
+        return obl_nil();
     }
 
     return _obl_resolve_stub(slotted->storage.slotted_storage->slots[index]);
@@ -102,14 +101,14 @@ void obl_slotted_at_put(struct obl_object *slotted,
     obl_uint maximum;
 
     if (obl_storage_of(slotted) != OBL_SLOTTED) {
-        obl_report_error(slotted->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(slotted), OBL_WRONG_STORAGE,
                 "obl_slotted_at_put requires a SLOTTED object.");
         return ;
     }
 
     maximum = obl_shape_slotcount(obl_object_shape(slotted));
     if (index >= maximum) {
-        obl_report_errorf(slotted->database, OBL_INVALID_INDEX,
+        obl_report_errorf(obl_database_of(slotted), OBL_INVALID_INDEX,
                 "obl_slotted_at_put called with an invalid index (%d, valid 0..%d)",
                 index, maximum - 1);
         return ;
@@ -130,8 +129,9 @@ void obl_slotted_atcnamed_put(struct obl_object *slotted,
     obl_slotted_at_put(slotted, obl_shape_slotcnamed(slotted->shape, slotname), value);
 }
 
-struct obl_object *obl_slotted_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address base, int depth)
+struct obl_object *obl_slotted_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address base, int depth)
 {
     struct obl_object *result;
     obl_uint slot_count;
@@ -143,11 +143,11 @@ struct obl_object *obl_slotted_read(struct obl_object *shape,
 
     slot_count = obl_shape_slotcount(shape);
     for (i = 0; i < slot_count; i++) {
-        addr = (obl_logical_address) readable_uint(source[base + 1 + i]);
+        addr = readable_logical(source[base + 1 + i]);
         if (depth <= 0) {
-            linked = _obl_create_stub(shape->database, addr);
+            linked = _obl_create_stub(session, addr);
         } else {
-            linked = obl_at_address_depth(shape->database, addr, depth - 1);
+            linked = obl_at_address_depth(session, addr, depth - 1);
         }
         obl_slotted_at_put(result, i, linked);
     }

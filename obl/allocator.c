@@ -11,15 +11,16 @@
 
 #include "storage/object.h"
 #include "database.h"
+#include "session.h"
 
 obl_logical_address obl_allocate_logical(struct obl_database *d)
 {
     struct obl_object *allocator, *next_logical;
     obl_logical_address result;
 
-    allocator = obl_at_address_depth(d, d->root.allocator_addr, 2);
+    allocator = _obl_at_address(d, d->root.allocator_addr);
 
-    if (allocator->shape != obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR)) {
+    if (allocator->shape != _obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR)) {
         obl_report_error(d, OBL_MISSING_SYSTEM_OBJECT,
                 "Allocator has incorrect shape.");
         return OBL_LOGICAL_UNASSIGNED;
@@ -38,9 +39,9 @@ obl_physical_address obl_allocate_physical(struct obl_database *d,
     struct obl_object *allocator, *next_physical;
     obl_physical_address result;
 
-    allocator = obl_at_address_depth(d, d->root.allocator_addr, 2);
+    allocator = _obl_at_address(d, d->root.allocator_addr);
 
-    if (allocator->shape != obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR)) {
+    if (allocator->shape != _obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR)) {
         obl_report_error(d, OBL_MISSING_SYSTEM_OBJECT,
                 "Allocator has incorrect shape.");
         return OBL_LOGICAL_UNASSIGNED;

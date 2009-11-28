@@ -183,8 +183,9 @@ void test_create_leaf(void)
     d->root.address_map_addr = (obl_physical_address) branch;
 
     /* Create and address allocator and prime the read set with it. */
-    allocator = obl_create_slotted(obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
-    next_physical = obl_create_integer(d, (obl_int) leaf);
+    allocator = obl_create_slotted(
+            _obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
+    next_physical = obl_create_integer((obl_int) leaf);
     obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
     allocator->logical_address = (obl_logical_address) 1;
     d->root.allocator_addr = allocator->logical_address;
@@ -233,8 +234,9 @@ void test_create_branch(void)
     d->root.address_map_addr = (obl_physical_address) 1;
 
     /* Create an address allocator and prime the read set with it. */
-    allocator = obl_create_slotted(obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
-    next_physical = obl_create_integer(d, (obl_int) branch);
+    allocator = obl_create_slotted(
+            _obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
+    next_physical = obl_create_integer((obl_int) branch);
     obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
     allocator->logical_address = (obl_logical_address) 1;
     d->root.allocator_addr = allocator->logical_address;

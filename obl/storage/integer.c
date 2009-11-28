@@ -10,29 +10,29 @@
 
 #include "storage/object.h"
 #include "database.h"
+#include "session.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 
-struct obl_object *obl_create_integer(struct obl_database *d, obl_int i)
+struct obl_object *obl_create_integer(obl_int i)
 {
     struct obl_object *result;
     struct obl_integer_storage *storage;
 
-    result = _obl_allocate_object(d);
+    result = _obl_allocate_object();
     if (result == NULL) {
         return NULL;
     }
 
-    storage = (struct obl_integer_storage *)
-            malloc(sizeof(struct obl_integer_storage));
+    storage = malloc(sizeof(struct obl_integer_storage));
     if (storage == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY, NULL);
+        obl_report_error(NULL, OBL_OUT_OF_MEMORY, NULL);
         free(result);
         return NULL;
     }
 
-    result->shape = obl_at_address(d, OBL_INTEGER_SHAPE_ADDR);
+    result->shape = _obl_at_fixed_address(OBL_INTEGER_SHAPE_ADDR);
     storage->value = i;
     result->storage.integer_storage = storage;
     return result;
@@ -41,7 +41,7 @@ struct obl_object *obl_create_integer(struct obl_database *d, obl_int i)
 obl_int obl_integer_value(struct obl_object *integer)
 {
     if (obl_storage_of(integer) != OBL_INTEGER) {
-        obl_report_error(integer->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(integer), OBL_WRONG_STORAGE,
                 "obl_integer_value called with a non-INTEGER object.");
         return 0;
     }
@@ -52,7 +52,7 @@ obl_int obl_integer_value(struct obl_object *integer)
 void obl_integer_set(struct obl_object *integer, obl_int value)
 {
     if (obl_storage_of(integer) != OBL_INTEGER) {
-        obl_report_error(integer->database, OBL_WRONG_STORAGE,
+        obl_report_error(obl_database_of(integer), OBL_WRONG_STORAGE,
                 "obl_integer_set requires an object with INTEGER storage.");
         return ;
     }
@@ -61,14 +61,11 @@ void obl_integer_set(struct obl_object *integer, obl_int value)
 }
 
 /* Integers are stored in 32 bits, network byte order. */
-struct obl_object *obl_integer_read(struct obl_object *shape,
-        obl_uint *source, obl_physical_address base, int depth)
+struct obl_object *obl_integer_read(struct obl_session *session,
+        struct obl_object *shape, obl_uint *source,
+        obl_physical_address base, int depth)
 {
-    obl_int value;
-
-    value = readable_int(source[base + 1]);
-
-    return obl_create_integer(shape->database, value);
+    return obl_create_integer(readable_int(source[base + 1]));
 }
 
 void obl_integer_write(struct obl_object *integer, obl_uint *dest)

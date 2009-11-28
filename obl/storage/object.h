@@ -35,6 +35,9 @@
 /* Defined in database.h */
 struct obl_database;
 
+/* Defined in session.h */
+struct obl_session;
+
 /**
  * The structure that contains an object's shape and internal storage.  Most
  * external and language binding code should work with obl_object objects
@@ -42,9 +45,11 @@ struct obl_database;
  */
 struct obl_object
 {
-
-    /** Database that this object is stored in. */
-    struct obl_database *database;
+    /**
+     * The database session that currently owns this object.  NULL if the
+     * object has not yet been persisted.
+     */
+    struct obl_session *session;
 
     /**
      * The logical address of this object, if one has been assigned, or
@@ -118,18 +123,26 @@ void obl_print_object(struct obl_object *o, int depth, int indent);
  * Orderly obl_object deallocation.  Frees both the object itself and its
  * internal storage.
  *
- * \param o The object to destroy.
+ * @param o The object to destroy.
  */
 void obl_destroy_object(struct obl_object *o);
 
 /**
  * Return the storage type of an object.
  *
- * \param o The object to inspect.
- * \return The storage type of the object o, as acquired from its current
+ * @param o The object to inspect.
+ * @return The storage type of the object o, as acquired from its current
  *      shape.
  */
 enum obl_storage_type obl_storage_of(struct obl_object *o);
+
+/**
+ * Access the database to which an object belongs.
+ *
+ * @param o The object to query.
+ * @return The obl_database in which this object is (or will be) persisted.
+ */
+struct obl_database *obl_database_of(struct obl_object *o);
 
 /**
  * Read a shape word from the current position of the file `source`, retrieve
@@ -141,7 +154,8 @@ enum obl_storage_type obl_storage_of(struct obl_object *o);
  * obl_destroy_object() as defined in object.h.
  */
 struct obl_object *obl_read_object(struct obl_database *d,
-        obl_uint *source, obl_physical_address offset, int depth);
+        struct obl_session *s, obl_uint *source,
+        obl_physical_address offset, int depth);
 
 /**
  * Write an object to the memory-mapped file provided.  The object must
@@ -170,7 +184,7 @@ obl_uint _obl_children(struct obl_object *root,
  * @return An obl_object if the malloc is successful, or NULL if it is not.  An
  *      error will be logged if the allocation is unsuccessful.
  */
-struct obl_object *_obl_allocate_object(struct obl_database *d);
+struct obl_object *_obl_allocate_object();
 
 /**
  * Deallocate the memory associated with an obl_object.  For internal use only.

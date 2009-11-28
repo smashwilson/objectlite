@@ -16,25 +16,29 @@
 
 #include "database.h"
 #include "log.h"
+#include "session.h"
 #include "set.h"
 #include "unitutilities.h"
 
 void test_integer_object(void)
 {
     struct obl_database *d;
+    struct obl_session *s;
     struct obl_object *o;
 
     d = obl_create_database("unit.obl");
+    s = obl_create_session(d);
 
-    o = obl_create_integer(d, (obl_int) 42);
+    o = obl_create_integer((obl_int) 42);
     CU_ASSERT_FATAL(o != NULL);
-    CU_ASSERT(o->database == d);
-    CU_ASSERT(o->shape == obl_at_address(d, OBL_INTEGER_SHAPE_ADDR));
+    CU_ASSERT(o->session == NULL);
+    CU_ASSERT(o->shape == obl_at_address(s, OBL_INTEGER_SHAPE_ADDR));
     CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(obl_integer_value(o) == (obl_int) 42);
 
     obl_destroy_object(o);
+    obl_destroy_session(s);
     obl_destroy_database(d);
 }
 
@@ -42,20 +46,22 @@ void test_string_object(void)
 {
     char *string = "NULL-terminated C string.";
     struct obl_database *d;
+    struct obl_session *s;
     struct obl_object *o;
     char *buffer;
 
     d = obl_create_database("unit.obl");
+    s = obl_create_session(d);
 
-    o = obl_create_cstring(d, string, strlen(string));
+    o = obl_create_cstring(string, strlen(string));
     CU_ASSERT_FATAL(o != NULL);
-    CU_ASSERT(o->database == d);
-    CU_ASSERT(o->shape == obl_at_address(d, OBL_STRING_SHAPE_ADDR));
+    CU_ASSERT(o->session == NULL);
+    CU_ASSERT(o->shape == obl_at_address(s, OBL_STRING_SHAPE_ADDR));
     CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(obl_string_size(o) == strlen(string));
 
-    buffer = (char *) malloc(sizeof(char) * obl_string_size(o));
+    buffer = malloc(sizeof(char) * obl_string_size(o));
     CU_ASSERT(obl_string_chars(o, buffer, obl_string_size(o))
             == obl_string_size(o));
     CU_ASSERT(strncmp(buffer, string, obl_string_size(o)) == 0);
@@ -64,6 +70,7 @@ void test_string_object(void)
 
     free(buffer);
     obl_destroy_object(o);
+    obl_destroy_session(s);
     obl_destroy_database(d);
 }
 
@@ -72,23 +79,25 @@ void test_fixed_object(void)
     const size_t length = 3;
     struct obl_object *items[length];
     struct obl_database *d;
+    struct obl_session *s;
     struct obl_object *o;
     int i;
 
     d = obl_create_database("unit.obl");
+    s = obl_create_session(d);
 
-    o = obl_create_fixed(d, length);
+    o = obl_create_fixed(length);
     CU_ASSERT_FATAL(o != NULL);
-    CU_ASSERT(o->database == d);
+    CU_ASSERT(o->session == NULL);
     CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
-    CU_ASSERT(o->shape == obl_at_address(d, OBL_FIXED_SHAPE_ADDR));
+    CU_ASSERT(o->shape == obl_at_address(s, OBL_FIXED_SHAPE_ADDR));
     CU_ASSERT(obl_fixed_size(o) == length);
-    CU_ASSERT(obl_fixed_at(o, 1) == obl_nil(d));
+    CU_ASSERT(obl_fixed_at(o, 1) == obl_nil());
 
-    items[0] = obl_create_integer(d, (obl_int) 100);
-    items[1] = obl_create_integer(d, (obl_int) 101);
-    items[2] = obl_create_integer(d, (obl_int) 102);
+    items[0] = obl_create_integer((obl_int) 100);
+    items[1] = obl_create_integer((obl_int) 101);
+    items[2] = obl_create_integer((obl_int) 102);
 
     obl_fixed_at_put(o, 0, items[0]);
     obl_fixed_at_put(o, 1, items[1]);
@@ -98,8 +107,9 @@ void test_fixed_object(void)
     CU_ASSERT(obl_integer_value(obl_fixed_at(o, 2)) == 102);
 
     d->log_config.level = L_NONE;
+    o->session = s;
     CU_ASSERT(obl_database_ok(d));
-    CU_ASSERT(obl_fixed_at(o, 3) == obl_nil(d));
+    CU_ASSERT(obl_fixed_at(o, 3) == obl_nil());
     CU_ASSERT(!obl_database_ok(d));
     obl_clear_error(d);
 
@@ -107,6 +117,7 @@ void test_fixed_object(void)
         obl_destroy_object(items[i]);
     }
     obl_destroy_object(o);
+    obl_destroy_session(s);
     obl_destroy_database(d);
 }
 
@@ -114,17 +125,19 @@ void test_shape_object(void)
 {
     char *slot_names[] = { "one", "two" };
     struct obl_database *d;
+    struct obl_session *s;
     struct obl_object *o;
     struct obl_shape_storage *storage;
 
     d = obl_create_database("unit.obl");
+    s = obl_create_session(d);
 
-    o = obl_create_cshape(d, "Foo", 2, slot_names, OBL_SLOTTED);
+    o = obl_create_cshape("Foo", 2, slot_names, OBL_SLOTTED);
     CU_ASSERT_FATAL(o != NULL);
-    CU_ASSERT(o->database == d);
+    CU_ASSERT(o->session == NULL);
     CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
-    CU_ASSERT(o->shape == obl_nil(d));
+    CU_ASSERT(o->shape == obl_nil());
 
     storage = o->storage.shape_storage;
     CU_ASSERT_FATAL(storage != NULL);
@@ -146,48 +159,54 @@ void test_slotted_object(void)
 {
     char *slot_names[] = { "foo" , "bar" };
     struct obl_database *d;
+    struct obl_session *s;
     struct obl_object *shape;
     struct obl_object *o;
     struct obl_object *value;
 
     d = obl_create_database("unit.obl");
+    s = obl_create_session(d);
 
-    shape = obl_create_cshape(d, "FooClass", 2, slot_names, OBL_SLOTTED);
+    shape = obl_create_cshape("FooClass", 2, slot_names, OBL_SLOTTED);
     o = obl_create_slotted(shape);
     CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
 
     CU_ASSERT(obl_database_ok(d));
-    CU_ASSERT(obl_slotted_atcnamed(o, "foo") == obl_nil(d));
-    CU_ASSERT(obl_slotted_atcnamed(o, "bar") == obl_nil(d));
+    CU_ASSERT(obl_slotted_atcnamed(o, "foo") == obl_nil());
+    CU_ASSERT(obl_slotted_atcnamed(o, "bar") == obl_nil());
 
-    value = obl_create_integer(d, (obl_int) 4);
+    value = obl_create_integer((obl_int) 4);
     obl_slotted_atcnamed_put(o, "foo", value);
     CU_ASSERT(obl_slotted_atcnamed(o, "foo") == value);
     CU_ASSERT(obl_slotted_at(o, 0) == value);
-    CU_ASSERT(obl_slotted_atcnamed(o, "bar") == obl_nil(d));
-    CU_ASSERT(obl_slotted_at(o, 1) == obl_nil(d));
+    CU_ASSERT(obl_slotted_atcnamed(o, "bar") == obl_nil());
+    CU_ASSERT(obl_slotted_at(o, 1) == obl_nil());
 
     d->log_config.level = L_NONE;
+    o->session = s;
     CU_ASSERT(obl_database_ok(d));
-    CU_ASSERT(obl_slotted_at(o, 7) == obl_nil(d));
+    CU_ASSERT(obl_slotted_at(o, 7) == obl_nil());
     CU_ASSERT(!obl_database_ok(d));
     obl_clear_error(d);
 
     obl_destroy_cshape(shape);
     obl_destroy_object(o);
     obl_destroy_object(value);
+    obl_destroy_session(s);
     obl_destroy_database(d);
 }
 
 void test_stub_object(void)
 {
     struct obl_database *d;
+    struct obl_session *s;
     struct obl_object *o;
 
     d = obl_create_database("unit.obl");
+    s = obl_create_session(d);
 
-    o = _obl_create_stub(d, (obl_logical_address) 14);
+    o = _obl_create_stub(s, (obl_logical_address) 14);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->logical_address == (obl_logical_address) 14)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
@@ -195,19 +214,14 @@ void test_stub_object(void)
     CU_ASSERT(_obl_is_stub(o));
     CU_ASSERT(obl_set_lookup(d->read_set, (obl_set_key) 14) == o);
 
+    obl_destroy_session(s);
     obl_destroy_database(d);
 }
 
 void test_boolean_object(void)
 {
-    struct obl_database *d;
-
-    d = obl_create_database("unit.obl");
-
-    CU_ASSERT(obl_boolean_value(obl_true(d)));
-    CU_ASSERT(! obl_boolean_value(obl_false(d)));
-
-    obl_destroy_database(d);
+    CU_ASSERT(obl_boolean_value(obl_true()));
+    CU_ASSERT(! obl_boolean_value(obl_false()));
 }
 
 /*

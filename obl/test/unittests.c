@@ -8,6 +8,8 @@
 
 #include "CUnit/Basic.h"
 
+#include "database.h"
+
 /*
  * Prototypes for the initialization methods of each test_xyz module.
  */
@@ -32,6 +34,8 @@ void stress_test_set(unsigned long insert_count,
  */
 int main()
 {
+    obl_startup();
+
     if (CU_initialize_registry() != CUE_SUCCESS) {
         return CU_get_error();
     }
@@ -50,5 +54,7 @@ int main()
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();
+
+    obl_shutdown();
     return CU_get_error();
 }
