@@ -214,7 +214,6 @@ void test_stub_object(void)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(obl_shape_storagetype(o->shape) == OBL_STUB);
     CU_ASSERT(_obl_is_stub(o));
-    CU_ASSERT(obl_set_lookup(d->read_set, (obl_set_key) 14) == o);
 
     obl_destroy_session(s);
     obl_destroy_database(d);

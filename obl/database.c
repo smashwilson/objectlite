@@ -290,7 +290,7 @@ struct obl_object *_obl_at_address_depth(struct obl_database *d,
         struct obl_session *s, obl_logical_address address, int depth)
 {
     struct obl_object *o;
-    obl_physical_address addr;
+    obl_physical_address physical;
 
     /* Check for fixed addresses first. */
     if (IS_FIXED_ADDR(address)) {
@@ -305,14 +305,18 @@ struct obl_object *_obl_at_address_depth(struct obl_database *d,
         return o;
     }
 
-    /* Look up the physical address. */
-    addr = obl_address_lookup(d, address);
-    if (addr == OBL_PHYSICAL_UNASSIGNED) {
-        return obl_nil();
-    }
+    if (depth > 0) {
+        /* Look up the physical address. */
+        physical = obl_address_lookup(d, address);
+        if (physical == OBL_PHYSICAL_UNASSIGNED) {
+            return obl_nil();
+        }
 
-    o = obl_read_object(d, s, d->content, addr, depth);
-    o->session = s;
+        o = obl_read_object(d, s, d->content, physical, depth);
+        o->session = s;
+    } else {
+        o = _obl_create_stub(s, address);
+    }
 
     sem_wait(&d->lock);
     obl_set_insert(d->read_set, o);

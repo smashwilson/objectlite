@@ -117,11 +117,7 @@ struct obl_object *obl_fixed_read(struct obl_session *session,
 
     for (i = 0; i < length; i++) {
         addr = readable_logical(source[base + 2 + i]);
-        if (depth <= 0) {
-            linked = _obl_create_stub(session, addr);
-        } else {
-            linked = obl_at_address_depth(session, addr, depth - 1);
-        }
+        linked = obl_at_address_depth(session, addr, depth - 1);
         obl_fixed_at_put(o, i, linked);
     }
 

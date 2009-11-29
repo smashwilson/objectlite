@@ -39,14 +39,6 @@ struct obl_object *_obl_create_stub(struct obl_session *s,
     result->storage.stub_storage = storage;
     result->logical_address = address;
 
-    /*
-     * Store the newly created stub within the read set, so that it will be
-     * deallocated with the rest of the read objects.
-     *
-     * FIXME This should be the caller's responsibility.
-     */
-    obl_set_insert(s->database->read_set, result);
-
     return result;
 }
 
