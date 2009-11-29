@@ -45,6 +45,10 @@ struct obl_object *obl_at_address_depth(struct obl_session *session,
 
 void obl_destroy_session(struct obl_session *session)
 {
+    if (session->current_transaction != NULL) {
+        obl_abort_transaction(session->current_transaction);
+    }
+
     sem_destroy(&session->lock);
     free(session);
 }
