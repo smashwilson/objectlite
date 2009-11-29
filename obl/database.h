@@ -139,8 +139,8 @@ struct obl_root {
 /**
  * ObjectLite interface layer.
  */
-struct obl_database {
-
+struct obl_database
+{
     /** Location of the persisted database. */
     const char *filename;
 
@@ -174,6 +174,11 @@ struct obl_database {
      * units.
      */
     obl_uint content_size;
+
+    /**
+     * A semaphore to make primitive database operations atomic.
+     */
+    sem_t lock;
 };
 
 /**
@@ -307,7 +312,18 @@ struct obl_object *_obl_at_fixed_address(obl_logical_address address);
  * This function performs primitive I/O and should only be called by internal
  * ObjectLite functions while a transaction is active and the database is
  * properly locked.
+ *
+ * @param o
  */
 void _obl_write(struct obl_object *o);
+
+/**
+ * Atomically removes an object from any internal data structures.
+ *
+ * @param o
+ *
+ * @sa obl_destroy_object()
+ */
+void _obl_database_release(struct obl_object *o);
 
 #endif

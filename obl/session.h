@@ -23,7 +23,7 @@ struct obl_session
 
     struct obl_transaction *current_transaction;
 
-    sem_t session_lock;
+    sem_t lock;
 };
 
 struct obl_session *obl_create_session(struct obl_database *database);
@@ -42,5 +42,14 @@ struct obl_object *obl_at_address_depth(struct obl_session *session,
         const obl_logical_address address, int depth);
 
 void obl_destroy_session(struct obl_session *session);
+
+/**
+ * Atomically release an object from any internal session data structures.
+ *
+ * @param o
+ *
+ * @sa obl_destroy_object()
+ */
+void _obl_session_release(struct obl_object *o);
 
 #endif /* SESSION_H */

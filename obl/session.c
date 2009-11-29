@@ -10,6 +10,8 @@
 
 #include "storage/object.h"
 #include "session.h"
+#include "set.h"
+#include "transaction.h"
 #include "database.h"
 
 struct obl_session *obl_create_session(struct obl_database *database)
@@ -23,7 +25,7 @@ struct obl_session *obl_create_session(struct obl_database *database)
 
     session->database = database;
     session->current_transaction = NULL;
-    sem_init(&(session->session_lock), 0, 1);
+    sem_init(&session->lock, 0, 1);
 
     return session;
 }
@@ -43,6 +45,20 @@ struct obl_object *obl_at_address_depth(struct obl_session *session,
 
 void obl_destroy_session(struct obl_session *session)
 {
-    sem_destroy(&(session->session_lock));
+    sem_destroy(&session->lock);
     free(session);
+}
+
+void _obl_session_release(struct obl_object *o)
+{
+    struct obl_session *s = o->session;
+    struct obl_transaction *t;
+
+    if (s == NULL) return;
+    t = s->current_transaction;
+    if (t == NULL) return;
+
+    sem_wait(&s->lock);
+    obl_set_remove(t->write_set, o);
+    sem_post(&s->lock);
 }

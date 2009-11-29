@@ -120,8 +120,10 @@ struct obl_object *obl_object_shape(struct obl_object *o);
 void obl_print_object(struct obl_object *o, int depth, int indent);
 
 /**
- * Orderly obl_object deallocation.  Frees both the object itself and its
- * internal storage.
+ * Orderly obl_object deallocation.  Removes the object from any read or write
+ * sets it's a member of, then destroys it.  This function should be invoked
+ * whenever an object that shadows the obl_object in a language binding is
+ * garbage collected.
  *
  * @param o The object to destroy.
  */

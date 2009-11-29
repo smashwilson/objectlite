@@ -214,10 +214,10 @@ void obl_print_object(struct obl_object *o, int depth, int indent)
 
 void obl_destroy_object(struct obl_object *o)
 {
-    if (o->storage.any_storage != NULL ) {
-        free(o->storage.any_storage);
-    }
-    free(o);
+    _obl_database_release(o);
+    _obl_session_release(o);
+
+    _obl_deallocate_object(o);
 }
 
 enum obl_storage_type obl_storage_of(struct obl_object *o)

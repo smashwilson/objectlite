@@ -117,6 +117,8 @@ struct obl_database *obl_create_database(const char *filename)
     database->content = NULL;
     database->content_size = (obl_uint) 0;
 
+    sem_init(&(database->lock), 0, 1);
+
     return database;
 }
 
@@ -198,17 +200,19 @@ void obl_close_database(struct obl_database *database)
     database->content_size = (obl_uint) 0;
 }
 
-void obl_destroy_database(struct obl_database *database)
+void obl_destroy_database(struct obl_database *d)
 {
-    if (database->read_set != NULL) {
-        obl_destroy_set(database->read_set, &_obl_deallocate_object);
+    if (d->read_set != NULL) {
+        obl_destroy_set(d->read_set, &_obl_deallocate_object);
     }
 
-    if (database->last_error.message != NULL) {
-        free(database->last_error.message);
+    if (d->last_error.message != NULL) {
+        free(d->last_error.message);
     }
 
-    free(database);
+    sem_destroy(&d->lock);
+
+    free(d);
 }
 
 int obl_database_ok(const struct obl_database *database)
@@ -294,7 +298,9 @@ struct obl_object *_obl_at_address_depth(struct obl_database *d,
     }
 
     /* If this object already exists within the read set, return it as-is. */
+    sem_wait(&d->lock);
     o = obl_set_lookup(d->read_set, (obl_set_key) address);
+    sem_post(&d->lock);
     if (o != NULL && ! _obl_is_stub(o)) {
         return o;
     }
@@ -307,7 +313,10 @@ struct obl_object *_obl_at_address_depth(struct obl_database *d,
 
     o = obl_read_object(d, s, d->content, addr, depth);
     o->session = s;
+
+    sem_wait(&d->lock);
     obl_set_insert(d->read_set, o);
+    sem_post(&d->lock);
 
     return o;
 }
@@ -352,6 +361,18 @@ void _obl_write(struct obl_object *o)
     }
 
     obl_write_object(o, d->content);
+}
+
+void _obl_database_release(struct obl_object *o)
+{
+    struct obl_database *d;
+
+    if (o->session == NULL) return ;
+    d = o->session->database;
+
+    sem_wait(&d->lock);
+    obl_set_remove(d->read_set, o);
+    sem_post(&d->lock);
 }
 
 /* Internal function implementations. */
