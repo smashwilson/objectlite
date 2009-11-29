@@ -48,21 +48,42 @@ struct obl_transaction *obl_ensure_transaction(struct obl_session *session,
     }
 }
 
-int obl_commit_transaction(struct obl_transaction *transaction)
+void obl_mark_dirty(struct obl_object *o)
 {
-    _deallocate_transaction(transaction);
+    struct obl_transaction *t;
+
+    if (o->session == NULL ||
+            o->session->current_transaction == NULL ||
+            o->logical_address == OBL_LOGICAL_UNASSIGNED)
+        return ;
+
+    t = o->session->current_transaction;
+    obl_set_insert(t->write_set, o);
+}
+
+int obl_commit_transaction(struct obl_transaction *t)
+{
+    struct obl_set_iterator *it = obl_set_destroying_iter(t->write_set);
+    struct obl_object *current;
+
+    while ( (current = obl_set_iternext(it)) != NULL ) {
+        if (current->physical_address != OBL_PHYSICAL_UNASSIGNED) {
+            _obl_write(current);
+        }
+    }
+
+    _deallocate_transaction(t);
     return 0;
 }
 
-void obl_abort_transaction(struct obl_transaction *transaction)
+void obl_abort_transaction(struct obl_transaction *t)
 {
-    _deallocate_transaction(transaction);
+    obl_destroy_set(t->write_set, NULL);
+    _deallocate_transaction(t);
 }
 
 static void _deallocate_transaction(struct obl_transaction *t)
 {
     t->session->current_transaction = NULL;
-
-    obl_destroy_set(t->write_set, NULL);
     free(t);
 }

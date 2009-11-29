@@ -15,6 +15,9 @@ struct obl_set;
 /* defined in session.h */
 struct obl_session;
 
+/* defined in storage/object.h */
+struct obl_object;
+
 struct obl_transaction
 {
     struct obl_session *session;
@@ -26,6 +29,8 @@ struct obl_transaction *obl_begin_transaction(struct obl_session *session);
 
 struct obl_transaction *obl_ensure_transaction(struct obl_session *session,
         int *created);
+
+void obl_mark_dirty(struct obl_object *o);
 
 int obl_commit_transaction(struct obl_transaction *transaction);
 

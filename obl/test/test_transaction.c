@@ -11,6 +11,7 @@
 #include "storage/integer.h"
 #include "database.h"
 #include "session.h"
+#include "set.h"
 #include "unitutilities.h"
 
 #include "CUnit/Basic.h"
@@ -46,6 +47,66 @@ void test_ensure_transaction(void)
     obl_destroy_database(d);
 }
 
+void test_mark_dirty(void)
+{
+    struct obl_database *d = obl_create_database(filename);
+    struct obl_session *s = obl_create_session(d);
+    struct obl_transaction *t;
+    struct obl_object *o;
+
+    o = obl_create_integer(42);
+    CU_ASSERT(o->session == NULL);
+
+    /*
+     * Without a session or a transaction, obl_mark_dirty should be a no-op.
+     * Basically, these calls shouldn't segfault.
+     */
+    obl_mark_dirty(o);
+    o->session = s;
+    o->logical_address = 200;
+    o->physical_address = 1024;
+    obl_mark_dirty(o);
+
+    t = obl_begin_transaction(s);
+    obl_mark_dirty(o);
+
+    CU_ASSERT(obl_set_includes(t->write_set, o));
+    CU_ASSERT(!obl_set_includes(d->read_set, o));
+
+    obl_abort_transaction(t);
+
+    obl_destroy_object(o);
+    obl_destroy_session(s);
+    obl_destroy_database(d);
+}
+
+void test_simple_commit(void)
+{
+    struct obl_database *d = obl_create_database(filename);
+    struct obl_session *s = obl_create_session(d);
+    struct obl_transaction *t;
+    struct obl_object *o;
+    obl_uint contents[3] = { 0 };
+    d->content = contents;
+    d->content_size = 3;
+
+    t = obl_begin_transaction(s);
+
+    o = obl_create_integer(-400);
+    o->session = s;
+    o->logical_address = 100;
+    o->physical_address = 1;
+    obl_mark_dirty(o);
+
+    obl_commit_transaction(t);
+    CU_ASSERT(readable_logical(contents[1]) == OBL_INTEGER_SHAPE_ADDR);
+    CU_ASSERT(readable_int(contents[2]) == (obl_int) -400);
+
+    obl_destroy_object(o);
+    obl_destroy_session(s);
+    obl_destroy_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -60,6 +121,8 @@ CU_pSuite initialize_transaction_suite(void)
     }
 
     ADD_TEST(test_ensure_transaction);
+    ADD_TEST(test_mark_dirty);
+    ADD_TEST(test_simple_commit);
 
     return pSuite;
 }
