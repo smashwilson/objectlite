@@ -20,13 +20,15 @@
 #include "set.h"
 #include "unitutilities.h"
 
+static const char *filename = "object.obl";
+
 void test_integer_object(void)
 {
     struct obl_database *d;
     struct obl_session *s;
     struct obl_object *o;
 
-    d = obl_create_database("unit.obl");
+    d = obl_create_database(filename);
     s = obl_create_session(d);
 
     o = obl_create_integer((obl_int) 42);
@@ -50,7 +52,7 @@ void test_string_object(void)
     struct obl_object *o;
     char *buffer;
 
-    d = obl_create_database("unit.obl");
+    d = obl_create_database(filename);
     s = obl_create_session(d);
 
     o = obl_create_cstring(string, strlen(string));
@@ -83,7 +85,7 @@ void test_fixed_object(void)
     struct obl_object *o;
     int i;
 
-    d = obl_create_database("unit.obl");
+    d = obl_create_database(filename);
     s = obl_create_session(d);
 
     o = obl_create_fixed(length);
@@ -129,7 +131,7 @@ void test_shape_object(void)
     struct obl_object *o;
     struct obl_shape_storage *storage;
 
-    d = obl_create_database("unit.obl");
+    d = obl_create_database(filename);
     s = obl_create_session(d);
 
     o = obl_create_cshape("Foo", 2, slot_names, OBL_SLOTTED);
@@ -164,7 +166,7 @@ void test_slotted_object(void)
     struct obl_object *o;
     struct obl_object *value;
 
-    d = obl_create_database("unit.obl");
+    d = obl_create_database(filename);
     s = obl_create_session(d);
 
     shape = obl_create_cshape("FooClass", 2, slot_names, OBL_SLOTTED);
@@ -203,7 +205,7 @@ void test_stub_object(void)
     struct obl_session *s;
     struct obl_object *o;
 
-    d = obl_create_database("unit.obl");
+    d = obl_create_database(filename);
     s = obl_create_session(d);
 
     o = _obl_create_stub(s, (obl_logical_address) 14);
