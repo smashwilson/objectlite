@@ -102,8 +102,22 @@ void obl_set_insert(struct obl_set *set, struct obl_object *o);
  *
  * @param set The set possibly containing the object.
  * @param key Key value to query.
+ * @return The obl_object with the specified key, if one is present, or NULL
+ *      otherwise.
  */
 struct obl_object *obl_set_lookup(struct obl_set *set, obl_set_key key);
+
+/**
+ * Return true if a set contains a provided object.
+ *
+ * @param set The set possibly containing the object.
+ * @param o The object to test.
+ * @return Truth (1) if set contains the exact object "o", falsehood (0) if it
+ *      does not.
+ *
+ * @sa obl_set_lookup()
+ */
+int obl_set_includes(struct obl_set *set, struct obl_object *o);
 
 /**
  * Remove an obl_object from the set.

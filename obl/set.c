@@ -251,6 +251,12 @@ struct obl_object *obl_set_lookup(struct obl_set *set, obl_set_key key)
     return n == NULL ? NULL : n->o;
 }
 
+int obl_set_includes(struct obl_set *set, struct obl_object *o)
+{
+    obl_set_key key = set->keyfunction(o);
+    return obl_set_lookup(set, key) == o;
+}
+
 void obl_set_remove(struct obl_set *set, struct obl_object *o)
 {
     int done;
