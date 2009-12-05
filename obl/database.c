@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -85,7 +86,7 @@ struct obl_database *obl_create_database(const char *filename)
     struct obl_database *database;
     struct obl_set *read_set;
 
-    database = (struct obl_database*) malloc(sizeof(struct obl_database));
+    database = malloc(sizeof(struct obl_database));
     if (database == NULL) {
         return NULL;
     }
@@ -271,7 +272,7 @@ void obl_report_errorf(struct obl_database *database, error_code code,
     va_end(args);
 
     va_start(args, format);
-    buffer = (char*) malloc(required_size);
+    buffer = malloc(required_size);
     vsnprintf(buffer, required_size, format, args);
     va_end(args);
 
