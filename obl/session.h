@@ -26,11 +26,9 @@ struct obl_session
 
     struct obl_transaction *current_transaction;
 
-    sem_t current_transaction_mutex;
-
     struct obl_set *read_set;
 
-    sem_t read_set_mutex;
+    sem_t session_mutex;
 };
 
 struct obl_session *obl_create_session(struct obl_database *database);
