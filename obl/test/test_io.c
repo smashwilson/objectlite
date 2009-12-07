@@ -32,7 +32,7 @@ void test_read_integer(void)
             0x11, 0x22, 0x33, 0x44,
     };
     struct obl_object *shape, *o;
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
 
     shape = obl_at_address(s, OBL_INTEGER_SHAPE_ADDR);
@@ -43,7 +43,7 @@ void test_read_integer(void)
 
     obl_destroy_object(o);
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_read_string(void)
@@ -56,7 +56,7 @@ void test_read_string(void)
             0x00,  'c', 0x00,  'd',
     };
     struct obl_object *shape, *o;
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
 
     shape = obl_at_address(s, OBL_STRING_SHAPE_ADDR);
@@ -66,7 +66,7 @@ void test_read_string(void)
     CU_ASSERT(obl_string_ccmp(o, "abcd") == 0);
 
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_read_fixed(void)
@@ -82,7 +82,7 @@ void test_read_fixed(void)
     };
     struct obl_object *shape, *o, *stub, *linked;
     struct obl_object *one, *two, *three, *four;
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
 
     shape = obl_at_address(s, OBL_FIXED_SHAPE_ADDR);
@@ -138,7 +138,7 @@ void test_read_fixed(void)
 
     obl_destroy_object(o);
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_read_shape(void)
@@ -157,7 +157,7 @@ void test_read_shape(void)
     struct obl_object *name, *slot_names;
     struct obl_object *slot_one_name, *slot_two_name;
     struct obl_object *out;
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
 
     name = obl_create_cstring("FooClass", 8);
@@ -185,7 +185,7 @@ void test_read_shape(void)
     obl_destroy_object(out);
 
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_read_slotted(void)
@@ -201,7 +201,7 @@ void test_read_slotted(void)
     struct obl_object *shape;
     struct obl_object *one, *two;
     struct obl_object *o;
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
 
     shape = obl_create_cshape("FooClass", 2, slot_names, OBL_SLOTTED);
@@ -224,7 +224,7 @@ void test_read_slotted(void)
     obl_destroy_cshape(shape);
 
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_read_addrtreepage(void)
@@ -237,7 +237,7 @@ void test_read_addrtreepage(void)
             0                       /* 0x02 - 0xFF = OBL_PHYSICAL_UNASSIGNED */
     };
     struct obl_object *treepage, *shape;
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
 
     shape = obl_at_address(s, OBL_ADDRTREEPAGE_SHAPE_ADDR);
@@ -252,7 +252,7 @@ void test_read_addrtreepage(void)
     obl_destroy_object(treepage);
 
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_read_arbitrary(void)
@@ -269,7 +269,7 @@ void test_read_arbitrary(void)
             0x00, 0x6F, 0x00, 0x00, /* 'o' padding byte */
     };
     struct obl_object *integer, *string;
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
 
     integer = obl_read_object(d, NULL, (obl_uint*) contents, 0, 1);
@@ -284,7 +284,7 @@ void test_read_arbitrary(void)
     obl_destroy_object(string);
 
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_write_integer(void)
@@ -295,7 +295,7 @@ void test_write_integer(void)
             0x00, 0x00, 0x00, 0x00, /* Space for the shape address. */
             0x12, 0x34, 0x56, 0x78
     };
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
 
     o = obl_create_integer((obl_int) 0x12345678);
     o->physical_address = (obl_physical_address) 0;
@@ -304,7 +304,7 @@ void test_write_integer(void)
     CU_ASSERT(memcmp(contents, expected, 8) == 0);
 
     obl_destroy_object(o);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_write_string(void)
@@ -320,7 +320,7 @@ void test_write_string(void)
             0x00, 0x6F, 0x00, 0x00  /* 'o' padding */
     };
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
 
     o = obl_create_cstring("hello", 5);
     o->physical_address = (obl_physical_address) 0;
@@ -329,7 +329,7 @@ void test_write_string(void)
     CU_ASSERT(memcmp(contents, expected, 20) == 0);
 
     obl_destroy_object(o);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_write_fixed(void)
@@ -346,7 +346,7 @@ void test_write_fixed(void)
             0x00, 0x00, 0x00, 0xCC, /* Object three. */
     };
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
 
     one = obl_create_integer((obl_int) 4123);
     one->logical_address = (obl_logical_address) 0x00AA;
@@ -369,7 +369,7 @@ void test_write_fixed(void)
     obl_destroy_object(one);
     obl_destroy_object(two);
     obl_destroy_object(three);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_write_shape(void)
@@ -386,7 +386,7 @@ void test_write_shape(void)
             0x00, 0x00, 0x00, 0x01  /* Storage type = OBL_SLOTTED */
     };
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
 
     shape = obl_create_cshape("FooClass", 2, slot_names, OBL_SLOTTED);
     shape->physical_address = (obl_physical_address) 0;
@@ -400,7 +400,7 @@ void test_write_shape(void)
     CU_ASSERT(memcmp(contents, expected, 20) == 0);
 
     obl_destroy_cshape(shape);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_write_slotted(void)
@@ -417,7 +417,7 @@ void test_write_slotted(void)
             0x00, 0x00, 0x33, 0xCC  /* Slot "ccc" address. */
     };
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
 
     shape = obl_create_cshape("FooClass", 3, slot_names, OBL_SLOTTED);
     shape->physical_address = (obl_physical_address) 0;
@@ -443,7 +443,7 @@ void test_write_slotted(void)
     obl_destroy_object(ccc);
     obl_destroy_object(slotted);
     obl_destroy_cshape(shape);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_write_addrtreepage(void)
@@ -459,7 +459,7 @@ void test_write_addrtreepage(void)
             0                       /* 0x02 - 0xFF = OBL_PHYSICAL_UNASSIGNED */
     };
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
 
     treepage = obl_create_addrtreepage((obl_uint) 4);
     treepage->storage.addrtreepage_storage->contents[1] =
@@ -469,7 +469,7 @@ void test_write_addrtreepage(void)
     CU_ASSERT(memcmp(contents, expected, 4 + CHUNK_SIZE * 4) == 0);
 
     obl_destroy_object(treepage);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_write_arbitrary(void)
@@ -490,7 +490,7 @@ void test_write_arbitrary(void)
             0x00, 0x00, 0x00, 0x2A  /* Integer value */
     };
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
 
     one = obl_create_cstring("hello", 5);
     one->physical_address = (obl_physical_address) 0;
@@ -504,7 +504,7 @@ void test_write_arbitrary(void)
 
     obl_destroy_object(one);
     obl_destroy_object(two);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 /*

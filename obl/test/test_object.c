@@ -20,45 +20,30 @@
 #include "set.h"
 #include "unitutilities.h"
 
-static const char *filename = "object.obl";
-
 void test_integer_object(void)
 {
-    struct obl_database *d;
-    struct obl_session *s;
     struct obl_object *o;
-
-    d = obl_create_database(filename);
-    s = obl_create_session(d);
 
     o = obl_create_integer((obl_int) 42);
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->session == NULL);
-    CU_ASSERT(o->shape == obl_at_address(s, OBL_INTEGER_SHAPE_ADDR));
+    CU_ASSERT(o->shape == _obl_at_fixed_address(OBL_INTEGER_SHAPE_ADDR));
     CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(obl_integer_value(o) == (obl_int) 42);
-
     obl_destroy_object(o);
-    obl_destroy_session(s);
-    obl_destroy_database(d);
 }
 
 void test_string_object(void)
 {
     char *string = "NULL-terminated C string.";
-    struct obl_database *d;
-    struct obl_session *s;
     struct obl_object *o;
     char *buffer;
-
-    d = obl_create_database(filename);
-    s = obl_create_session(d);
 
     o = obl_create_cstring(string, strlen(string));
     CU_ASSERT_FATAL(o != NULL);
     CU_ASSERT(o->session == NULL);
-    CU_ASSERT(o->shape == obl_at_address(s, OBL_STRING_SHAPE_ADDR));
+    CU_ASSERT(o->shape == _obl_at_fixed_address(OBL_STRING_SHAPE_ADDR));
     CU_ASSERT(o->logical_address == OBL_LOGICAL_UNASSIGNED)
     CU_ASSERT(o->physical_address == OBL_PHYSICAL_UNASSIGNED);
     CU_ASSERT(obl_string_size(o) == strlen(string));
@@ -72,8 +57,6 @@ void test_string_object(void)
 
     free(buffer);
     obl_destroy_object(o);
-    obl_destroy_session(s);
-    obl_destroy_database(d);
 }
 
 void test_fixed_object(void)
@@ -85,7 +68,7 @@ void test_fixed_object(void)
     struct obl_object *o;
     int i;
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
     s = obl_create_session(d);
 
     o = obl_create_fixed(length);
@@ -108,7 +91,7 @@ void test_fixed_object(void)
     CU_ASSERT(obl_fixed_at(o, 1) == items[1]);
     CU_ASSERT(obl_integer_value(obl_fixed_at(o, 2)) == 102);
 
-    d->log_config.level = L_NONE;
+    d->configuration.log_level = L_NONE;
     o->session = s;
     CU_ASSERT(obl_database_ok(d));
     CU_ASSERT(obl_fixed_at(o, 3) == obl_nil());
@@ -118,9 +101,10 @@ void test_fixed_object(void)
     for (i = 0; i < length; i++) {
         obl_destroy_object(items[i]);
     }
+
     obl_destroy_object(o);
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_shape_object(void)
@@ -131,7 +115,7 @@ void test_shape_object(void)
     struct obl_object *o;
     struct obl_shape_storage *storage;
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
     s = obl_create_session(d);
 
     o = obl_create_cshape("Foo", 2, slot_names, OBL_SLOTTED);
@@ -154,7 +138,7 @@ void test_shape_object(void)
     CU_ASSERT(obl_shape_storagetype(o) == OBL_SLOTTED);
 
     obl_destroy_cshape(o);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_slotted_object(void)
@@ -166,7 +150,7 @@ void test_slotted_object(void)
     struct obl_object *o;
     struct obl_object *value;
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
     s = obl_create_session(d);
 
     shape = obl_create_cshape("FooClass", 2, slot_names, OBL_SLOTTED);
@@ -185,7 +169,7 @@ void test_slotted_object(void)
     CU_ASSERT(obl_slotted_atcnamed(o, "bar") == obl_nil());
     CU_ASSERT(obl_slotted_at(o, 1) == obl_nil());
 
-    d->log_config.level = L_NONE;
+    d->configuration.log_level = L_NONE;
     o->session = s;
     CU_ASSERT(obl_database_ok(d));
     CU_ASSERT(obl_slotted_at(o, 7) == obl_nil());
@@ -196,7 +180,7 @@ void test_slotted_object(void)
     obl_destroy_object(o);
     obl_destroy_object(value);
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_stub_object(void)
@@ -205,7 +189,7 @@ void test_stub_object(void)
     struct obl_session *s;
     struct obl_object *o;
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
     s = obl_create_session(d);
 
     o = _obl_create_stub(s, (obl_logical_address) 14);
@@ -216,7 +200,7 @@ void test_stub_object(void)
     CU_ASSERT(_obl_is_stub(o));
 
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_boolean_object(void)

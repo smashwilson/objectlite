@@ -8,7 +8,14 @@
 
 #include "unitutilities.h"
 
+#include "database.h"
+
 #include <stdio.h>
+
+void wipe(struct obl_database *d)
+{
+    memset(d->content, 0, sizeof(obl_uint) * d->content_size);
+}
 
 void dump_memory(char *memory, int size, const char *filename)
 {
@@ -36,4 +43,11 @@ void dump_memory(char *memory, int size, const char *filename)
     }
 
     fclose(outf);
+}
+
+void dump(struct obl_database *d, const char *filename)
+{
+    dump_memory((char*) d->content,
+            d->content_size * sizeof(obl_uint),
+            filename);
 }

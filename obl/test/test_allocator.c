@@ -15,15 +15,14 @@
 #include "set.h"
 #include "session.h"
 #include "platform.h"
-
-static const char *filename = "allocator.obl";
+#include "unitutilities.h"
 
 static struct obl_database *setup_database()
 {
     struct obl_database *d;
     struct obl_object *allocator, *logical, *physical;
 
-    d = obl_create_database(filename);
+    d = obl_open_defdatabase(NULL);
 
     allocator = obl_create_slotted(
             _obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
@@ -48,7 +47,7 @@ static void teardown_database(struct obl_database *d)
     obl_destroy_object(obl_slotted_at(allocator, 0));
     obl_destroy_object(obl_slotted_at(allocator, 1));
 
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_allocate_logical(void)
@@ -103,16 +102,8 @@ CU_pSuite initialize_allocator_suite(void)
         return NULL;
     }
 
-    if (
-        (CU_add_test(pSuite,
-                "test_allocate_logical",
-                test_allocate_logical) == NULL) ||
-        (CU_add_test(pSuite,
-                "test_allocate_physical",
-                test_allocate_physical) == NULL)
-    ) {
-        return NULL;
-    }
+    ADD_TEST(test_allocate_logical);
+    ADD_TEST(test_allocate_physical);
 
     return pSuite;
 }

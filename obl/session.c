@@ -34,7 +34,7 @@ struct obl_object *obl_at_address(struct obl_session *session,
         const obl_logical_address address)
 {
     return obl_at_address_depth(session, address,
-            session->database->default_stub_depth);
+            session->database->configuration.default_stub_depth);
 }
 
 struct obl_object *obl_at_address_depth(struct obl_session *session,

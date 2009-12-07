@@ -15,23 +15,18 @@
 #include "set.h"
 #include "unitutilities.h"
 
-const static char *filename = "addrmap.obl";
-
 void test_map_leaf(void)
 {
     struct obl_database *d;
     obl_physical_address result;
-    const char contents[] = {
-            0x00, 0x00, 0x00, 0x00, /* padding word */
-            /* Physical address 1 */
-            0xff, 0xff, 0xff, 0xfb, /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
-            0x00, 0x00, 0x00, 0x00, /* height = 0 */
-            0x00, 0x00, 0x00, 0x00, /* 0x00 */
-            0x00, 0x00, 0x1A, 0x2B, /* 0x01 */
-    };
 
-    d = obl_create_database(filename);
-    d->content = (obl_uint*) contents;
+    d = obl_open_defdatabase(NULL);
+    wipe(d);
+
+    SET_UINT(d->content, 1, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_CHAR(d->content, 2, 0x00, 0x00, 0x00, 0x00); /* height = 0 */
+    SET_CHAR(d->content, 4, 0x00, 0x00, 0x1A, 0x2B); /* entry 0x01 */
+
     d->root.address_map_addr = (obl_physical_address) 1;
 
     result = obl_address_lookup(d, (obl_logical_address) 1);
@@ -40,40 +35,26 @@ void test_map_leaf(void)
     result = obl_address_lookup(d, (obl_logical_address) 0x400);
     CU_ASSERT(result == OBL_PHYSICAL_UNASSIGNED);
 
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_map_branch(void)
 {
     struct obl_database *d;
     obl_physical_address result;
-    const char contents[] = {
-            0x00, 0x00, 0x00, 0x00,  /* A padding word */
-            /* Physical address 1 */
-            0xff, 0xff, 0xff, 0xfb,  /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
-            0x00, 0x00, 0x00, 0x00,  /* height = 0 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x00 = OBL_PHYSICAL_UNASSIGNED */
-            0x00, 0xAA, 0xBB, 0xCC,  /* 0x01 = physical 0x00AABBCC */
-            0x00, 0x00, 0x00, 0x00,  /* ... */
-            /* Physical address 6 */
-            0xff, 0xff, 0xff, 0xfb,  /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
-            0x00, 0x00, 0x00, 0x01,  /* height = 1 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x00 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x01 */
-            0x00, 0x00, 0x00, 0x01,  /* 0x02 = physical 1 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x03 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x04 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x05 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x06 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x07 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x08 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x09 */
-            0x00, 0x00, 0x00, 0x00,  /* 0x0A */
-    };
 
-    d = obl_create_database(filename);
-    d->content = (obl_uint*) contents;
-    d->root.address_map_addr = (obl_physical_address) 6;
+    d = obl_open_defdatabase(NULL);
+    wipe(d);
+
+    SET_UINT(d->content, 1, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_CHAR(d->content, 2, 0x00, 0x00, 0x00, 0x00); /* page height */
+    SET_CHAR(d->content, 4, 0x00, 0xAA, 0xBB, 0xCC); /* 0x01 = addr */
+
+    SET_UINT(d->content, 260, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_CHAR(d->content, 261, 0x00, 0x00, 0x00, 0x01); /* height = 1 */
+    SET_CHAR(d->content, 264, 0x00, 0x00, 0x00, 0x01); /* 0x02 = physical 1 */
+
+    d->root.address_map_addr = (obl_physical_address) 260;
 
     result = obl_address_lookup(d, (obl_logical_address) 0x00000201);
     CU_ASSERT(result == (obl_physical_address) 0x00AABBCC);
@@ -86,73 +67,60 @@ void test_map_branch(void)
     result = obl_address_lookup(d, (obl_logical_address) 0x00000301);
     CU_ASSERT(result == OBL_LOGICAL_UNASSIGNED);
 
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
-#define AL_SIZE ((1 + CHUNK_SIZE) * sizeof(obl_uint))
 void test_assign_leaf(void)
 {
     struct obl_database *d;
-    char content[AL_SIZE] = {
-            0xff, 0xff, 0xff, 0xfb, /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
-            0x00, 0x00, 0x00, 0x00, /* depth */
-            0x00, 0x00, 0x00, 0x00, /* 0x00 */
-            0
-    };
-    char expected[AL_SIZE] = {
-            0xff, 0xff, 0xff, 0xfb, /* OBL_ADDRTREEPAGE_SHAPE_ADDR */
-            0x00, 0x00, 0x00, 0x00, /* depth */
-            0x00, 0x00, 0x00, 0x00, /* 0x00 */
-            0x00, 0x00, 0xAA, 0xBB, /* 0x01 */
-            0
-    };
+    obl_uint expected[10] = { 0 };
 
-    d = obl_create_database(filename);
-    d->content = (obl_uint*) content;
+    d = obl_open_defdatabase(NULL);
+    wipe(d);
+
+    SET_UINT(d->content, 0, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+
     d->root.address_map_addr = (obl_physical_address) 0;
 
     obl_address_assign(d,
             (obl_logical_address) 0x01,
             (obl_physical_address) 0x0000AABB);
 
-    CU_ASSERT(memcmp(content, expected, AL_SIZE) == 0);
+    SET_UINT(expected, 0, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_CHAR(expected, 3, 0x00, 0x00, 0xAA, 0xBB); /* 0x01 in page*/
 
-    obl_destroy_database(d);
+    CU_ASSERT(memcmp(d->content, expected, 10 * sizeof(obl_uint)) == 0);
+
+    obl_close_database(d);
 }
 
 #define AB_SIZE (1 + (2 * (1 + CHUNK_SIZE)))
 void test_assign_branch(void)
 {
     struct obl_database *d;
-    obl_uint content[AB_SIZE] = { 0x00 };
-    obl_uint expected[AB_SIZE] = { 0x00 };
+    obl_uint expected[AB_SIZE] = { 0 };
 
-    /* leaf @ physical 1 */
-    content[1] = writable_uint(OBL_ADDRTREEPAGE_SHAPE_ADDR);
-    content[2] = writable_uint((obl_uint) 0);
+    d = obl_open_defdatabase(NULL);
+    wipe(d);
 
-    /* branch [root] @ physical CHUNK_SIZE + 2 */
-    content[CHUNK_SIZE + 2] =
-            writable_uint(OBL_ADDRTREEPAGE_SHAPE_ADDR);
-    content[CHUNK_SIZE + 3] = writable_uint((obl_uint) 1);
-    content[CHUNK_SIZE + 4 + 6] = writable_uint((obl_uint) 1);
+    SET_UINT(d->content, 1, OBL_ADDRTREEPAGE_SHAPE_ADDR);
 
-    memcpy(expected, content, AB_SIZE);
+    SET_UINT(d->content, CHUNK_SIZE + 2, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_UINT(d->content, CHUNK_SIZE + 3, 1);
+    SET_UINT(d->content, CHUNK_SIZE + 4 + 6, 1);
 
-    /* Assign in leaf @ physical 1, index 0x0A */
-    expected[13] = writable_uint((obl_uint) 0x00AA00BB);
+    memcpy(expected, d->content, AB_SIZE * sizeof(obl_uint));
+    SET_UINT(expected, 13, (obl_uint) 0x00AA00BB);
 
-    d = obl_create_database(filename);
     d->root.address_map_addr = (obl_physical_address) (CHUNK_SIZE + 2);
-    d->content = content;
 
     obl_address_assign(d,
             (obl_logical_address) 0x0000060A,
             (obl_physical_address) 0x00AA00BB);
 
-    CU_ASSERT(memcmp(content, expected, AB_SIZE) == 0);
+    CU_ASSERT(memcmp(d->content, expected, AB_SIZE * sizeof(obl_uint)) == 0);
 
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 #define CL_SIZE (1 + 2 * (CHUNK_SIZE + 2))
@@ -160,31 +128,26 @@ void test_create_leaf(void)
 {
     struct obl_database *d;
     struct obl_object *allocator, *next_physical;
-    obl_uint content[CL_SIZE] = { 0x00 };
-    obl_uint expected[CL_SIZE] = { 0x00 };
+    obl_uint expected[CL_SIZE] = { 0 };
     const obl_uint branch = 1;
     const obl_uint leaf = branch + CHUNK_SIZE + 2;
 
-    /* branch [root] @ physical 1 */
-    content[branch] = writable_uint((obl_uint) OBL_ADDRTREEPAGE_SHAPE_ADDR);
-    content[branch + 1] = writable_uint((obl_uint) 1); /* height */
+    d = obl_open_defdatabase(NULL);
+    wipe(d);
 
-    memcpy(expected, content, CL_SIZE * 4);
+    SET_UINT(d->content, branch, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_UINT(d->content, branch + 1, (obl_uint) 1);
 
-    /* branch [root] @ physical 1 */
-    expected[branch + 2 + 4] = writable_uint(leaf);
+    memcpy(expected, d->content, CL_SIZE * sizeof(obl_uint));
+    SET_UINT(expected, branch + 2 + 4, leaf);
+    SET_UINT(expected, leaf, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_UINT(expected, leaf + 2 + 3, 0xAABBCCDD);
 
-    /* leaf [newly created] @ physical CHUNK_SIZE + 2 */
-    expected[leaf] = writable_uint((obl_uint) OBL_ADDRTREEPAGE_SHAPE_ADDR);
-    expected[leaf + 2 + 3] = writable_uint((obl_uint) 0xAABBCCDD);
-
-    d = obl_create_database(filename);
-    d->content = content;
     d->root.address_map_addr = (obl_physical_address) branch;
 
-    /* Create and address allocator and prime the read set with it. */
+    /* Create an address allocator and prime the read set with it. */
     allocator = obl_create_slotted(
-            _obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
+            _obl_at_fixed_address(OBL_ALLOCATOR_SHAPE_ADDR));
     next_physical = obl_create_integer((obl_int) leaf);
     obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
     allocator->logical_address = (obl_logical_address) 1;
@@ -195,10 +158,10 @@ void test_create_leaf(void)
             (obl_logical_address) 0x00000403,
             (obl_physical_address) 0xAABBCCDD);
 
-    CU_ASSERT(memcmp(content, expected, CL_SIZE * 4) == 0);
+    CU_ASSERT(memcmp(d->content, expected, CL_SIZE * 4) == 0);
 
     obl_destroy_object(next_physical);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 #define CB_SIZE (1 + 3 * (CHUNK_SIZE + 2))
@@ -206,36 +169,31 @@ void test_create_branch(void)
 {
     struct obl_database *d;
     struct obl_object *allocator, *next_physical;
-    obl_uint content[CB_SIZE] = { 0x00 };
     obl_uint expected[CB_SIZE] = { 0x00 };
     const obl_uint leaf_a = 1;
     const obl_uint branch = leaf_a + CHUNK_SIZE + 2;
     const obl_uint leaf_b = branch + CHUNK_SIZE + 2;
 
-    /* leaf [root] @ physical 1 */
-    content[leaf_a] = writable_uint((obl_uint) OBL_ADDRTREEPAGE_SHAPE_ADDR);
-    content[leaf_a + 1] = writable_uint((obl_uint) 0);
+    d = obl_open_defdatabase(NULL);
+    wipe(d);
 
-    memcpy(expected, content, CB_SIZE * 4);
+    SET_UINT(d->content, leaf_a, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_UINT(d->content, leaf_a + 1, 0);
 
-    /* branch [new root] */
-    expected[branch] = writable_uint((obl_uint) OBL_ADDRTREEPAGE_SHAPE_ADDR);
-    expected[branch + 1] = writable_uint((obl_uint) 1);
-    expected[branch + 2 + 0] = writable_uint(leaf_a);
-    expected[branch + 2 + 1] = writable_uint(leaf_b);
+    memcpy(expected, d->content, CB_SIZE * sizeof(obl_uint));
+    SET_UINT(expected, branch, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_UINT(expected, branch + 1, 1);
+    SET_UINT(expected, branch + 2 + 0, leaf_a);
+    SET_UINT(expected, branch + 2 + 1, leaf_b);
+    SET_UINT(expected, leaf_b, OBL_ADDRTREEPAGE_SHAPE_ADDR);
+    SET_UINT(expected, leaf_b + 1, 0);
+    SET_UINT(expected, leaf_b + 2 + 15, 0xADBCCBDA);
 
-    /* leaf [new] */
-    expected[leaf_b] = writable_uint((obl_uint) OBL_ADDRTREEPAGE_SHAPE_ADDR);
-    expected[leaf_b + 1] = writable_uint((obl_uint) 0);
-    expected[leaf_b + 2 + 15] = writable_uint((obl_uint) 0xADBCCBDA);
-
-    d = obl_create_database(filename);
-    d->content = content;
     d->root.address_map_addr = (obl_physical_address) 1;
 
     /* Create an address allocator and prime the read set with it. */
     allocator = obl_create_slotted(
-            _obl_at_address(d, OBL_ALLOCATOR_SHAPE_ADDR));
+            _obl_at_fixed_address(OBL_ALLOCATOR_SHAPE_ADDR));
     next_physical = obl_create_integer((obl_int) branch);
     obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
     allocator->logical_address = (obl_logical_address) 1;
@@ -246,12 +204,12 @@ void test_create_branch(void)
             (obl_logical_address) 0x0000010F,
             (obl_physical_address) 0xADBCCBDA);
 
-    CU_ASSERT(memcmp(content, expected, CB_SIZE * 4) == 0);
+    CU_ASSERT(memcmp(d->content, expected, CB_SIZE * 4) == 0);
     CU_ASSERT(d->root.address_map_addr == (obl_physical_address) branch);
     CU_ASSERT(d->root.dirty);
 
     obl_destroy_object(next_physical);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 /*

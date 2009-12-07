@@ -16,12 +16,10 @@
 
 #include "CUnit/Basic.h"
 
-static const char *filename = "transaction.obl";
-
 void test_ensure_transaction(void)
 {
     int created = 0;
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
     struct obl_transaction *t, *same;
 
@@ -44,12 +42,12 @@ void test_ensure_transaction(void)
     obl_abort_transaction(t);
 
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_mark_dirty(void)
 {
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
     struct obl_transaction *t;
     struct obl_object *o;
@@ -77,34 +75,36 @@ void test_mark_dirty(void)
 
     obl_destroy_object(o);
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 void test_simple_commit(void)
 {
-    struct obl_database *d = obl_create_database(filename);
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
     struct obl_transaction *t;
     struct obl_object *o;
-    obl_uint contents[3] = { 0 };
-    d->content = contents;
-    d->content_size = 3;
 
+    OBL_INFO(d, "Beginning transaction.");
     t = obl_begin_transaction(s);
 
+    OBL_INFO(d, "Creating integer object.");
     o = obl_create_integer(-400);
     o->session = s;
     o->logical_address = 100;
-    o->physical_address = 1;
+    o->physical_address = 256;
+    OBL_INFO(d, "Marking object dirty.");
     obl_mark_dirty(o);
 
+    OBL_INFO(d, "Committing transaction.");
     obl_commit_transaction(t);
-    CU_ASSERT(readable_logical(contents[1]) == OBL_INTEGER_SHAPE_ADDR);
-    CU_ASSERT(readable_int(contents[2]) == (obl_int) -400);
+    CU_ASSERT(readable_logical(d->content[256]) == OBL_INTEGER_SHAPE_ADDR);
+    CU_ASSERT(readable_int(d->content[257]) == (obl_int) -400);
 
+    OBL_INFO(d, "Cleaning up.");
     obl_destroy_object(o);
     obl_destroy_session(s);
-    obl_destroy_database(d);
+    obl_close_database(d);
 }
 
 /*

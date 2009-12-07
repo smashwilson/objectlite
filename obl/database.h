@@ -66,31 +66,66 @@ typedef enum
 #define IS_FIXED_ADDR(addr) ((addr) >= OBL_FIXED_ADDR_MIN)
 
 /**
- * The available error codes.  Each error code should correspond to one
- * exception class in each language's binding.
+ * A user-editable structure that customizes and optimizes the behaviour of
+ * an obl_database.  Zero-initialize it to accept default options.
  */
-typedef enum
+struct obl_database_config
 {
-    OBL_OK,                     //!< OBL_OK
-    OBL_OUT_OF_MEMORY,          //!< OBL_OUT_OF_MEMORY
-    OBL_UNABLE_TO_READ_FILE,    //!< OBL_UNABLE_TO_READ_FILE
-    OBL_UNABLE_TO_OPEN_FILE,    //!< OBL_UNABLE_TO_OPEN_FILE
-    OBL_CONVERSION_ERROR,       //!< OBL_CONVERSION_ERROR
-    OBL_WRONG_STORAGE,          //!< OBL_WRONG_STORAGE
-    OBL_ARGUMENT_SIZE,          //!< OBL_ARGUMENT_SIZE
-    OBL_MISSING_SYSTEM_OBJECT,  //!< OBL_MISSING_SYSTEM_OBJECT
-    OBL_DATABASE_NOT_OPEN,      //!< OBL_DATABASE_NOT_OPEN
-    OBL_INVALID_INDEX,          //!< OBL_INVALID_INDEX
-    OBL_INVALID_ADDRESS,        //!< OBL_INVALID_ADDRESS
-    OBL_ALREADY_IN_TRANSACTION, //!< OBL_ALREADY_IN_TRANSACTION
-} error_code;
+    /**
+     * The *.obl database filename.  This setting only has an effect on the
+     * obl_open_database() call (unlike other settings, changing it within an
+     * opened database has no effect).
+     *
+     * Default: NULL, which operates as an in-memory database allocated on
+     * the heap.
+     */
+    const char *filename;
 
-/**
- * A structure for storing information about an error that's occurred.
- */
-struct error {
-    char *message;
-    error_code code;
+    /**
+     * If zero, obl_open_database() will create the file called filename if
+     * no such file exists.  If nonzero, only an existing file will be opened.
+     *
+     * Default: allow file creation.
+     */
+    int prohibit_creation;
+
+    /**
+     * The number of bytes to grow the database file each time it allocates all
+     * available space.  Smaller values will create more compact storage, but
+     * larger values will reduce the number of growth operations that need to
+     * be performed (which are very expensive).
+     *
+     * Default: 1024.
+     */
+    int growth_size;
+
+    /**
+     * If specified, ObjectLite will log messages to the specified file.
+     *
+     * Default: NULL, which outputs messages to stderr.
+     */
+    char *log_filename;
+
+    /**
+     * Filter log messages by severity.  L_DEBUG shows all messages; L_NONE
+     * shows nothing.
+     *
+     * Default: L_NOTICE.
+     */
+    obl_log_level log_level;
+
+    /**
+     * When faulting objects from the database file, this many reference levels
+     * will be followed.
+     *
+     * Default: 4.
+     */
+    int default_stub_depth;
+
+    /**
+     * A field to verify that you've properly zero-initialized the structure.
+     */
+    int zero_check;
 };
 
 /**
@@ -141,27 +176,14 @@ struct obl_root {
  */
 struct obl_database
 {
-    /** Location of the persisted database. */
-    const char *filename;
+    /** The database configuration provided to obl_open_database(). */
+    struct obl_database_config configuration;
 
-    /**
-     * Object cache to prevent unnecessary address translations
-     * and support self-referential object structures.
-     */
-    struct obl_set *read_set;
+    /** The last error message, heap-allocated.  NULL if all is well. */
+    char *error_message;
 
-    /** Logging and error structures. */
-    struct obl_log_configuration log_config;
-    struct error last_error;
-
-    /** Stubbing control. */
-    int default_stub_depth;
-
-    /**
-     * Grow the database file by this many obl_uint units each time growth
-     * is triggered.
-     */
-    obl_uint growth_size;
+    /** The last error code.  OBL_OK if all is well. */
+    obl_error_code error_code;
 
     /** Root storage.  Initialized during open. */
     struct obl_root root;
@@ -176,6 +198,12 @@ struct obl_database
     obl_uint content_size;
 
     /**
+     * Object cache to prevent unnecessary address translations
+     * and support self-referential object structures.
+     */
+    struct obl_set *read_set;
+
+    /**
      * A semaphore to make primitive database operations atomic.
      */
     sem_t lock;
@@ -183,41 +211,37 @@ struct obl_database
 
 /**
  * Allocate and prepare global internal ObjectLite resources.  Call this
- * function before you invoke any other obl functions.
+ * function before you invoke any other obl functions, and before you create
+ * multiple threads.
  */
 int obl_startup();
 
 /**
  * Clean up global internal ObjectLite resources.  Call this function before
  * your program terminates, but after you're done calling any and all
- * obl functions.
+ * obl functions, and after you've joined any and all threads.
  */
 int obl_shutdown();
 
 /**
- * Allocate structures for a new ObjectLite database interface layer, using all
- * of the default settings.  Database objects created in this manner must be
- * destroyed by obl_destroy_database().
+ * Create and open an obl_database using the provided configuration information.
+ * Databases created with this function must be closed by a call to
+ * obl_close_database().
+ *
+ * @param config Zero-initialize this structure, then customize the settings
+ *      as you see fit.
+ * @return A pointer to the newly allocated obl_database.  Returns NULL if there
+ *      is an allocation problem.
  */
-struct obl_database *obl_create_database(const char *filename);
+struct obl_database *obl_open_database(struct obl_database_config *config);
 
 /**
- * Open the database file using the existing settings within d.
+ * Open a database accepting all default obl_database_config options, except
+ * for the name of the .obl database file.
  *
- * @param d A database returned from obl_create_database().
- * @param allow_creation If 1, bootstrap the database if it does not already
- *      exist.
- * @return Returns 0 on a successful open.  Logs a warning and returns 1 on an
- *      unsuccessful open.
+ * @param filename
  */
-int obl_open_database(struct obl_database *d, int allow_creation);
-
-/**
- * Determine if a database has been opened or not.
- *
- * @return 1 if d has been opened successfully, or 0 if it has not.
- */
-int obl_is_open(struct obl_database *d);
+struct obl_database *obl_open_defdatabase(const char *filename);
 
 /**
  * Return the single instance of nil.
@@ -235,38 +259,43 @@ struct obl_object *obl_true();
 struct obl_object *obl_false();
 
 /**
- * Close the opened database file.
+ * Close an opened database file and dispose of any resources associated with
+ * it.  Closes any active obl_session and obl_transaction objects associated
+ * with it.
+ *
+ * @param d A database, as allocated by obl_open_database() or
+ *      obl_open_defdatabase().
  */
-void obl_close_database(struct obl_database *database);
+void obl_close_database(struct obl_database *d);
 
 /**
  * Deallocate all of the resources associated with an ObjectLite database.
  */
-void obl_destroy_database(struct obl_database *database);
+void obl_destroy_database(struct obl_database *d);
 
 /**
  * Return TRUE if database has no active error code, or FALSE if it does.  The
  * error status of a database may be reset using the obl_clear_error()
  * function.
  */
-int obl_database_ok(const struct obl_database *database);
+int obl_database_ok(const struct obl_database *d);
 
 /**
  * Unset any active error codes in database.
  */
-void obl_clear_error(struct obl_database *database);
+void obl_clear_error(struct obl_database *d);
 
 /**
  * Set the active error code in database.  If message is NULL, a default
  * message will be used.
  */
-void obl_report_error(struct obl_database *database, error_code code,
+void obl_report_error(struct obl_database *d, obl_error_code code,
         const char *message);
 
 /**
  * Format an error message with variables a la sprintf() and friends.
  */
-void obl_report_errorf(struct obl_database *database, error_code code,
+void obl_report_errorf(struct obl_database *d, obl_error_code code,
         const char *format, ...);
 
 /**

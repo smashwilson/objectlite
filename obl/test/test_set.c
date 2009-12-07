@@ -42,7 +42,7 @@ void stress_test_set(unsigned long insert_count,
 
     verbose = insert_count - delete_count <= 100;
 
-    d = obl_create_database("foo.obl");
+    d = obl_open_defdatabase(NULL);
     set = obl_create_set(&logical_address_keyfunction);
 
     printf("Starting...");
@@ -103,7 +103,7 @@ void stress_test_set(unsigned long insert_count,
     obl_set_destroyiter(iter);
     printf("Set destroyed.\n");
 
-    obl_destroy_database(d);
+    obl_close_database(d);
 
     exit(0);
 }

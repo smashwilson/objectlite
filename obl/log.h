@@ -9,22 +9,46 @@
 #ifndef LOG_H
 #define LOG_H
 
+/* defined in database.h */
+struct obl_database_config;
+
 typedef enum
 {
-    L_DEBUG, L_INFO, L_NOTICE, L_WARN, L_ERROR, L_NONE
+    L_DEFAULT = 0, L_DEBUG, L_INFO, L_NOTICE, L_WARN, L_ERROR, L_NONE
 } obl_log_level;
 
-struct obl_log_configuration {
+/**
+ * The available error codes.  Each error code should correspond to one
+ * exception class in each language's binding.
+ */
+typedef enum
+{
+    OBL_OK,                     //!< OBL_OK
+    OBL_OUT_OF_MEMORY,          //!< OBL_OUT_OF_MEMORY
+    OBL_UNABLE_TO_READ_FILE,    //!< OBL_UNABLE_TO_READ_FILE
+    OBL_UNABLE_TO_OPEN_FILE,    //!< OBL_UNABLE_TO_OPEN_FILE
+    OBL_CONVERSION_ERROR,       //!< OBL_CONVERSION_ERROR
+    OBL_WRONG_STORAGE,          //!< OBL_WRONG_STORAGE
+    OBL_ARGUMENT_SIZE,          //!< OBL_ARGUMENT_SIZE
+    OBL_MISSING_SYSTEM_OBJECT,  //!< OBL_MISSING_SYSTEM_OBJECT
+    OBL_DATABASE_NOT_OPEN,      //!< OBL_DATABASE_NOT_OPEN
+    OBL_INVALID_INDEX,          //!< OBL_INVALID_INDEX
+    OBL_INVALID_ADDRESS,        //!< OBL_INVALID_ADDRESS
+    OBL_ALREADY_IN_TRANSACTION, //!< OBL_ALREADY_IN_TRANSACTION
+} obl_error_code;
+
+struct obl_log_configuration
+{
     char *filename;
     obl_log_level level;
 };
 
-void obl_log(struct obl_log_configuration *config, obl_log_level level,
+void obl_log(struct obl_database_config *config, obl_log_level level,
         const char *message);
 
 #ifndef DISABLE_LOGGING
 
-#define OBL_CONFIG_FROM(d) (d) == NULL ? NULL : &((d)->log_config)
+#define OBL_CONFIG_FROM(d) (d) == NULL ? NULL : &((d)->configuration)
 
 #define OBL_DEBUG(d, message) obl_log( OBL_CONFIG_FROM(d), L_DEBUG, (message) )
 #define OBL_INFO(d, message) obl_log( OBL_CONFIG_FROM(d), L_INFO, (message) )

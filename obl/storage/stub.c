@@ -47,7 +47,7 @@ struct obl_object *_obl_resolve_stub(struct obl_object *stub)
     if (_obl_is_stub(stub)) {
         return obl_at_address_depth(stub->session,
                 stub->storage.stub_storage->value,
-                obl_database_of(stub)->default_stub_depth);
+                obl_database_of(stub)->configuration.default_stub_depth);
     } else {
         return stub;
     }

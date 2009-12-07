@@ -36,6 +36,10 @@ static void _destroy_fixed_space();
 
 static inline int _index_for_fixed(obl_logical_address addr);
 
+static int _obl_map_database(struct obl_database *d);
+
+static int _obl_unmap_database(struct obl_database *d);
+
 static void _grow_database(struct obl_database *d);
 
 static void _bootstrap_database(struct obl_database *d);
@@ -44,19 +48,29 @@ static void _read_root(struct obl_database *d);
 
 static void _write_root(struct obl_database *d);
 
-/** Error codes: one for each error_code in error.h. */
+/** Error codes: one for each obl_error_code in log.h. */
 static char *error_messages[] = {
         "EVERYTHING IS FINE",
-        "Unable to allocate an object", "Unable to read file",
-        "Unable to open file", "Error during Unicode conversion",
-        "Incorrect object storage type", "Bad argument length",
-        "Missing a critical system object", "Database must be open",
-        "Invalid index", "Invalid address",
+        "Unable to allocate an object",
+        "Unable to read file",
+        "Unable to open file",
+        "Error during Unicode conversion",
+        "Incorrect object storage type",
+        "Bad argument length",
+        "Missing a critical system object",
+        "Database must be open",
+        "Invalid index",
+        "Invalid address",
         "An attempt was made to begin a transaction while one was already in progress"
 };
 
 /** Storage for fixed space, shared by all active databases. */
 static struct obl_object *fixed_space[OBL_FIXED_SIZE] = { 0 };
+
+/**
+ * A magic number used to prefix a valid database.  The string "obl\0" in hex.
+ */
+static const obl_uint magic = 0x6F626C00;
 
 /* Addresses of the elements in obl_root. */
 
@@ -81,96 +95,90 @@ int obl_shutdown()
     return 0;
 }
 
-struct obl_database *obl_create_database(const char *filename)
+struct obl_database *obl_open_database(struct obl_database_config *config)
 {
-    struct obl_database *database;
+    struct obl_database *d = NULL;
+    struct obl_database_config *conf;
     struct obl_set *read_set;
 
-    database = malloc(sizeof(struct obl_database));
-    if (database == NULL) {
+    /* Sanity-check the user-provided configuration. */
+    if (config->zero_check) {
+        OBL_ERROR(d,
+                "The database configuration structure is "
+                "not zero-initialized.");
         return NULL;
     }
 
-    database->filename = filename;
-    database->log_config.filename = NULL;
-    database->log_config.level = L_DEBUG;
-    database->last_error.code = OBL_OK;
-    database->last_error.message = NULL;
-    database->default_stub_depth = DEFAULT_STUB_DEPTH;
-    database->growth_size = (obl_uint) DEFAULT_GROWTH_SIZE;
+    d = malloc(sizeof(struct obl_database));
+    if (d == NULL) {
+        OBL_ERROR(d, "Unable to allocate the database.");
+        return NULL;
+    }
+    d->configuration = *config;
 
-    /* Initialize +root+ to OBL_UNASSIGNED until opened. */
-    database->root.address_map_addr = OBL_PHYSICAL_UNASSIGNED;
-    database->root.allocator_addr = OBL_PHYSICAL_UNASSIGNED;
-    database->root.name_map_addr = OBL_PHYSICAL_UNASSIGNED;
-    database->root.shape_map_addr = OBL_PHYSICAL_UNASSIGNED;
-    database->root.dirty = 0;
+    /* Accept defaults. */
+    conf = &d->configuration;
+    if (conf->default_stub_depth == 0)
+        conf->default_stub_depth = DEFAULT_STUB_DEPTH;
+    if (conf->growth_size == 0)
+        conf->growth_size = DEFAULT_GROWTH_SIZE;
+    if (conf->log_level == L_DEFAULT)
+        conf->log_level = L_NOTICE;
 
+    /* Initialize the error flags. */
+    d->error_message = NULL;
+    d->error_code = OBL_OK;
+
+    /* Initialize the read set. */
     read_set = obl_create_set(&logical_address_keyfunction);
     if (read_set == NULL) {
-        obl_report_error(database, OBL_OUT_OF_MEMORY,
+        obl_report_error(d, OBL_OUT_OF_MEMORY,
                 "Unable to allocate read set.");
-        free(database);
+        free(d);
         return NULL;
     }
-    database->read_set = read_set;
+    d->read_set = read_set;
 
-    database->content = NULL;
-    database->content_size = (obl_uint) 0;
+    /* Initialize the lock semaphore. */
+    sem_init(&d->lock, 0, 1);
 
-    sem_init(&(database->lock), 0, 1);
+    /* Prepare +root+ as OBL_UNASSIGNED until the actual file is mapped. */
+    d->root.address_map_addr = OBL_PHYSICAL_UNASSIGNED;
+    d->root.allocator_addr = OBL_PHYSICAL_UNASSIGNED;
+    d->root.name_map_addr = OBL_PHYSICAL_UNASSIGNED;
+    d->root.shape_map_addr = OBL_PHYSICAL_UNASSIGNED;
+    d->root.dirty = 0;
 
-    return database;
-}
+    /* Prepare the content pointer to be appropriately empty. */
+    d->content = NULL;
+    d->content_size = (obl_uint) 0;
 
-int obl_open_database(struct obl_database *d, int allow_creation)
-{
-    int fd, flags;
-    struct stat buffer;
-
-    flags = O_RDWR;
-    if (allow_creation) {
-        flags |= O_CREAT;
+    if (_obl_map_database(d)) {
+        sem_destroy(&d->lock);
+        obl_destroy_set(d->read_set, NULL);
+        free(d);
+        return NULL;
     }
 
-    fd = open(d->filename, flags, S_IRUSR | S_IWUSR);
-    if (fd < 0) {
-        /* Unable to open the database file. */
-        obl_report_errorf(d, OBL_UNABLE_TO_OPEN_FILE,
-                "Unable to open file <%s>: %s",
-                d->filename,
-                strerror(errno));
-        return 1;
-    }
-
-    if( fstat(fd, &buffer) ) {
-        /* Unable to stat database file. */
-        close(fd);
-        obl_report_errorf(d, OBL_UNABLE_TO_OPEN_FILE,
-                "Unable to stat file <%s>: %s",
-                d->filename,
-                strerror(errno));
-        return 1;
-    }
-
-    d->content_size = (obl_uint) (buffer.st_size / sizeof(obl_uint));
-    d->content = (obl_uint*) mmap(NULL, d->content_size,
-            PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    close(fd);
-
-    if (d->content_size < d->growth_size) {
+    if (d->content_size == 0) {
         _grow_database(d);
+    }
+
+    if (readable_uint(d->content[0]) != magic) {
         _bootstrap_database(d);
     }
 
     _read_root(d);
 
-    return 0;
+    return d;
 }
 
-int obl_is_open(struct obl_database *d)
+struct obl_database *obl_open_defdatabase(const char *filename)
 {
-    return d->content != NULL && d->content_size > 0;
+    struct obl_database_config conf = { 0 };
+    conf.filename = filename;
+
+    return obl_open_database(&conf);
 }
 
 struct obl_object *obl_nil()
@@ -188,27 +196,16 @@ struct obl_object *obl_false()
     return _obl_at_fixed_address(OBL_FALSE_ADDR);
 }
 
-void obl_close_database(struct obl_database *database)
+void obl_close_database(struct obl_database *d)
 {
-    if (!obl_is_open(database)) {
-        OBL_WARN(database, "Database already closed.");
-        return ;
-    }
+    _obl_unmap_database(d);
 
-    munmap(database->content, database->content_size * sizeof(obl_uint));
-
-    database->content = (obl_uint*) 0;
-    database->content_size = (obl_uint) 0;
-}
-
-void obl_destroy_database(struct obl_database *d)
-{
     if (d->read_set != NULL) {
         obl_destroy_set(d->read_set, &_obl_deallocate_object);
     }
 
-    if (d->last_error.message != NULL) {
-        free(d->last_error.message);
+    if (d->error_message != NULL ) {
+        free(d->error_message);
     }
 
     sem_destroy(&d->lock);
@@ -216,22 +213,22 @@ void obl_destroy_database(struct obl_database *d)
     free(d);
 }
 
-int obl_database_ok(const struct obl_database *database)
+int obl_database_ok(const struct obl_database *d)
 {
-    return database->last_error.code == OBL_OK;
+    return d->error_code == OBL_OK;
 }
 
-void obl_clear_error(struct obl_database *database)
+void obl_clear_error(struct obl_database *d)
 {
-    if (database->last_error.message != NULL) {
-        free(database->last_error.message);
+    if (d->error_message != NULL) {
+        free(d->error_message);
     }
-    database->last_error.message = NULL;
-    database->last_error.code = OBL_OK;
+    d->error_message = NULL;
+    d->error_code = OBL_OK;
 }
 
-void obl_report_error(struct obl_database *database,
-        error_code code, const char *message)
+void obl_report_error(struct obl_database *d, obl_error_code code,
+        const char *message)
 {
     const char *real_message;
     char *buffer;
@@ -243,9 +240,9 @@ void obl_report_error(struct obl_database *database,
         real_message = error_messages[code];
     }
 
-    OBL_ERROR(database, real_message);
+    OBL_ERROR(d, real_message);
 
-    if (database == NULL) {
+    if (d == NULL) {
         fprintf(stderr, "Unable to report error \"%s\":\n", real_message);
         fprintf(stderr, "No database structure available to report it in.\n");
         return;
@@ -255,11 +252,11 @@ void obl_report_error(struct obl_database *database,
     buffer = malloc(message_size);
     memcpy(buffer, real_message, message_size);
 
-    database->last_error.message = buffer;
-    database->last_error.code = code;
+    d->error_message = buffer;
+    d->error_code = code;
 }
 
-void obl_report_errorf(struct obl_database *database, error_code code,
+void obl_report_errorf(struct obl_database *d, obl_error_code code,
         const char *format, ...)
 {
     va_list args;
@@ -276,7 +273,7 @@ void obl_report_errorf(struct obl_database *database, error_code code,
     vsnprintf(buffer, required_size, format, args);
     va_end(args);
 
-    obl_report_error(database, code, buffer);
+    obl_report_error(d, code, buffer);
 
     free(buffer);
 }
@@ -284,7 +281,8 @@ void obl_report_errorf(struct obl_database *database, error_code code,
 struct obl_object *_obl_at_address(struct obl_database *d,
         obl_logical_address address)
 {
-    return _obl_at_address_depth(d, NULL, address, d->default_stub_depth);
+    return _obl_at_address_depth(d, NULL, address,
+            d->configuration.default_stub_depth);
 }
 
 struct obl_object *_obl_at_address_depth(struct obl_database *d,
@@ -342,7 +340,7 @@ void _obl_write(struct obl_object *o)
 {
     struct obl_database *d = obl_database_of(o);
 
-    if (!obl_is_open(d)) {
+    if (d->content == NULL) {
         obl_report_error(d, OBL_DATABASE_NOT_OPEN, NULL);
         return ;
     }
@@ -502,36 +500,126 @@ static inline int _index_for_fixed(obl_logical_address addr)
     return addr - OBL_FIXED_ADDR_MIN;
 }
 
+static int _obl_map_database(struct obl_database *d)
+{
+    int fd, flags;
+    struct stat buffer;
+
+    if (d->configuration.filename == NULL) {
+        /* Prepare an in-memory database on the heap. */
+
+        d->content_size = (obl_uint) d->configuration.growth_size;
+        d->content = malloc(sizeof(obl_uint) * d->content_size);
+        memset(d->content, 0, sizeof(obl_uint) * d->content_size);
+
+        if (d->content == NULL) {
+            d->content_size = (obl_uint) 0;
+            obl_report_error(d, OBL_OUT_OF_MEMORY,
+                    "Unable to allocate enough space for an in-memory "
+                    "database.");
+            return 1;
+        }
+
+        return 0;
+    }
+
+    flags = O_RDWR;
+    if (! d->configuration.prohibit_creation) {
+        flags |= O_CREAT;
+    }
+
+    fd = open(d->configuration.filename, flags, S_IRUSR | S_IWUSR);
+    if (fd < 0) {
+        /* Unable to open the database file. */
+        obl_report_errorf(d, OBL_UNABLE_TO_OPEN_FILE,
+                "Unable to open file <%s>: %s",
+                d->configuration.filename,
+                strerror(errno));
+        return 1;
+    }
+
+    if (fstat(fd, &buffer)) {
+        /* Unable to stat database file. */
+        close(fd);
+        obl_report_errorf(d, OBL_UNABLE_TO_OPEN_FILE,
+                "Unable to stat file <%s>: %s",
+                d->configuration.filename,
+                strerror(errno));
+        return 1;
+    }
+
+    d->content_size = (obl_uint) (buffer.st_size / sizeof(obl_uint));
+    d->content = (obl_uint*) mmap(NULL, d->content_size,
+            PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    close(fd);
+
+    return 0;
+}
+
+static int _obl_unmap_database(struct obl_database *d)
+{
+    if (d->configuration.filename == NULL) {
+        /* Free heap space. */
+
+        free(d->content);
+        d->content = NULL;
+        d->content_size = (obl_uint) 0;
+
+        return 0;
+    }
+
+    munmap(d->content, d->content_size * sizeof(obl_uint));
+
+    d->content = NULL;
+    d->content_size = (obl_uint) 0;
+
+    return 0;
+}
+
 static void _grow_database(struct obl_database *d)
 {
     FILE *fd;
 
-    if (obl_is_open(d)) {
-        obl_close_database(d);
+    if (d->configuration.filename == NULL) {
+        /* Allocate additional space on the heap. */
+
+        d->content_size = d->content_size + d->configuration.growth_size;
+        d->content = realloc(d->content, d->content_size);
+
+        if (d->content == NULL) {
+            obl_report_errorf(d, OBL_OUT_OF_MEMORY,
+                    "Unable to grow an in-memory database to <%lu> bytes.",
+                    d->content_size);
+            d->content_size = (obl_uint) 0;
+        }
+
+        return ;
     }
 
-    fd = fopen(d->filename, "rb+");
-    fseek(fd, (d->growth_size * sizeof(obl_int)) - 1, SEEK_END);
+    if (d->content != NULL) {
+        _obl_unmap_database(d);
+    }
+
+    fd = fopen(d->configuration.filename, "rb+");
+    fseek(fd, d->configuration.growth_size - 1, SEEK_END);
     fputc('\0', fd);
     fclose(fd);
 
-    obl_open_database(d, 0);
+    _obl_map_database(d);
 }
 
 static void _bootstrap_database(struct obl_database *d)
 {
-    /* obl\0 in hex. */
-    const obl_uint magic = 0x6F626C00;
     struct obl_session *s;
     struct obl_object *treepage, *allocator;
     struct obl_object *next_physical, *next_logical;
     obl_logical_address current_logical;
     obl_physical_address current_physical;
 
-    /* Write the "magic word" at address 0. */
-    d->content[0] = writable_uint(magic);
+    s = obl_create_session(d);
+    if (s == NULL) return ;
 
-    /* Logical 0 is OBL_LOGICAL_UNASSIGNED. */
+    /* Logical 0 is OBL_LOGICAL_UNASSIGNED, so start at Logical 1. */
     current_logical = (obl_logical_address) 1;
 
     /*
@@ -539,8 +627,6 @@ static void _bootstrap_database(struct obl_database *d)
      * 1 - 4 are occupied by root.  Allocation begins at 5.
      */
     current_physical = (obl_physical_address) 5;
-
-    s = obl_create_session(d);
 
     /* First: the allocator. */
     allocator = obl_create_slotted(obl_at_address(s, OBL_ALLOCATOR_SHAPE_ADDR));
@@ -601,6 +687,12 @@ static void _bootstrap_database(struct obl_database *d)
     obl_set_insert(d->read_set, next_logical);
 
     obl_destroy_session(s);
+
+    /*
+     * Write the "magic word" at address 0 to indicate a successful
+     * bootstrapping.
+     */
+    d->content[0] = writable_uint(magic);
 }
 
 static void _read_root(struct obl_database *d)
