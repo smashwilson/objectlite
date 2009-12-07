@@ -197,10 +197,8 @@ struct obl_database
      */
     obl_uint content_size;
 
-    /**
-     * A semaphore to make primitive database operations atomic.
-     */
-    sem_t lock;
+    /** A semaphore to make database content operations atomic. */
+    sem_t content_mutex;
 };
 
 /**

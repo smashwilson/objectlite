@@ -128,9 +128,6 @@ struct obl_database *obl_open_database(struct obl_database_config *config)
     d->error_message = NULL;
     d->error_code = OBL_OK;
 
-    /* Initialize the lock semaphore. */
-    sem_init(&d->lock, 0, 1);
-
     /* Prepare +root+ as OBL_UNASSIGNED until the actual file is mapped. */
     d->root.address_map_addr = OBL_PHYSICAL_UNASSIGNED;
     d->root.allocator_addr = OBL_PHYSICAL_UNASSIGNED;
@@ -142,8 +139,11 @@ struct obl_database *obl_open_database(struct obl_database_config *config)
     d->content = NULL;
     d->content_size = (obl_uint) 0;
 
+    /* Initialize the content lock. */
+    sem_init(&d->content_mutex, 0, 1);
+
     if (_obl_map_database(d)) {
-        sem_destroy(&d->lock);
+        sem_destroy(&d->content_mutex);
         free(d);
         return NULL;
     }
@@ -153,6 +153,7 @@ struct obl_database *obl_open_database(struct obl_database_config *config)
     }
 
     if (readable_uint(d->content[0]) != magic) {
+        OBL_INFO(d, "Bootstrapping the database.");
         _bootstrap_database(d);
     }
 
@@ -192,7 +193,7 @@ void obl_close_database(struct obl_database *d)
         free(d->error_message);
     }
 
-    sem_destroy(&d->lock);
+    sem_destroy(&d->content_mutex);
 
     free(d);
 }
@@ -522,6 +523,8 @@ static void _grow_database(struct obl_database *d)
 {
     FILE *fd;
 
+    sem_wait(&d->content_mutex);
+
     if (d->configuration.filename == NULL) {
         /* Allocate additional space on the heap. */
 
@@ -535,6 +538,7 @@ static void _grow_database(struct obl_database *d)
             d->content_size = (obl_uint) 0;
         }
 
+        sem_post(&d->content_mutex);
         return ;
     }
 
@@ -548,6 +552,7 @@ static void _grow_database(struct obl_database *d)
     fclose(fd);
 
     _obl_map_database(d);
+    sem_post(&d->content_mutex);
 }
 
 static void _bootstrap_database(struct obl_database *d)
