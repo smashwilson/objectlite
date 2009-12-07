@@ -99,7 +99,6 @@ struct obl_database *obl_open_database(struct obl_database_config *config)
 {
     struct obl_database *d = NULL;
     struct obl_database_config *conf;
-    struct obl_set *read_set;
 
     /* Sanity-check the user-provided configuration. */
     if (config->zero_check) {
@@ -129,16 +128,6 @@ struct obl_database *obl_open_database(struct obl_database_config *config)
     d->error_message = NULL;
     d->error_code = OBL_OK;
 
-    /* Initialize the read set. */
-    read_set = obl_create_set(&logical_address_keyfunction);
-    if (read_set == NULL) {
-        obl_report_error(d, OBL_OUT_OF_MEMORY,
-                "Unable to allocate read set.");
-        free(d);
-        return NULL;
-    }
-    d->read_set = read_set;
-
     /* Initialize the lock semaphore. */
     sem_init(&d->lock, 0, 1);
 
@@ -155,7 +144,6 @@ struct obl_database *obl_open_database(struct obl_database_config *config)
 
     if (_obl_map_database(d)) {
         sem_destroy(&d->lock);
-        obl_destroy_set(d->read_set, NULL);
         free(d);
         return NULL;
     }
@@ -199,10 +187,6 @@ struct obl_object *obl_false()
 void obl_close_database(struct obl_database *d)
 {
     _obl_unmap_database(d);
-
-    if (d->read_set != NULL) {
-        obl_destroy_set(d->read_set, &_obl_deallocate_object);
-    }
 
     if (d->error_message != NULL ) {
         free(d->error_message);
@@ -334,10 +318,6 @@ void _obl_database_release(struct obl_object *o)
 
     if (o->session == NULL) return ;
     d = o->session->database;
-
-    sem_wait(&d->lock);
-    obl_set_remove(d->read_set, o);
-    sem_post(&d->lock);
 }
 
 /* Internal function implementations. */

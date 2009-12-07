@@ -69,7 +69,7 @@ void test_mark_dirty(void)
     obl_mark_dirty(o);
 
     CU_ASSERT(obl_set_includes(t->write_set, o));
-    CU_ASSERT(!obl_set_includes(d->read_set, o));
+    CU_ASSERT(!obl_set_includes(s->read_set, o));
 
     obl_abort_transaction(t);
 

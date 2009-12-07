@@ -73,6 +73,10 @@ void _obl_session_release(struct obl_object *o)
     struct obl_transaction *t;
 
     if (s == NULL) return;
+    sem_wait(&s->read_set_mutex);
+    obl_set_remove(s->read_set, o);
+    sem_post(&s->read_set_mutex);
+
     t = s->current_transaction;
     if (t == NULL) return;
 

@@ -198,12 +198,6 @@ struct obl_database
     obl_uint content_size;
 
     /**
-     * Object cache to prevent unnecessary address translations
-     * and support self-referential object structures.
-     */
-    struct obl_set *read_set;
-
-    /**
      * A semaphore to make primitive database operations atomic.
      */
     sem_t lock;
