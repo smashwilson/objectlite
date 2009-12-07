@@ -62,6 +62,10 @@ void obl_destroy_session(struct obl_session *session)
     if (session->current_transaction != NULL) {
         obl_abort_transaction(session->current_transaction);
     }
+    sem_destroy(&session->current_transaction_mutex);
+
+    obl_destroy_set(session->read_set, &_obl_deallocate_object);
+    sem_destroy(&session->read_set_mutex);
 
     sem_destroy(&session->lock);
     free(session);
