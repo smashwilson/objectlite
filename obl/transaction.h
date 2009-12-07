@@ -9,6 +9,8 @@
 #ifndef TRANSACTION_H
 #define TRANSACTION_H
 
+#include "platform.h"
+
 /* defined in set.h */
 struct obl_set;
 
@@ -23,6 +25,8 @@ struct obl_transaction
     struct obl_session *session;
 
     struct obl_set *write_set;
+
+    sem_t write_set_mutex;
 };
 
 struct obl_transaction *obl_begin_transaction(struct obl_session *session);

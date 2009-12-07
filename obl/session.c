@@ -39,8 +39,6 @@ struct obl_session *obl_create_session(struct obl_database *database)
     session->current_transaction = NULL;
     sem_init(&session->current_transaction_mutex, 0, 1);
 
-    sem_init(&session->lock, 0, 1);
-
     return session;
 }
 
@@ -67,7 +65,6 @@ void obl_destroy_session(struct obl_session *session)
     obl_destroy_set(session->read_set, &_obl_deallocate_object);
     sem_destroy(&session->read_set_mutex);
 
-    sem_destroy(&session->lock);
     free(session);
 }
 
@@ -77,16 +74,20 @@ void _obl_session_release(struct obl_object *o)
     struct obl_transaction *t;
 
     if (s == NULL) return;
+    sem_wait(&s->current_transaction_mutex);
+
     sem_wait(&s->read_set_mutex);
     obl_set_remove(s->read_set, o);
     sem_post(&s->read_set_mutex);
 
     t = s->current_transaction;
-    if (t == NULL) return;
+    if (t != NULL) {
+        sem_wait(&t->write_set_mutex);
+        obl_set_remove(t->write_set, o);
+        sem_post(&t->write_set_mutex);
+    }
 
-    sem_wait(&s->lock);
-    obl_set_remove(t->write_set, o);
-    sem_post(&s->lock);
+    sem_post(&s->current_transaction_mutex);
 }
 
 struct obl_object *_obl_at_address_depth(struct obl_session *s,

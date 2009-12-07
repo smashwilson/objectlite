@@ -31,8 +31,6 @@ struct obl_session
     struct obl_set *read_set;
 
     sem_t read_set_mutex;
-
-    sem_t lock;
 };
 
 struct obl_session *obl_create_session(struct obl_database *database);
