@@ -13,6 +13,7 @@
 #include "storage/object.h"
 #include "database.h"
 #include "set.h"
+#include "session.h"
 #include "unitutilities.h"
 
 void test_map_leaf(void)
@@ -73,6 +74,7 @@ void test_map_branch(void)
 void test_assign_leaf(void)
 {
     struct obl_database *d;
+    struct obl_session *s;
     obl_uint expected[10] = { 0 };
 
     d = obl_open_defdatabase(NULL);
@@ -82,7 +84,9 @@ void test_assign_leaf(void)
 
     d->root.address_map_addr = (obl_physical_address) 0;
 
-    obl_address_assign(d,
+    s = obl_create_session(d);
+
+    obl_address_assign(s,
             (obl_logical_address) 0x01,
             (obl_physical_address) 0x0000AABB);
 
@@ -91,6 +95,7 @@ void test_assign_leaf(void)
 
     CU_ASSERT(memcmp(d->content, expected, 10 * sizeof(obl_uint)) == 0);
 
+    obl_destroy_session(s);
     obl_close_database(d);
 }
 
@@ -98,6 +103,7 @@ void test_assign_leaf(void)
 void test_assign_branch(void)
 {
     struct obl_database *d;
+    struct obl_session *s;
     obl_uint expected[AB_SIZE] = { 0 };
 
     d = obl_open_defdatabase(NULL);
@@ -114,12 +120,15 @@ void test_assign_branch(void)
 
     d->root.address_map_addr = (obl_physical_address) (CHUNK_SIZE + 2);
 
-    obl_address_assign(d,
+    s = obl_create_session(d);
+
+    obl_address_assign(s,
             (obl_logical_address) 0x0000060A,
             (obl_physical_address) 0x00AA00BB);
 
     CU_ASSERT(memcmp(d->content, expected, AB_SIZE * sizeof(obl_uint)) == 0);
 
+    obl_destroy_session(s);
     obl_close_database(d);
 }
 
@@ -127,6 +136,7 @@ void test_assign_branch(void)
 void test_create_leaf(void)
 {
     struct obl_database *d;
+    struct obl_session *s;
     struct obl_object *allocator, *next_physical;
     obl_uint expected[CL_SIZE] = { 0 };
     const obl_uint branch = 1;
@@ -145,6 +155,8 @@ void test_create_leaf(void)
 
     d->root.address_map_addr = (obl_physical_address) branch;
 
+    s = obl_create_session(d);
+
     /* Create an address allocator and prime the read set with it. */
     allocator = obl_create_slotted(
             _obl_at_fixed_address(OBL_ALLOCATOR_SHAPE_ADDR));
@@ -152,15 +164,17 @@ void test_create_leaf(void)
     obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
     allocator->logical_address = (obl_logical_address) 1;
     d->root.allocator_addr = allocator->logical_address;
-    obl_set_insert(d->read_set, allocator);
+    obl_set_insert(s->read_set, allocator);
 
-    obl_address_assign(d,
+    obl_address_assign(s,
             (obl_logical_address) 0x00000403,
             (obl_physical_address) 0xAABBCCDD);
 
     CU_ASSERT(memcmp(d->content, expected, CL_SIZE * 4) == 0);
 
     obl_destroy_object(next_physical);
+
+    obl_destroy_session(s);
     obl_close_database(d);
 }
 
@@ -168,6 +182,7 @@ void test_create_leaf(void)
 void test_create_branch(void)
 {
     struct obl_database *d;
+    struct obl_session *s;
     struct obl_object *allocator, *next_physical;
     obl_uint expected[CB_SIZE] = { 0x00 };
     const obl_uint leaf_a = 1;
@@ -191,6 +206,8 @@ void test_create_branch(void)
 
     d->root.address_map_addr = (obl_physical_address) 1;
 
+    s = obl_create_session(d);
+
     /* Create an address allocator and prime the read set with it. */
     allocator = obl_create_slotted(
             _obl_at_fixed_address(OBL_ALLOCATOR_SHAPE_ADDR));
@@ -198,9 +215,9 @@ void test_create_branch(void)
     obl_slotted_atcnamed_put(allocator, "next_physical", next_physical);
     allocator->logical_address = (obl_logical_address) 1;
     d->root.allocator_addr = allocator->logical_address;
-    obl_set_insert(d->read_set, allocator);
+    obl_set_insert(s->read_set, allocator);
 
-    obl_address_assign(d,
+    obl_address_assign(s,
             (obl_logical_address) 0x0000010F,
             (obl_physical_address) 0xADBCCBDA);
 
@@ -209,6 +226,7 @@ void test_create_branch(void)
     CU_ASSERT(d->root.dirty);
 
     obl_destroy_object(next_physical);
+    obl_destroy_session(s);
     obl_close_database(d);
 }
 

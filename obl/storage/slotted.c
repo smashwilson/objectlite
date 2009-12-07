@@ -144,7 +144,7 @@ struct obl_object *obl_slotted_read(struct obl_session *session,
     slot_count = obl_shape_slotcount(shape);
     for (i = 0; i < slot_count; i++) {
         addr = readable_logical(source[base + 1 + i]);
-        linked = obl_at_address_depth(session, addr, depth - 1);
+        linked = _obl_at_address_depth(session, addr, depth - 1, 0);
         obl_slotted_at_put(result, i, linked);
     }
 

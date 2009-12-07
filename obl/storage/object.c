@@ -237,16 +237,16 @@ struct obl_database *obl_database_of(struct obl_object *o)
     return o->session->database;
 }
 
-struct obl_object *obl_read_object(struct obl_database *d,
-        struct obl_session *s, obl_uint *source,
+struct obl_object *obl_read_object(struct obl_session *s, obl_uint *source,
         obl_physical_address base, int depth)
 {
+    struct obl_database *d = s->database;
     struct obl_object *shape, *result;
     obl_logical_address addr;
     int function_index;
 
     addr = readable_logical(source[base]);
-    shape = _obl_at_address_depth(d, s, addr, 2);
+    shape = _obl_at_address_depth(s, addr, 3, 0);
 
     if (shape != obl_nil() && obl_storage_of(shape) != OBL_SHAPE) {
         obl_report_errorf(d, OBL_WRONG_STORAGE,

@@ -218,13 +218,13 @@ struct obl_object *obl_shape_read(struct obl_session *session,
     obl_uint storage_format;
 
     addr = readable_logical(source[base + 1]);
-    name = obl_at_address_depth(session, addr, depth - 1);
+    name = _obl_at_address_depth(session, addr, depth - 1, 0);
 
     addr = readable_logical(source[base + 2]);
-    slot_names = obl_at_address_depth(session, addr, depth - 1);
+    slot_names = _obl_at_address_depth(session, addr, depth - 1, 0);
 
     addr = readable_logical(source[base + 3]);
-    current_shape = obl_at_address_depth(session, addr, depth - 1);
+    current_shape = _obl_at_address_depth(session, addr, depth - 1, 0);
 
     storage_format = readable_uint(source[base + 4]);
     if (storage_format > OBL_STORAGE_TYPE_MAX) {

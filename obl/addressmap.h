@@ -41,11 +41,12 @@ obl_physical_address obl_address_lookup(struct obl_database *d,
  * directly and should therefore only be invoked by a session in the
  * process of committing changes.
  *
- * @param d The database in which the assignment should be made.
+ * @param s The session in which the assignment should be made.  This session
+ *      should be preparing to commit.
  * @param logical The logical address to map.
  * @param physical The physical address to map it to.
  */
-void obl_address_assign(struct obl_database *d,
+void obl_address_assign(struct obl_session *s,
         obl_logical_address logical, obl_physical_address physical);
 
 #endif /* ADDRESSMAP_H */

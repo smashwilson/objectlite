@@ -17,11 +17,20 @@ struct obl_database;
 /* Defined in transaction.h */
 struct obl_transaction;
 
+/* Defined in set.h */
+struct obl_set;
+
 struct obl_session
 {
     struct obl_database *database;
 
     struct obl_transaction *current_transaction;
+
+    sem_t current_transaction_mutex;
+
+    struct obl_set *read_set;
+
+    sem_t read_set_mutex;
 
     sem_t lock;
 };
@@ -33,13 +42,13 @@ struct obl_session *obl_create_session(struct obl_database *database);
  * Use the default stub depth as configured in the database.
  */
 struct obl_object *obl_at_address(struct obl_session *session,
-        const obl_logical_address address);
+        obl_logical_address address);
 
 /**
  * Retrieve an object to a specified stub depth.
  */
 struct obl_object *obl_at_address_depth(struct obl_session *session,
-        const obl_logical_address address, int depth);
+        obl_logical_address address, int depth);
 
 void obl_destroy_session(struct obl_session *session);
 
@@ -51,5 +60,22 @@ void obl_destroy_session(struct obl_session *session);
  * @sa obl_destroy_object()
  */
 void _obl_session_release(struct obl_object *o);
+
+/**
+ * Primitive function used for actual database access.  Used in recursive calls
+ * to prevent waiting on a mutex you're already holding.  For internal use
+ * only.  Seriously, you could really screw up your database if you call this
+ * with the wrong parameters.
+ *
+ * @param session
+ * @param address
+ * @param depth Object fault depth.
+ * @param top If nonzero, session semaphores will be locked and unlocked.  If
+ *      zero, ensuring thread safety is the caller's responsibility.
+ *
+ * @sa obl_at_address_depth()
+ */
+struct obl_object *_obl_at_address_depth(struct obl_session *session,
+        obl_logical_address address, int depth, int top);
 
 #endif /* SESSION_H */

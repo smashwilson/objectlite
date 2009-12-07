@@ -299,32 +299,6 @@ void obl_report_errorf(struct obl_database *d, obl_error_code code,
         const char *format, ...);
 
 /**
- * Retrieve an object directly from the database using the default stub depth.
- * For internal use only: these objects are not properly initialized with a
- * session reference, so they will not properly track changes or self-dispose.
- *
- * @param d The database to perform the lookup within.
- * @param address The logical address to query.
- * @return The object assigned to the provided logical address, or #obl_nil().
- */
-struct obl_object *_obl_at_address(struct obl_database *d,
-        obl_logical_address address);
-
-/**
- * Retrieve an object to a specified stub depth.  For internal use only: users
- * should use the obl_session #obl_at_address() call with an active session
- * instead.
- *
- * @param d The database to perform the lookup within.
- * @param s The session to associate discovered objects with.  May be NULL to
- *      return unassociated objects.
- * @param address The logical address to query.
- * @param depth The maximum depth to resolve addresses.
- */
-struct obl_object *_obl_at_address_depth(struct obl_database *d,
-        struct obl_session *s, obl_logical_address address, int depth);
-
-/**
  * Retrieve an object directly from fixed space.  For internal use only.
  *
  * @param address A logical address within fixed space.

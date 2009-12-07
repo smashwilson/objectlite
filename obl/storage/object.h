@@ -154,9 +154,15 @@ struct obl_database *obl_database_of(struct obl_object *o);
  *
  * The created object lives on the heap and must be destroyed with a call to
  * obl_destroy_object() as defined in object.h.
+ *
+ * @param s The session that should own this object.
+ * @param source Binary contents to be interpreted.
+ * @param offset The address into <code>source</code> that contains the
+ *      shape header.
+ * @param depth The number of references to follow into the object graph.
+ * @return An object initialized from the data found at <code>source</code>.
  */
-struct obl_object *obl_read_object(struct obl_database *d,
-        struct obl_session *s, obl_uint *source,
+struct obl_object *obl_read_object(struct obl_session *s, obl_uint *source,
         obl_physical_address offset, int depth);
 
 /**

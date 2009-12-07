@@ -278,52 +278,6 @@ void obl_report_errorf(struct obl_database *d, obl_error_code code,
     free(buffer);
 }
 
-struct obl_object *_obl_at_address(struct obl_database *d,
-        obl_logical_address address)
-{
-    return _obl_at_address_depth(d, NULL, address,
-            d->configuration.default_stub_depth);
-}
-
-struct obl_object *_obl_at_address_depth(struct obl_database *d,
-        struct obl_session *s, obl_logical_address address, int depth)
-{
-    struct obl_object *o;
-    obl_physical_address physical;
-
-    /* Check for fixed addresses first. */
-    if (IS_FIXED_ADDR(address)) {
-        return _obl_at_fixed_address(address);
-    }
-
-    /* If this object already exists within the read set, return it as-is. */
-    sem_wait(&d->lock);
-    o = obl_set_lookup(d->read_set, (obl_set_key) address);
-    sem_post(&d->lock);
-    if (o != NULL && ! _obl_is_stub(o)) {
-        return o;
-    }
-
-    if (depth > 0) {
-        /* Look up the physical address. */
-        physical = obl_address_lookup(d, address);
-        if (physical == OBL_PHYSICAL_UNASSIGNED) {
-            return obl_nil();
-        }
-
-        o = obl_read_object(d, s, d->content, physical, depth);
-        o->session = s;
-    } else {
-        o = _obl_create_stub(s, address);
-    }
-
-    sem_wait(&d->lock);
-    obl_set_insert(d->read_set, o);
-    sem_post(&d->lock);
-
-    return o;
-}
-
 struct obl_object *_obl_at_fixed_address(obl_logical_address address)
 {
     if (!IS_FIXED_ADDR(address)) {
@@ -338,29 +292,37 @@ struct obl_object *_obl_at_fixed_address(obl_logical_address address)
 
 void _obl_write(struct obl_object *o)
 {
-    struct obl_database *d = obl_database_of(o);
+    struct obl_session *s = o->session;
+    struct obl_database *d = NULL;
 
+    if (s == NULL) {
+        OBL_ERROR(d, "_obl_write called with an object that has not been "
+                "assigned to a session yet.");
+        return ;
+    }
+
+    d = s->database;
     if (d->content == NULL) {
         obl_report_error(d, OBL_DATABASE_NOT_OPEN, NULL);
         return ;
     }
 
     if (o->logical_address == OBL_LOGICAL_UNASSIGNED) {
-        o->logical_address = obl_allocate_logical(d);
+        o->logical_address = obl_allocate_logical(s);
     }
 
     if (o->physical_address == OBL_PHYSICAL_UNASSIGNED) {
         obl_uint size, extent;
 
         size = obl_object_wordsize(o);
-        o->physical_address = obl_allocate_physical(d, size);
+        o->physical_address = obl_allocate_physical(s, size);
 
         extent = (obl_uint) (o->physical_address) + size;
         if (extent >= d->content_size) {
             _grow_database(d);
         }
 
-        obl_address_assign(d, o->logical_address, o->physical_address);
+        obl_address_assign(s, o->logical_address, o->physical_address);
     }
 
     obl_write_object(o, d->content);
@@ -674,17 +636,17 @@ static void _bootstrap_database(struct obl_database *d)
     obl_write_object(treepage, d->content);
 
     /* Write the address assignments into the address map. */
-    obl_address_assign(d,
-            allocator->logical_address, allocator->physical_address);
-    obl_address_assign(d,
-            next_physical->logical_address, next_physical->physical_address);
-    obl_address_assign(d,
-            next_logical->logical_address, next_logical->physical_address);
+    obl_address_assign(s, allocator->logical_address,
+            allocator->physical_address);
+    obl_address_assign(s, next_physical->logical_address,
+            next_physical->physical_address);
+    obl_address_assign(s, next_logical->logical_address,
+            next_logical->physical_address);
 
     /* Store temporary objects in the read set. */
-    obl_set_insert(d->read_set, allocator);
-    obl_set_insert(d->read_set, next_physical);
-    obl_set_insert(d->read_set, next_logical);
+    obl_set_insert(s->read_set, allocator);
+    obl_set_insert(s->read_set, next_physical);
+    obl_set_insert(s->read_set, next_logical);
 
     obl_destroy_session(s);
 

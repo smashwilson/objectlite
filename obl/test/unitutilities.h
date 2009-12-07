@@ -38,7 +38,7 @@ struct obl_database *d;
  * Set a full obl_uint value within the content of a database.
  */
 #define SET_UINT(mem, addr, value) \
-    (mem)[addr] = writable_uint(value)
+    ((obl_uint*) mem)[addr] = writable_uint(value)
 
 /**
  * Zero out the contents of the database.

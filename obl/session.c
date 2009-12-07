@@ -6,16 +6,24 @@
  * @file session.c
  */
 
+#include "session.h"
+
 #include <stdlib.h>
 
 #include "storage/object.h"
-#include "session.h"
+#include "addressmap.h"
 #include "set.h"
 #include "transaction.h"
 #include "database.h"
 
 struct obl_session *obl_create_session(struct obl_database *database)
 {
+    if (database == NULL) {
+        OBL_ERROR(database,
+                "Attempt to create a session without a valid database.");
+        return NULL;
+    }
+
     struct obl_session *session = malloc(sizeof(struct obl_session));
 
     if (session == NULL) {
@@ -24,23 +32,29 @@ struct obl_session *obl_create_session(struct obl_database *database)
     }
 
     session->database = database;
+
+    session->read_set = obl_create_set(&logical_address_keyfunction);
+    sem_init(&session->read_set_mutex, 0, 1);
+
     session->current_transaction = NULL;
+    sem_init(&session->current_transaction_mutex, 0, 1);
+
     sem_init(&session->lock, 0, 1);
 
     return session;
 }
 
 struct obl_object *obl_at_address(struct obl_session *session,
-        const obl_logical_address address)
+        obl_logical_address address)
 {
     return obl_at_address_depth(session, address,
             session->database->configuration.default_stub_depth);
 }
 
 struct obl_object *obl_at_address_depth(struct obl_session *session,
-        const obl_logical_address address, int depth)
+        obl_logical_address address, int depth)
 {
-    return _obl_at_address_depth(session->database, session, address, depth);
+    return _obl_at_address_depth(session, address, depth, 1);
 }
 
 void obl_destroy_session(struct obl_session *session)
@@ -65,4 +79,47 @@ void _obl_session_release(struct obl_object *o)
     sem_wait(&s->lock);
     obl_set_remove(t->write_set, o);
     sem_post(&s->lock);
+}
+
+struct obl_object *_obl_at_address_depth(struct obl_session *s,
+        obl_logical_address address, int depth, int top)
+{
+    struct obl_database *d = s->database;
+    struct obl_object *o;
+    obl_physical_address physical;
+
+    /* Check within fixed address space first. */
+    if (IS_FIXED_ADDR(address)) {
+        return _obl_at_fixed_address(address);
+    }
+
+    /* If this object already exists within the read set, return it as-is. */
+    if (top) sem_wait(&s->read_set_mutex);
+    o = obl_set_lookup(s->read_set, (obl_set_key) address);
+    if (o != NULL && ! _obl_is_stub(o)) {
+        if (top) sem_post(&s->read_set_mutex);
+        return o;
+    }
+
+    if (depth > 0) {
+        /* Look up the physical address. */
+        physical = obl_address_lookup(d, address);
+        if (physical == OBL_PHYSICAL_UNASSIGNED) {
+            if (top) sem_post(&s->read_set_mutex);
+            return obl_nil();
+        }
+
+        o = obl_read_object(s, d->content, physical, depth);
+        o->logical_address = address;
+        o->session = s;
+    } else {
+        /* Create and return a stub that will resolve to this object. */
+        o = _obl_create_stub(s, address);
+    }
+
+    obl_set_insert(s->read_set, o);
+    if (top) sem_post(&s->read_set_mutex);
+
+    return o;
+
 }
