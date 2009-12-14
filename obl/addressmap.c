@@ -18,6 +18,7 @@
 #include "constants.h"
 #include "database.h"
 #include "session.h"
+#include "platform.h"
 
 /* Prototypes for internal functions */
 
