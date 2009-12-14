@@ -19,7 +19,7 @@ static const char *level_names[] = {
 
 #define TS_SIZE 24
 
-void obl_log(struct obl_database_config *config, obl_log_level level,
+void obl_log(struct obl_database_config *config, enum obl_log_level level,
         const char *message)
 {
     FILE *log_file;

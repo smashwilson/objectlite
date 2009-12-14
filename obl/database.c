@@ -212,7 +212,7 @@ void obl_clear_error(struct obl_database *d)
     d->error_code = OBL_OK;
 }
 
-void obl_report_error(struct obl_database *d, obl_error_code code,
+void obl_report_error(struct obl_database *d, enum obl_error_code code,
         const char *message)
 {
     const char *real_message;
@@ -241,7 +241,7 @@ void obl_report_error(struct obl_database *d, obl_error_code code,
     d->error_code = code;
 }
 
-void obl_report_errorf(struct obl_database *d, obl_error_code code,
+void obl_report_errorf(struct obl_database *d, enum obl_error_code code,
         const char *format, ...)
 {
     va_list args;
@@ -275,6 +275,42 @@ struct obl_object *_obl_at_fixed_address(obl_logical_address address)
     return fixed_space[_index_for_fixed(address)];
 }
 
+int _obl_assign_addresses(struct obl_object *o)
+{
+    struct obl_session *s = o->session;
+    struct obl_database *d = NULL;
+    int assigned = 0;
+
+    if (s == NULL) {
+        OBL_ERROR(d, "_obl_assign_addresses called with an object that has not "
+                "been assigned to a session yet.");
+        return 0;
+    }
+
+    d = s->database;
+
+    if (o->logical_address == OBL_LOGICAL_UNASSIGNED) {
+        o->logical_address = obl_allocate_logical(s);
+        assigned = 1;
+    }
+
+    if (o->physical_address == OBL_PHYSICAL_UNASSIGNED) {
+        obl_uint size, extent;
+
+        size = obl_object_wordsize(o);
+        o->physical_address = obl_allocate_physical(s, size);
+
+        extent = (obl_uint) (o->physical_address) + size;
+        if (extent >= d->content_size) {
+            _grow_database(d);
+        }
+
+        obl_address_assign(s, o->logical_address, o->physical_address);
+    }
+
+    return assigned;
+}
+
 void _obl_write(struct obl_object *o)
 {
     struct obl_session *s = o->session;
@@ -290,24 +326,6 @@ void _obl_write(struct obl_object *o)
     if (d->content == NULL) {
         obl_report_error(d, OBL_DATABASE_NOT_OPEN, NULL);
         return ;
-    }
-
-    if (o->logical_address == OBL_LOGICAL_UNASSIGNED) {
-        o->logical_address = obl_allocate_logical(s);
-    }
-
-    if (o->physical_address == OBL_PHYSICAL_UNASSIGNED) {
-        obl_uint size, extent;
-
-        size = obl_object_wordsize(o);
-        o->physical_address = obl_allocate_physical(s, size);
-
-        extent = (obl_uint) (o->physical_address) + size;
-        if (extent >= d->content_size) {
-            _grow_database(d);
-        }
-
-        obl_address_assign(s, o->logical_address, o->physical_address);
     }
 
     obl_write_object(o, d->content);

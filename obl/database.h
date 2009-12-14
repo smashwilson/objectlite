@@ -112,7 +112,7 @@ struct obl_database_config
      *
      * Default: L_NOTICE.
      */
-    obl_log_level log_level;
+    enum obl_log_level log_level;
 
     /**
      * When faulting objects from the database file, this many reference levels
@@ -183,7 +183,7 @@ struct obl_database
     char *error_message;
 
     /** The last error code.  OBL_OK if all is well. */
-    obl_error_code error_code;
+    enum obl_error_code error_code;
 
     /** Root storage.  Initialized during open. */
     struct obl_root root;
@@ -281,13 +281,13 @@ void obl_clear_error(struct obl_database *d);
  * Set the active error code in database.  If message is NULL, a default
  * message will be used.
  */
-void obl_report_error(struct obl_database *d, obl_error_code code,
+void obl_report_error(struct obl_database *d, enum obl_error_code code,
         const char *message);
 
 /**
  * Format an error message with variables a la sprintf() and friends.
  */
-void obl_report_errorf(struct obl_database *d, obl_error_code code,
+void obl_report_errorf(struct obl_database *d, enum obl_error_code code,
         const char *format, ...);
 
 /**
@@ -298,6 +298,16 @@ void obl_report_errorf(struct obl_database *d, obl_error_code code,
  *      the address is invalid.
  */
 struct obl_object *_obl_at_fixed_address(obl_logical_address address);
+
+/**
+ * Allocate and map logical and physical addresses to an object if necessary.
+ * This method can perform raw database I/O, even including database growth. For
+ * internal use only.
+ *
+ * @param o The object that is (possibly) missing an address.
+ * @return 1 if a new logical address was assigned, 0 otherwise.
+ */
+int _obl_assign_addresses(struct obl_object *o);
 
 /**
  * Allocate any necessary addresses, grow the database file if necessary, then
