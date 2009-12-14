@@ -30,7 +30,7 @@ void obl_set_ambient_log_level(enum obl_log_level level)
 void obl_log(struct obl_database_config *config, enum obl_log_level level,
         const char *message)
 {
-    char *filename;
+    const char *filename;
     FILE *log_file;
     char timestamp[TS_SIZE];
     time_t timer;
