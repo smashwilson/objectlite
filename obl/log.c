@@ -36,14 +36,14 @@ void obl_log(struct obl_database_config *config, enum obl_log_level level,
     time_t timer;
     struct tm *local;
 
-    if (config == NULL && ambient_log_level > level) {
+    if (config == NULL) {
+        if (ambient_log_level > level)
+            return ;
         filename = NULL;
-        return ;
-    }
-
-    if (config != NULL && config->log_level > level) {
+    } else {
+        if (config->log_level > level)
+            return ;
         filename = config->filename;
-        return ;
     }
 
     if (filename != NULL) {
