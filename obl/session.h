@@ -46,6 +46,13 @@ struct obl_object *obl_at_address(struct obl_session *session,
 struct obl_object *obl_at_address_depth(struct obl_session *session,
         obl_logical_address address, int depth);
 
+/**
+ * Re-read a persisted object from its native storage.
+ *
+ * @param o The object to refresh, which must be persisted by some session.
+ */
+void obl_refresh_object(struct obl_object *o);
+
 void obl_destroy_session(struct obl_session *session);
 
 /**

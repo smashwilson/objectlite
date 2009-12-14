@@ -54,6 +54,26 @@ struct obl_object *obl_at_address_depth(struct obl_session *session,
     return _obl_at_address_depth(session, address, depth, 1);
 }
 
+void obl_refresh_object(struct obl_object *o)
+{
+    struct obl_session *s = o->session;
+    struct obl_database *d = s->database;
+    struct obl_object *n;
+
+    sem_wait(&d->content_mutex);
+    n = obl_read_object(s, d->content, o->physical_address,
+            d->configuration.default_stub_depth);
+    sem_post(&d->content_mutex);
+
+    o->shape = n->shape;
+    o->storage.any_storage = n->storage.any_storage;
+
+    /*
+     * Free n directly; its storage is now referenced by o.
+     */
+    free(n);
+}
+
 void obl_destroy_session(struct obl_session *session)
 {
     if (session->current_transaction != NULL) {

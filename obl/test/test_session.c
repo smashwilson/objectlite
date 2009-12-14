@@ -3,14 +3,14 @@
  * This software is licensed as described in the file COPYING in the root
  * directory of this distribution.
  *
- * @file test_transaction.c
+ * @file test_session.c
  */
 
+#include "session.h"
 #include "transaction.h"
 
 #include "storage/integer.h"
 #include "database.h"
-#include "session.h"
 #include "set.h"
 #include "unitutilities.h"
 
@@ -224,15 +224,44 @@ void test_auto_mark_dirty(void)
     obl_close_database(d);
 }
 
+void test_refresh_object(void)
+{
+    struct obl_database *d = obl_open_defdatabase(NULL);
+    struct obl_session *s = obl_create_session(d);
+    struct obl_transaction *t;
+    struct obl_object *o;
+
+    /*
+     * Force the persistance of o.
+     */
+    t = obl_begin_transaction(s);
+    o = obl_create_integer(16);
+    o->session = s;
+    obl_mark_dirty(o);
+    obl_commit_transaction(t);
+
+    /*
+     * Change the storage of o directly within the database.
+     */
+    SET_UINT(d->content, o->physical_address + 1, 15);
+
+    CU_ASSERT(obl_integer_value(o) == 16);
+    obl_refresh_object(o);
+    CU_ASSERT(obl_integer_value(o) == 15);
+
+    obl_destroy_session(s);
+    obl_close_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
  */
-CU_pSuite initialize_transaction_suite(void)
+CU_pSuite initialize_session_suite(void)
 {
     CU_pSuite pSuite = NULL;
 
-    pSuite = CU_add_suite("transaction", NULL, NULL);
+    pSuite = CU_add_suite("session", NULL, NULL);
     if (pSuite == NULL) {
         return NULL;
     }
@@ -242,6 +271,7 @@ CU_pSuite initialize_transaction_suite(void)
     ADD_TEST(test_simple_commit);
     ADD_TEST(test_object_discovery);
     ADD_TEST(test_auto_mark_dirty);
+    ADD_TEST(test_refresh_object);
 
     return pSuite;
 }
