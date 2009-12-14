@@ -179,15 +179,13 @@ void test_object_discovery(void)
 
 void test_auto_mark_dirty(void)
 {
-    struct obl_database *d = obl_open_defdatabase("transaction.obl");
+    struct obl_database *d = obl_open_defdatabase(NULL);
     struct obl_session *s = obl_create_session(d);
     struct obl_transaction *t;
 
     struct obl_object *root_shape;
     char *slots[] = { "one", "two" };
     struct obl_object *root, *one, *two;
-
-    d->configuration.log_level = L_DEBUG;
 
     root_shape = obl_create_cshape("RootShape", 2, slots, OBL_SLOTTED);
 
