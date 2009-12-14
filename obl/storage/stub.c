@@ -38,6 +38,7 @@ struct obl_object *_obl_create_stub(struct obl_session *s,
     result->shape = obl_at_address(s, OBL_STUB_SHAPE_ADDR);
     result->storage.stub_storage = storage;
     result->logical_address = address;
+    result->session = s;
 
     return result;
 }
