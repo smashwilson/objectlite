@@ -25,8 +25,6 @@ struct obl_transaction
     struct obl_session *session;
 
     struct obl_set *write_set;
-
-    sem_t write_set_mutex;
 };
 
 struct obl_transaction *obl_begin_transaction(struct obl_session *session);

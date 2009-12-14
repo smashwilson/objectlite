@@ -118,6 +118,7 @@ void test_database_roundtrip(void)
     o = obl_create_integer((obl_int) 42);
     o->session = s;
 
+    _obl_assign_addresses(o);
     _obl_write(o);
     addr = o->logical_address;
 

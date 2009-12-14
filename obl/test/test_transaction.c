@@ -85,24 +85,94 @@ void test_simple_commit(void)
     struct obl_transaction *t;
     struct obl_object *o;
 
-    OBL_INFO(d, "Beginning transaction.");
     t = obl_begin_transaction(s);
 
-    OBL_INFO(d, "Creating integer object.");
     o = obl_create_integer(-400);
     o->session = s;
     o->logical_address = 100;
     o->physical_address = 256;
-    OBL_INFO(d, "Marking object dirty.");
     obl_mark_dirty(o);
 
-    OBL_INFO(d, "Committing transaction.");
     obl_commit_transaction(t);
     CU_ASSERT(readable_logical(d->content[256]) == OBL_INTEGER_SHAPE_ADDR);
     CU_ASSERT(readable_int(d->content[257]) == (obl_int) -400);
 
-    OBL_INFO(d, "Cleaning up.");
     obl_destroy_object(o);
+    obl_destroy_session(s);
+    obl_close_database(d);
+}
+
+void test_object_discovery(void)
+{
+    struct obl_database *d = obl_open_defdatabase(NULL);
+    struct obl_session *s = obl_create_session(d);
+    struct obl_transaction *t;
+
+    struct obl_object *root_shape, *root;
+    struct obl_object *one_shape, *one, *a, *b;
+    struct obl_object *two;
+
+    char *root_slots[] = { "one", "two" };
+    char *one_slots[] = { "a", "b" };
+
+    t = obl_begin_transaction(s);
+
+    root_shape = obl_create_cshape("RootClass", 2, root_slots, OBL_SLOTTED);
+    root = obl_create_slotted(root_shape);
+
+    one_shape = obl_create_cshape("OneClass", 2, one_slots, OBL_SLOTTED);
+    one = obl_create_slotted(one_shape);
+
+    a = obl_create_cstring("A", 1);
+    b = obl_create_integer(42);
+
+    two = obl_create_cstring("b", 1);
+
+    obl_slotted_atcnamed_put(one, "a", a);
+    obl_slotted_atcnamed_put(one, "b", b);
+    obl_slotted_atcnamed_put(root, "one", one);
+    obl_slotted_atcnamed_put(root, "two", two);
+
+    /* Fake the insertion of root. */
+    root->session = s;
+    obl_mark_dirty(root);
+
+    CU_ASSERT(one->physical_address == OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(a->physical_address == OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(b->physical_address == OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(two->physical_address == OBL_PHYSICAL_UNASSIGNED);
+
+    obl_commit_transaction(t);
+
+    CU_ASSERT(one->physical_address != OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(one->logical_address != OBL_LOGICAL_UNASSIGNED);
+    CU_ASSERT(one->session == s);
+    CU_ASSERT(a->physical_address != OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(a->logical_address != OBL_LOGICAL_UNASSIGNED);
+    CU_ASSERT(a->session == s);
+    CU_ASSERT(b->physical_address != OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(b->logical_address != OBL_LOGICAL_UNASSIGNED);
+    CU_ASSERT(b->session == s);
+    CU_ASSERT(two->physical_address != OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(two->logical_address != OBL_LOGICAL_UNASSIGNED);
+    CU_ASSERT(two->session == s);
+    CU_ASSERT(root_shape->physical_address != OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(root_shape->logical_address != OBL_LOGICAL_UNASSIGNED);
+    CU_ASSERT(root_shape->session == s);
+    CU_ASSERT(one_shape->physical_address != OBL_PHYSICAL_UNASSIGNED);
+    CU_ASSERT(one_shape->logical_address != OBL_LOGICAL_UNASSIGNED);
+    CU_ASSERT(one_shape->session == s);
+
+    CU_ASSERT(obl_set_includes(s->read_set, one));
+    CU_ASSERT(obl_set_includes(s->read_set, two));
+    CU_ASSERT(obl_set_includes(s->read_set, a));
+    CU_ASSERT(obl_set_includes(s->read_set, b));
+    CU_ASSERT(obl_set_includes(s->read_set, root_shape));
+    CU_ASSERT(obl_set_includes(s->read_set, one_shape));
+
+    CU_ASSERT(obl_nil()->session == NULL);
+    CU_ASSERT(! obl_set_includes(s->read_set, obl_nil()));
+
     obl_destroy_session(s);
     obl_close_database(d);
 }
@@ -123,6 +193,7 @@ CU_pSuite initialize_transaction_suite(void)
     ADD_TEST(test_ensure_transaction);
     ADD_TEST(test_mark_dirty);
     ADD_TEST(test_simple_commit);
+    ADD_TEST(test_object_discovery);
 
     return pSuite;
 }
