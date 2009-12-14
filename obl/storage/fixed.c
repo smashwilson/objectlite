@@ -85,6 +85,10 @@ struct obl_object *obl_fixed_at(struct obl_object *fixed, obl_uint index)
 void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
         struct obl_object *value)
 {
+    struct obl_session *s = fixed->session;
+    struct obl_transaction *t;
+    int created = 0;
+
     if (obl_storage_of(fixed) != OBL_FIXED) {
         obl_report_error(obl_database_of(fixed), OBL_WRONG_STORAGE,
                         "obl_fixed_at requires an object with FIXED storage.");
@@ -99,7 +103,12 @@ void obl_fixed_at_put(struct obl_object *fixed, const obl_uint index,
         return ;
     }
 
+    t = obl_ensure_transaction(s, &created);
+
+    obl_mark_dirty(fixed);
     fixed->storage.fixed_storage->contents[index] = value;
+
+    if (created) obl_commit_transaction(t);
 }
 
 struct obl_object *obl_fixed_read(struct obl_session *session,

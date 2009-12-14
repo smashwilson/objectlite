@@ -98,6 +98,9 @@ struct obl_object *obl_slotted_atcnamed(struct obl_object *slotted,
 void obl_slotted_at_put(struct obl_object *slotted,
         obl_uint index, struct obl_object *value)
 {
+    struct obl_session *s = slotted->session;
+    struct obl_transaction *t;
+    int created = 0;
     obl_uint maximum;
 
     if (obl_storage_of(slotted) != OBL_SLOTTED) {
@@ -109,12 +112,18 @@ void obl_slotted_at_put(struct obl_object *slotted,
     maximum = obl_shape_slotcount(obl_object_shape(slotted));
     if (index >= maximum) {
         obl_report_errorf(obl_database_of(slotted), OBL_INVALID_INDEX,
-                "obl_slotted_at_put called with an invalid index (%d, valid 0..%d)",
+                "obl_slotted_at_put called with an invalid index "
+                "(%d, valid 0..%d)",
                 index, maximum - 1);
         return ;
     }
 
+    t = obl_ensure_transaction(s, &created);
+
+    obl_mark_dirty(slotted);
     slotted->storage.slotted_storage->slots[index] = value;
+
+    if (created) obl_commit_transaction(t);
 }
 
 void obl_slotted_atnamed_put(struct obl_object *slotted,

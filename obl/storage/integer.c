@@ -51,13 +51,22 @@ obl_int obl_integer_value(struct obl_object *integer)
 
 void obl_integer_set(struct obl_object *integer, obl_int value)
 {
+    struct obl_session *s = integer->session;
+    struct obl_transaction *t;
+    int created = 0;
+
     if (obl_storage_of(integer) != OBL_INTEGER) {
         obl_report_error(obl_database_of(integer), OBL_WRONG_STORAGE,
                 "obl_integer_set requires an object with INTEGER storage.");
         return ;
     }
 
+    t = obl_ensure_transaction(s, &created);
+
+    obl_mark_dirty(integer);
     integer->storage.integer_storage->value = value;
+
+    if (created) obl_commit_transaction(t);
 }
 
 /* Integers are stored in 32 bits, network byte order. */

@@ -55,6 +55,9 @@ struct obl_transaction *obl_ensure_transaction(struct obl_session *s,
 {
     struct obl_transaction *t;
 
+    if (s == NULL)
+        return NULL;
+
     sem_wait(&s->session_mutex);
     if (s->current_transaction != NULL) {
         *created = 0;
@@ -94,6 +97,9 @@ int obl_commit_transaction(struct obl_transaction *t)
     struct obl_object_list *adopted = NULL;
     struct obl_session *s = t->session;
     struct obl_database *d = s->database;
+    unsigned long count = 0, adopt_count = 0;
+
+    OBL_DEBUG(d, "Beginning commit.");
 
     sem_wait(&d->content_mutex);
     sem_wait(&s->session_mutex);
@@ -119,6 +125,7 @@ int obl_commit_transaction(struct obl_transaction *t)
         current = adopted->entry;
         obl_set_insert(t->write_set, current);
         obl_set_insert(s->read_set, current);
+        adopt_count++;
 
         former = adopted;
         adopted = adopted->next;
@@ -130,6 +137,7 @@ int obl_commit_transaction(struct obl_transaction *t)
      */
     write_it = obl_set_destroying_iter(t->write_set);
     while ( (current = obl_set_iternext(write_it)) != NULL ) {
+        count++;
         _obl_write(current);
     }
     obl_set_destroyiter(write_it);
@@ -142,6 +150,10 @@ int obl_commit_transaction(struct obl_transaction *t)
 
     sem_post(&s->session_mutex);
     sem_post(&d->content_mutex);
+
+    OBL_DEBUGF(d,
+            "Successful commit of %lu objects, "
+            "%lu previously unpersisted.", count, adopt_count);
 
     return 0;
 }

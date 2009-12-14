@@ -177,6 +177,55 @@ void test_object_discovery(void)
     obl_close_database(d);
 }
 
+void test_auto_mark_dirty(void)
+{
+    struct obl_database *d = obl_open_defdatabase("transaction.obl");
+    struct obl_session *s = obl_create_session(d);
+    struct obl_transaction *t;
+
+    struct obl_object *root_shape;
+    char *slots[] = { "one", "two" };
+    struct obl_object *root, *one, *two;
+
+    d->configuration.log_level = L_DEBUG;
+
+    root_shape = obl_create_cshape("RootShape", 2, slots, OBL_SLOTTED);
+
+    /* Fake-persist the root object and its shape. */
+    root = obl_create_slotted(root_shape);
+    t = obl_begin_transaction(s);
+    root->session = s;
+    obl_mark_dirty(root);
+    obl_commit_transaction(t);
+
+    /*
+     * Put a new object into one of root's slots without an active transaction.
+     * This should occur within its own implicit transaction.
+     */
+    one = obl_create_integer(12);
+    CU_ASSERT(one->session == NULL);
+    obl_slotted_atcnamed_put(root, "one", one);
+    CU_ASSERT(one->session == s);
+
+    /*
+     * Put a new object into another slot while there is an active transaction.
+     * This should add root to the transaction's write set, but the new
+     * object should not be persisted until the transaction commits.
+     */
+    t = obl_begin_transaction(s);
+
+    two = obl_create_integer(42);
+    obl_slotted_atcnamed_put(root, "two", two);
+    CU_ASSERT(two->session == NULL);
+    CU_ASSERT(obl_set_includes(t->write_set, root));
+
+    obl_commit_transaction(t);
+    CU_ASSERT(two->session == s);
+
+    obl_destroy_session(s);
+    obl_close_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -194,6 +243,7 @@ CU_pSuite initialize_transaction_suite(void)
     ADD_TEST(test_mark_dirty);
     ADD_TEST(test_simple_commit);
     ADD_TEST(test_object_discovery);
+    ADD_TEST(test_auto_mark_dirty);
 
     return pSuite;
 }
