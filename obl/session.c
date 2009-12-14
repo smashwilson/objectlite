@@ -61,12 +61,14 @@ void obl_refresh_object(struct obl_object *o)
     struct obl_object *n;
 
     sem_wait(&d->content_mutex);
+    sem_wait(&s->session_mutex);
     n = obl_read_object(s, d->content, o->physical_address,
             d->configuration.default_stub_depth);
-    sem_post(&d->content_mutex);
 
     o->shape = n->shape;
     o->storage.any_storage = n->storage.any_storage;
+    sem_post(&s->session_mutex);
+    sem_post(&d->content_mutex);
 
     /*
      * Free n directly; its storage is now referenced by o.

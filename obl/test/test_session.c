@@ -253,6 +253,45 @@ void test_refresh_object(void)
     obl_close_database(d);
 }
 
+void test_simple_abort(void)
+{
+    struct obl_database *d = obl_open_defdatabase(NULL);
+    struct obl_session *s = obl_create_session(d);
+    struct obl_transaction *t;
+    struct obl_object *root_shape, *root, *o;
+    char *slots[] = { "abc", "def" };
+
+    /*
+     * Force the persistance of o.
+     */
+    t = obl_begin_transaction(s);
+    root_shape = obl_create_cshape("RootShape", 2, slots, OBL_SLOTTED);
+    root = obl_create_slotted(root_shape);
+    root->session = s;
+    obl_mark_dirty(root);
+    obl_commit_transaction(t);
+
+    CU_ASSERT(obl_slotted_atcnamed(root, "abc") == obl_nil());
+
+    /*
+     * Assign o to one of root's slots.  Abort the transaction.
+     */
+    t = obl_begin_transaction(s);
+    o = obl_create_integer(5);
+    obl_slotted_atcnamed_put(root, "abc", o);
+    obl_abort_transaction(t);
+
+    /*
+     * Assert that root has been reverted to its previous state.
+     */
+    CU_ASSERT(o->session == NULL);
+    CU_ASSERT(obl_slotted_atcnamed(root, "abc") == obl_nil());
+
+    obl_destroy_object(o);
+    obl_destroy_session(s);
+    obl_close_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -272,6 +311,7 @@ CU_pSuite initialize_session_suite(void)
     ADD_TEST(test_object_discovery);
     ADD_TEST(test_auto_mark_dirty);
     ADD_TEST(test_refresh_object);
+    ADD_TEST(test_simple_abort);
 
     return pSuite;
 }

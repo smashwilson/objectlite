@@ -161,10 +161,17 @@ int obl_commit_transaction(struct obl_transaction *t)
 void obl_abort_transaction(struct obl_transaction *t)
 {
     struct obl_session *s = t->session;
+    struct obl_set_iterator *iter;
+    struct obl_object *current;
 
     sem_wait(&s->session_mutex);
 
-    obl_destroy_set(t->write_set, NULL);
+    iter = obl_set_destroying_iter(t->write_set);
+    while ( (current = obl_set_iternext(iter)) != NULL ) {
+        obl_refresh_object(current);
+    }
+    obl_set_destroyiter(iter);
+
     _deallocate_transaction(t);
 
     sem_post(&s->session_mutex);
