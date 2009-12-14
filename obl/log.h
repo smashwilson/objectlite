@@ -37,18 +37,73 @@ enum obl_error_code
     OBL_ALREADY_IN_TRANSACTION, //!< OBL_ALREADY_IN_TRANSACTION
 };
 
+/**
+ * Set the level of logging messages to be used when no database is available.
+ */
+void obl_set_ambient_log_level(enum obl_log_level level);
+
 void obl_log(struct obl_database_config *config, enum obl_log_level level,
         const char *message);
+
+void obl_logf(struct obl_database_config *config, enum obl_log_level level,
+        const char *pattern, ...);
 
 #ifndef DISABLE_LOGGING
 
 #define OBL_CONFIG_FROM(d) (d) == NULL ? NULL : &((d)->configuration)
 
-#define OBL_DEBUG(d, message) obl_log( OBL_CONFIG_FROM(d), L_DEBUG, (message) )
-#define OBL_INFO(d, message) obl_log( OBL_CONFIG_FROM(d), L_INFO, (message) )
-#define OBL_NOTICE(d, message) obl_log( OBL_CONFIG_FROM(d), L_NOTICE, (message) )
-#define OBL_WARN(d, message) obl_log( OBL_CONFIG_FROM(d), L_WARN, (message) )
-#define OBL_ERROR(d, message) obl_log( OBL_CONFIG_FROM(d), L_ERROR, (message) )
+#define _OBL_LOG(d, level, message) \
+    obl_log( OBL_CONFIG_FROM(d), (level), (message))
+#define _OBL_LOGF(d, level, pattern, ...) \
+    obl_logf( OBL_CONFIG_FROM(d), (level), (pattern), __VA_ARGS__)
+#define _OBL_NLOG(level, message) \
+    obl_log( NULL, (level), (message) )
+#define _OBL_NLOGF(level, pattern, ...) \
+    obl_logf( NULL, (level), (pattern), __VA_ARGS__)
+
+#define OBL_DEBUG(d, message) \
+    _OBL_LOG(d, L_DEBUG, message)
+#define OBL_INFO(d, message) \
+    _OBL_LOG(d, L_INFO, message)
+#define OBL_NOTICE(d, message) \
+    _OBL_LOG(d, L_NOTICE, message)
+#define OBL_WARN(d, message) \
+    _OBL_LOG(d, L_WARN, message)
+#define OBL_ERROR(d, message) \
+    _OBL_LOG(d, L_ERROR, message)
+
+#define OBL_NDEBUG(message) \
+    _OBL_NLOG(L_DEBUG, message)
+#define OBL_NINFO(message) \
+    _OBL_NLOG(L_INFO, message)
+#define OBL_NNOTICE(message) \
+    _OBL_NLOG(L_NOTICE, message)
+#define OBL_NWARN(message) \
+    _OBL_LOG(L_WARN, message)
+#define OBL_NERROR(message) \
+    _OBL_LOG(L_ERROR, message)
+
+#define OBL_DEBUGF(d, pattern, ...) \
+    _OBL_LOGF(d, L_DEBUG, pattern, __VA_ARGS__)
+#define OBL_INFOF(d, pattern, ...) \
+    _OBL_LOGF(d, L_INFO, pattern, __VA_ARGS__)
+#define OBL_NOTICEF(d, pattern, ...) \
+    _OBL_LOGF(d, L_NOTICE, pattern, __VA_ARGS__)
+#define OBL_WARNF(d, pattern, ...) \
+    _OBL_LOGF(d, L_WARN, pattern, __VA_ARGS__)
+#define OBL_ERRORF(d, pattern, ...) \
+    _OBL_LOGF(d, L_ERROR, pattern, __VA_ARGS__)
+
+#define OBL_NDEBUGF(pattern, ...) \
+    _OBL_NLOGF(d, L_DEBUG, pattern, __VA_ARGS__)
+#define OBL_NINFOF(pattern, ...) \
+    _OBL_NLOGF(d, L_INFO, pattern, __VA_ARGS__)
+#define OBL_NNOTICEF(pattern, ...) \
+    _OBL_NLOGF(d, L_NOTICE, pattern, __VA_ARGS__)
+#define OBL_NWARNF(pattern, ...) \
+    _OBL_NLOGF(d, L_WARN, pattern, __VA_ARGS__)
+#define OBL_NERRORF(pattern, ...) \
+    _OBL_NLOGF(d, L_ERROR, pattern, __VA_ARGS__)
 
 #else /* DISABLE_LOGGING defined */
 
@@ -57,6 +112,24 @@ void obl_log(struct obl_database_config *config, enum obl_log_level level,
 #define OBL_NOTICE(d, message)
 #define OBL_WARN(d, message)
 #define OBL_ERROR(d, message)
+
+#define OBL_NDEBUG(message)
+#define OBL_NINFO(message)
+#define OBL_NNOTICE(message)
+#define OBL_NWARN(message)
+#define OBL_NERROR(message)
+
+#define OBL_DEBUGF(d, pattern, ...)
+#define OBL_INFOF(d, pattern, ...)
+#define OBL_NOTICEF(d, pattern, ...)
+#define OBL_WARNF(d, pattern, ...)
+#define OBL_ERRORF(d, pattern, ...)
+
+#define OBL_NDEBUGF(pattern, ...)
+#define OBL_NINFOF(pattern, ...)
+#define OBL_NNOTICEF(pattern, ...)
+#define OBL_NWARNF(pattern, ...)
+#define OBL_NERRORF(pattern, ...)
 
 #endif /* DISABLE_LOGGING */
 

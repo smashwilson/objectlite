@@ -124,6 +124,12 @@ struct obl_database *obl_open_database(struct obl_database_config *config)
     if (conf->log_level == L_DEFAULT)
         conf->log_level = L_NOTICE;
 
+    /*
+     * Set the ambient logging level of the ObjectLite library to match this,
+     * the most recently created database.
+     */
+    obl_set_ambient_log_level(conf->log_level);
+
     /* Initialize the error flags. */
     d->error_message = NULL;
     d->error_code = OBL_OK;
