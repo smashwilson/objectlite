@@ -38,7 +38,18 @@ struct obl_session *obl_create_session(struct obl_database *database)
 
     sem_init(&session->session_mutex, 0, 1);
 
+    sem_wait(&database->session_list_mutex);
+    obl_session_list_append(&database->session_list, session);
+    sem_post(&database->session_list_mutex);
+
     return session;
+}
+
+struct obl_object *obl_in(struct obl_session *s, struct obl_object *o)
+{
+    if (o->session == s)
+        return o;
+    return obl_at_address(s, o->logical_address);
 }
 
 struct obl_object *obl_at_address(struct obl_session *session,
@@ -78,6 +89,8 @@ void obl_refresh_object(struct obl_object *o)
 
 void obl_destroy_session(struct obl_session *session)
 {
+    struct obl_database *d = session->database;
+
     if (session->current_transaction != NULL) {
         obl_abort_transaction(session->current_transaction);
     }
@@ -86,7 +99,45 @@ void obl_destroy_session(struct obl_session *session)
 
     sem_destroy(&session->session_mutex);
 
+    sem_wait(&d->session_list_mutex);
+    obl_session_list_remove(&d->session_list, session);
+    sem_post(&d->session_list_mutex);
+
     free(session);
+}
+
+void obl_session_list_append(struct obl_session_list **list,
+        struct obl_session *s)
+{
+    struct obl_session_list *node;
+
+    node = malloc(sizeof(struct obl_session_list));
+    node->entry = s;
+    node->next = *list;
+
+    *list = node;
+}
+
+void obl_session_list_remove(struct obl_session_list **list,
+        struct obl_session *s)
+{
+    struct obl_session_list *current = *list, *previous = NULL;
+
+    while (current != NULL) {
+        struct obl_session_list *next = current->next;
+
+        if (current->entry == s) {
+            if (previous != NULL) {
+                previous->next = current->next;
+            } else {
+                *list = current->next;
+            }
+
+            free(current);
+        }
+
+        current = next;
+    }
 }
 
 void _obl_session_release(struct obl_object *o)
@@ -148,4 +199,22 @@ struct obl_object *_obl_at_address_depth(struct obl_session *s,
 
     return o;
 
+}
+
+void _obl_update_objects(struct obl_session *s, struct obl_set *change_set)
+{
+    struct obl_set_iterator *it;
+    struct obl_object *current, *mine;
+
+    it = obl_set_inorder_iter(change_set);
+
+    sem_wait(&s->session_mutex);
+    while ( (current = obl_set_iternext(it)) != NULL ) {
+        mine = obl_set_lookup(s->read_set,
+                (obl_set_key) current->logical_address);
+        if (mine != NULL) {
+            obl_refresh_object(mine);
+        }
+    }
+    sem_post(&s->session_mutex);
 }

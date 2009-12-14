@@ -292,6 +292,47 @@ void test_simple_abort(void)
     obl_close_database(d);
 }
 
+void test_cross_session(void)
+{
+    struct obl_database *d = obl_open_defdatabase(NULL);
+
+    struct obl_session *s0 = obl_create_session(d);
+    struct obl_transaction *t0;
+    struct obl_object *o0;
+
+    struct obl_session *s1 = obl_create_session(d);
+    struct obl_object *o1;
+
+    t0 = obl_begin_transaction(s0);
+    o0 = obl_create_integer(123);
+    o0->session = s0;
+    obl_mark_dirty(o0);
+    obl_commit_transaction(t0);
+
+    o1 = obl_in(s1, o0);
+
+    /*
+     * Change the object within session 0.
+     */
+    t0 = obl_begin_transaction(s0);
+    obl_integer_set(o0, 1000);
+
+    /*
+     * The change should be visible from session 0, but not session 1.
+     */
+    CU_ASSERT(obl_integer_value(o0) == 1000);
+    CU_ASSERT(obl_integer_value(o1) == 123);
+
+    obl_commit_transaction(t0);
+
+    CU_ASSERT(obl_integer_value(o0) == 1000);
+    CU_ASSERT(obl_integer_value(o1) == 1000);
+
+    obl_destroy_session(s0);
+    obl_destroy_session(s1);
+    obl_close_database(d);
+}
+
 /*
  * Collect the unit tests defined here into a CUnit test suite.  Return the
  * initialized suite on success, or NULL on failure.  Invoked by unittests.c.
@@ -312,6 +353,7 @@ CU_pSuite initialize_session_suite(void)
     ADD_TEST(test_auto_mark_dirty);
     ADD_TEST(test_refresh_object);
     ADD_TEST(test_simple_abort);
+    ADD_TEST(test_cross_session);
 
     return pSuite;
 }

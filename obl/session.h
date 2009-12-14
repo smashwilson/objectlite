@@ -31,7 +31,23 @@ struct obl_session
     sem_t session_mutex;
 };
 
+struct obl_session_list
+{
+    struct obl_session *entry;
+
+    struct obl_session_list *next;
+};
+
 struct obl_session *obl_create_session(struct obl_database *database);
+
+/**
+ * Return one session's view of another session's object.
+ *
+ * @param s The session whose view of o you want.
+ * @param o An object belonging to a session that isn't s.
+ * @return A new object.
+ */
+struct obl_object *obl_in(struct obl_session *s, struct obl_object *o);
 
 /**
  * The most basic query: return an object that lives at a known logical address.
@@ -54,6 +70,12 @@ struct obl_object *obl_at_address_depth(struct obl_session *session,
 void obl_refresh_object(struct obl_object *o);
 
 void obl_destroy_session(struct obl_session *session);
+
+void obl_session_list_append(struct obl_session_list **list,
+        struct obl_session *s);
+
+void obl_session_list_remove(struct obl_session_list **list,
+        struct obl_session *s);
 
 /**
  * Atomically release an object from any internal session data structures.
@@ -80,5 +102,15 @@ void _obl_session_release(struct obl_object *o);
  */
 struct obl_object *_obl_at_address_depth(struct obl_session *session,
         obl_logical_address address, int depth, int top);
+
+/**
+ * Use obl_refresh_object() to acquire a new version of each object contained
+ * within a change set.  For internal use only.
+ *
+ * @param s
+ * @param change_set
+ */
+void _obl_update_objects(struct obl_session *s,
+        struct obl_set *change_set);
 
 #endif /* SESSION_H */

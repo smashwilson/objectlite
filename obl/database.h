@@ -24,6 +24,9 @@ struct obl_object;
 /* Defined in session.h */
 struct obl_session;
 
+/* Defined in session.h */
+struct obl_session_list;
+
 /** Size of fixed space. */
 #define OBL_FIXED_SIZE 15
 
@@ -199,6 +202,12 @@ struct obl_database
 
     /** A semaphore to make database content operations atomic. */
     sem_t content_mutex;
+
+    /** A singly-linked list of currently active sessions. */
+    struct obl_session_list *session_list;
+
+    /** A semaphore to protect access to the session list. */
+    sem_t session_list_mutex;
 };
 
 /**

@@ -97,6 +97,8 @@ int obl_commit_transaction(struct obl_transaction *t)
     struct obl_object_list *adopted = NULL;
     struct obl_session *s = t->session;
     struct obl_database *d = s->database;
+    struct obl_session_list *session_list;
+    struct obl_set *change_set;
     unsigned long count = 0, adopt_count = 0;
 
     OBL_DEBUG(d, "Beginning commit.");
@@ -135,7 +137,7 @@ int obl_commit_transaction(struct obl_transaction *t)
     /*
      * Write each dirty object to the database.
      */
-    write_it = obl_set_destroying_iter(t->write_set);
+    write_it = obl_set_inorder_iter(t->write_set);
     while ( (current = obl_set_iternext(write_it)) != NULL ) {
         count++;
         _obl_write(current);
@@ -146,10 +148,29 @@ int obl_commit_transaction(struct obl_transaction *t)
      * Destroy this transaction and remove it from the session.  Its work
      * is now complete.
      */
+    change_set = t->write_set;
     _deallocate_transaction(t);
 
     sem_post(&s->session_mutex);
     sem_post(&d->content_mutex);
+
+    /*
+     * Notify each other session to update their views of any objects we've
+     * just changed.
+     */
+    sem_wait(&d->session_list_mutex);
+    session_list = d->session_list;
+    while (session_list != NULL) {
+        struct obl_session *other = session_list->entry;
+        if (other != s) {
+            _obl_update_objects(other, change_set);
+        }
+
+        session_list = session_list->next;
+    }
+    sem_post(&d->session_list_mutex);
+
+    obl_destroy_set(change_set, NULL);
 
     OBL_DEBUGF(d,
             "Successful commit of %lu objects, "

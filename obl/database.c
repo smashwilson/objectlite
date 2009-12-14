@@ -148,6 +148,10 @@ struct obl_database *obl_open_database(struct obl_database_config *config)
     /* Initialize the content lock. */
     sem_init(&d->content_mutex, 0, 1);
 
+    /* Initialize the session list. */
+    d->session_list = NULL;
+    sem_init(&d->session_list_mutex, 0, 1);
+
     if (_obl_map_database(d)) {
         sem_destroy(&d->content_mutex);
         free(d);
@@ -193,6 +197,8 @@ struct obl_object *obl_false()
 
 void obl_close_database(struct obl_database *d)
 {
+    struct obl_session_list *current;
+
     _obl_unmap_database(d);
 
     if (d->error_message != NULL ) {
@@ -200,6 +206,20 @@ void obl_close_database(struct obl_database *d)
     }
 
     sem_destroy(&d->content_mutex);
+
+    current = d->session_list;
+
+    /* Prevent the call to obl_destroy_session below from attempting to
+     * remove each session from the list we're iterating over.
+     */
+    d->session_list = NULL;
+
+    while (current != NULL) {
+        struct obl_session_list *next = current->next;
+        obl_destroy_session(current->entry);
+        free(current);
+        current = next;
+    }
 
     free(d);
 }
