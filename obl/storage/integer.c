@@ -11,6 +11,7 @@
 #include "storage/object.h"
 #include "database.h"
 #include "session.h"
+#include "transaction.h"
 
 #include <stdlib.h>
 #include <stdio.h>
