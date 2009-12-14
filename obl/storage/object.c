@@ -29,8 +29,7 @@ static void invalid_write(struct obl_object *o, obl_uint *dest);
 static void invalid_print(struct obl_object *o,
         int depth, int indent);
 
-static obl_uint no_children(struct obl_object *root,
-        struct obl_object **results, int *done);
+static struct obl_object_list *no_children(struct obl_object *root);
 
 static void simple_deallocate(struct obl_object *o);
 
@@ -62,8 +61,8 @@ typedef void (*print_function)(struct obl_object *o, int depth, int indent);
  * Signature of a function that allows iteration over an obl_object's references
  * to other obl_object structures.
  */
-typedef obl_uint (*children_function)(struct obl_object *root,
-        struct obl_object **results, int *heaped);
+typedef struct obl_object_list *(*children_function)(
+        struct obl_object *root);
 
 /**
  * Signature of a function that deallocates an object and its internal
@@ -296,11 +295,32 @@ void obl_write_object(struct obl_object *o, obl_uint *dest)
     (*write_functions[function_index])(o, dest);
 }
 
-obl_uint _obl_children(struct obl_object *root,
-        struct obl_object **results, int *heaped)
+void obl_object_list_append(struct obl_object_list **list,
+        struct obl_object *o)
 {
-    *heaped = 0;
-    return (*children_functions[obl_storage_of(root)])(root, results, heaped);
+    struct obl_object_list *node;
+
+    node = malloc(sizeof(struct obl_object_list));
+    node->entry = o;
+    node->next = *list;
+
+    *list = node;
+}
+
+void obl_destroy_object_list(struct obl_object_list *list)
+{
+    struct obl_object_list *current = list, *next;
+
+    while (current != NULL) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+}
+
+struct obl_object_list *_obl_children(struct obl_object *root)
+{
+    return (*children_functions[obl_storage_of(root)])(root);
 }
 
 struct obl_object *_obl_allocate_object()
@@ -374,15 +394,11 @@ static void invalid_print(struct obl_object *o,
  * Invoked for any storage type that has no children (i.e. most of them).
  *
  * @param root Any object of a storage type without direct children.
- * @param results [out] Set to NULL.
- * @param heaped [out] Set to false.
- * @return Zero.
+ * @return NULL.
  */
-static obl_uint no_children(struct obl_object *root,
-        struct obl_object **results, int *heaped)
+static struct obl_object_list *no_children(struct obl_object *root)
 {
-    *results = NULL;
-    return (obl_uint) 0;
+    return NULL;
 }
 
 /**

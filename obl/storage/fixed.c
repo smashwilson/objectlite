@@ -160,11 +160,20 @@ void obl_fixed_print(struct obl_object *fixed, int depth, int indent)
     }
 }
 
-obl_uint _obl_fixed_children(struct obl_object *fixed,
-        struct obl_object **results, int *heaped)
+struct obl_object_list *_obl_fixed_children(struct obl_object *fixed)
 {
-    results = fixed->storage.fixed_storage->contents;
-    return obl_fixed_size(fixed);
+    struct obl_fixed_storage *storage = fixed->storage.fixed_storage;
+    struct obl_object_list *results = NULL;
+    obl_uint fixed_size, i;
+
+    obl_object_list_append(&results, fixed->shape);
+
+    fixed_size = storage->length;
+    for (i = 0; i < fixed_size; i++) {
+        obl_object_list_append(&results, storage->contents[i]);
+    }
+
+    return results;
 }
 
 void _obl_fixed_deallocate(struct obl_object *fixed)

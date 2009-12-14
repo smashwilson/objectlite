@@ -203,11 +203,20 @@ void obl_slotted_print(struct obl_object *slotted, int depth, int indent)
     }
 }
 
-obl_uint _obl_slotted_children(struct obl_object *slotted,
-        struct obl_object **results, int *heaped)
+struct obl_object_list *_obl_slotted_children(struct obl_object *slotted)
 {
-    results = slotted->storage.slotted_storage->slots;
-    return obl_shape_slotcount(obl_object_shape(slotted));
+    struct obl_object_list *list = NULL;
+    struct obl_slotted_storage *storage;
+    int count;
+
+    storage = slotted->storage.slotted_storage;
+
+    obl_object_list_append(&list, slotted->shape);
+    for (count = 0; count < obl_shape_slotcount(slotted->shape); count++) {
+        obl_object_list_append(&list, storage->slots[count]);
+    }
+
+    return list;
 }
 
 void _obl_slotted_deallocate(struct obl_object *slotted)

@@ -127,13 +127,10 @@ void obl_slotted_print(struct obl_object *slotted, int depth, int indent);
  * Iterate over a slotted object's referenced children.  For internal use
  * only; does not resolve stubs.
  *
- * \param slotted The root object.
- * \param results [out] Assigned to the collection of child objects.
- * \param heaped [out] False; no heap allocation necessary.
- * \return The number of slots assigned within results.
+ * @param slotted The root object.
+ * @return An obl_object_list containing this object's immediate references.
  */
-obl_uint _obl_slotted_children(struct obl_object *slotted,
-        struct obl_object **results, int *heaped);
+struct obl_object_list *_obl_slotted_children(struct obl_object *slotted);
 
 /**
  * Deallocate a slotted-storage object.  For internal use only.

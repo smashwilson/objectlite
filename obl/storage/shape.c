@@ -289,17 +289,15 @@ void obl_shape_print(struct obl_object *shape, int depth, int indent)
     obl_print_object(current_shape, depth - 1, indent + 2);
 }
 
-obl_uint _obl_shape_children(struct obl_object *shape,
-        struct obl_object **results, int *heaped)
+struct obl_object_list *_obl_shape_children(struct obl_object *shape)
 {
-    struct obl_shape_storage *storage;
+    struct obl_shape_storage *storage = shape->storage.shape_storage;
+    struct obl_object_list *results = NULL;
 
-    storage = shape->storage.shape_storage;
-    *heaped = 1;
-    results = (struct obl_object **) malloc(sizeof(struct obl_object*) * 3);
-    results[0] = storage->name;
-    results[1] = storage->slot_names;
-    results[2] = storage->current_shape;
+    obl_object_list_append(&results, shape->shape);
+    obl_object_list_append(&results, storage->name);
+    obl_object_list_append(&results, storage->slot_names);
+    obl_object_list_append(&results, storage->current_shape);
 
-    return (obl_uint) 3;
+    return results;
 }

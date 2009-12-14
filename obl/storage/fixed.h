@@ -108,14 +108,9 @@ void obl_fixed_print(struct obl_object *fixed, int depth, int indent);
  * this function does not resolve stubs; for internal use only.
  *
  * @param fixed The root object.
- * @param results [out] Pointed to the first obl_object child.
- * @param heaped [out] False; fixed objects already have a nice heap array
- *      to return as it is.
- * @return The number of array-indexable obl_object structures following
- *      results.
+ * @return An obl_object_list containing all directly referenced obl_objects.
  */
-obl_uint _obl_fixed_children(struct obl_object *fixed,
-        struct obl_object **results, int *heaped);
+struct obl_object_list *_obl_fixed_children(struct obl_object *fixed);
 
 /**
  * Deallocate a fixed object, its internal storage, and any obl_stub_storage

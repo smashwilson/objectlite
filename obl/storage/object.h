@@ -95,6 +95,17 @@ struct obl_object
 };
 
 /**
+ * A singly-linked list for passing around small collections of objects.  If
+ * you have more than a few, consider using an obl_set.
+ */
+struct obl_object_list
+{
+    struct obl_object *entry;
+
+    struct obl_object_list *next;
+};
+
+/**
  * Return the (non-recursive) storage size of this object.  Includes the shape
  * word in its calculations.
  *
@@ -172,18 +183,31 @@ struct obl_object *obl_read_object(struct obl_session *s, obl_uint *source,
 void obl_write_object(struct obl_object *o, obl_uint *dest);
 
 /**
+ * Append an entry to an existing obl_object_list or create a new
+ * obl_object_list.
+ *
+ * @param list [inout] NULL or an existing obl_object_list.
+ * @param o The object to append.
+ */
+void obl_object_list_append(struct obl_object_list **list,
+        struct obl_object *o);
+
+/**
+ * Deallocate a full obl_object_list.
+ *
+ * @param list The list to deallocate.
+ */
+void obl_destroy_object_list(struct obl_object_list *list);
+
+/**
  * Useful for iterating over referenced obl_object structures.  For internal
  * use only; this call does not resolve any stubs encountered.
  *
- * @param root The object at the root of the graph.
- * @param results [out] Assigned to the first addressable child.
- * @param heaped [out] Most of the time, we can get away without doing heap
- *      allocation.  When we can't, this variable will be set to 1.
- * @return The number of obl_objects addressable from the pointer assigned to
- *      results.
+ * @param root
+ * @return An obl_object_list containing the immediate children of root.
+ *      Returns NULL if root has no children.
  */
-obl_uint _obl_children(struct obl_object *root,
-        struct obl_object **results, int *heaped);
+struct obl_object_list *_obl_children(struct obl_object *root);
 
 /**
  * Allocate a new obl_object from the heap, without specified storage.  For

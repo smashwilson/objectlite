@@ -160,15 +160,11 @@ void obl_shape_write(struct obl_object *string, obl_uint *dest);
 void obl_shape_print(struct obl_object *shape, int depth, int indent);
 
 /**
- * Assign results to an array of the obl_object instances reachable from this
- * one.
+ * Return an obl_object_list of objects referenced by a shape.
  *
- * \param shape The shape object.
- * \param results [out] Assigned to the array address.
- * \param heaped [out] True; we have to heap allocate results.
- * \return The number of valid references in results.
+ * @param shape The shape object.
+ * @return An obl_object_list of referenced objects.
  */
-obl_uint _obl_shape_children(struct obl_object *shape,
-        struct obl_object **results, int *heaped);
+struct obl_object_list *_obl_shape_children(struct obl_object *shape);
 
 #endif /* SHAPE_H */
