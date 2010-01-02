@@ -20,10 +20,21 @@ env.Append(CPPPATH = os.pathsep + 'obl')
 env.Append(LIBPATH = os.environ.get('LD_LIBRARY_PATH'))
 env.Append(LIBPATH = os.pathsep + 'obl')
 
-# env.Append(CCFLAGS = '-g');
-env.Append(CCFLAGS = '-Wall');
+env.Append(CCFLAGS = '-Wall')
+
+# Handle command-line arguments. ###############################################
+
+AddOption('--debug-build',
+    action='store_true',
+    dest='debug_build',
+    default=False,
+    help='Include debugging symbols within the binary.')
+    
+if GetOption('debug_build'):
+    env.Append(CCFLAGS = '-g')
 
 # libobjectlite: The core library. #############################################
+
 obllib = StaticLibrary(
     'obl/objectlite',
     Glob('obl/*.c') + Glob('obl/storage/*.c'))
@@ -44,15 +55,18 @@ obltest = Program(
 doctask = Command('doc/html/index.html', obllib, 'doxygen Doxyfile')
 
 # Alias directives for common configurations. ##################################
+
 Alias('lib', obllib)
 Alias('test', obltest)
 Alias('docs', doctask)
+
+Default(obllib)
 
 # Additional -c clean rules. ###################################################
 
 for scratch in Glob('*~') + Glob('*/*~') + Glob('*/*/*~'):
     Clean(str(scratch)[:-1], scratch)
 
-Clean('.', Glob('*.log'))
-Clean('.', Glob('*.obl'))
-Clean('.', Glob('doc/**'))
+Clean(obllib, Glob('*.log'))
+Clean(obllib, Glob('*.obl'))
+Clean(obllib, Glob('doc/**'))
